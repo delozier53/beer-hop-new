@@ -156,13 +156,18 @@ export default function Podcast() {
 
   const handleEditEpisode = (episode: PodcastEpisode) => {
     setEditingEpisode(episode);
+    
+    // Format date properly to avoid timezone issues
+    const releaseDate = new Date(episode.releaseDate);
+    const localDateString = `${releaseDate.getFullYear()}-${String(releaseDate.getMonth() + 1).padStart(2, '0')}-${String(releaseDate.getDate()).padStart(2, '0')}`;
+    
     form.reset({
       title: episode.title,
       guest: episode.guest,
       business: episode.business,
       spotifyUrl: episode.spotifyUrl,
       image: episode.image,
-      releaseDate: new Date(episode.releaseDate).toISOString().split('T')[0],
+      releaseDate: localDateString,
       episodeNumber: episode.episodeNumber,
     });
     setIsEditDialogOpen(true);
@@ -734,11 +739,16 @@ export default function Podcast() {
                         {episode.business}
                       </p>
                       <p className="text-xs text-gray-500">
-                        Released {new Date(episode.releaseDate).toLocaleDateString('en-US', {
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric'
-                        })}
+                        Released {(() => {
+                          const date = new Date(episode.releaseDate);
+                          // Use local date formatting to avoid timezone issues
+                          return date.toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric',
+                            timeZone: 'UTC'
+                          });
+                        })()}
                       </p>
                     </div>
                     <button 

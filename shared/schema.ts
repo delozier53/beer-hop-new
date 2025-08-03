@@ -142,7 +142,11 @@ export const insertPodcastEpisodeSchema = createInsertSchema(podcastEpisodes).om
   id: true,
   createdAt: true,
 }).extend({
-  releaseDate: z.string().transform(str => new Date(str)),
+  releaseDate: z.string().transform(str => {
+    // Parse date as local date to avoid timezone conversion issues
+    const [year, month, day] = str.split('-').map(Number);
+    return new Date(year, month - 1, day);
+  }),
   episodeNumber: z.number(), // Required field - user should provide episode number
 });
 
