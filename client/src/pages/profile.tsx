@@ -108,26 +108,21 @@ export default function Profile() {
         {/* Current Badge */}
         {badge && (
           <div className="bg-gradient-to-r from-hops to-hops-dark rounded-xl p-4 mb-4 text-white">
-            <div className="flex flex-col items-center text-center space-y-3">
-              <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center overflow-hidden">
-                {badge.icon.startsWith('http') ? (
-                  <img 
-                    src={badge.icon} 
-                    alt={badge.name}
-                    className="w-12 h-12 object-contain"
-                    onError={(e) => {
-                      console.log('Badge image failed to load:', badge.icon);
-                      e.currentTarget.style.display = 'none';
-                      e.currentTarget.parentElement!.innerHTML = `<span class="text-2xl">🏆</span>`;
-                    }}
-                  />
-                ) : (
-                  <span className="text-2xl">{badge.icon}</span>
-                )}
-              </div>
-              <div>
-                <h3 className="font-semibold">{badge.name}</h3>
-                <p className="text-sm opacity-90">{badge.description}</p>
+            <div className="flex justify-center">
+              <div className="w-20 h-20 flex items-center justify-center">
+                <img 
+                  src={badge.icon} 
+                  alt={badge.name}
+                  className="w-20 h-20 object-contain"
+                  onError={(e) => {
+                    console.log('Badge image failed to load:', badge.icon);
+                    // Try alternative Google Drive URL format
+                    const fileId = badge.icon.match(/id=([a-zA-Z0-9-_]+)/)?.[1];
+                    if (fileId) {
+                      e.currentTarget.src = `https://lh3.googleusercontent.com/d/${fileId}`;
+                    }
+                  }}
+                />
               </div>
             </div>
           </div>

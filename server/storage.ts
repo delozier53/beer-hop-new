@@ -167,12 +167,13 @@ function loadBadgesFromCSV(): Badge[] {
     const badges = csvBadges
       .filter(badge => badge.rank && badge.badge_no)
       .map((csvBadge, index) => {
-        // Convert Google Drive links to direct image URLs
+        // Convert Google Drive links to direct image URLs  
         let icon = csvBadge.badge_icon;
         if (icon && icon.includes('drive.google.com')) {
           const fileId = icon.match(/\/d\/([a-zA-Z0-9-_]+)/)?.[1];
           if (fileId) {
-            icon = `https://drive.google.com/uc?export=view&id=${fileId}`;
+            // Use Google's image hosting service for better compatibility
+            icon = `https://lh3.googleusercontent.com/d/${fileId}`;
           }
         }
         
