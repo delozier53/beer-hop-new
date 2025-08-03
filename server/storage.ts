@@ -544,8 +544,8 @@ export class MemStorage implements IStorage {
 
   async getLeaderboard(): Promise<User[]> {
     return Array.from(this.users.values())
-      .sort((a, b) => b.checkins - a.checkins)
-      .slice(0, 50);
+      .filter(user => user.checkins > 0)
+      .sort((a, b) => b.checkins - a.checkins);
   }
 
   // Breweries

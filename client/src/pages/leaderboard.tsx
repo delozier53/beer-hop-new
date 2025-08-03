@@ -71,9 +71,10 @@ export default function Leaderboard() {
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <h1 className="text-xl font-bold">Check-in Leaderboard</h1>
+          <h1 className="text-xl font-bold">Leaderboard</h1>
           <div className="w-10"></div>
         </div>
+        <p className="text-center text-white/90 text-sm">Top brewers by check-ins</p>
       </div>
 
       {/* All Users */}
