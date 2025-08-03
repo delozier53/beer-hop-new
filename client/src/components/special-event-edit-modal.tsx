@@ -220,10 +220,18 @@ export function SpecialEventEditModal({ event, isOpen, onClose }: SpecialEventEd
 
           <div>
             <Label htmlFor="logo">Event Image</Label>
-            <div className="space-y-2">
+            <div className="space-y-3">
               {formData.logo && (
-                <div className="text-sm text-gray-600">
-                  Current image: {formData.logo.split('/').pop()}
+                <div className="w-full">
+                  <img 
+                    src={formData.logo} 
+                    alt="Current event image"
+                    className="w-full h-32 object-cover rounded-md border"
+                    onError={(e) => {
+                      // If image fails to load, hide it
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
                 </div>
               )}
               <ObjectUploader
@@ -231,17 +239,10 @@ export function SpecialEventEditModal({ event, isOpen, onClose }: SpecialEventEd
                 maxFileSize={10485760}
                 onGetUploadParameters={handleGetUploadParameters}
                 onComplete={handleUploadComplete}
-                buttonClassName="w-full"
+                buttonClassName="w-full bg-[#ff55e1] hover:bg-[#ff55e1]/90 text-white"
               >
                 <span>Upload New Image</span>
               </ObjectUploader>
-              <Input
-                id="logo"
-                value={formData.logo}
-                onChange={(e) => handleInputChange('logo', e.target.value)}
-                placeholder="Or enter image URL directly"
-                className="text-sm"
-              />
             </div>
           </div>
 
