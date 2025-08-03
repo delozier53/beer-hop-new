@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertCheckInSchema, insertUserSchema } from "@shared/schema";
+import { insertCheckInSchema, insertUserSchema, insertPodcastEpisodeSchema } from "@shared/schema";
 import { z } from "zod";
 import { ObjectStorageService } from "./objectStorage";
 
@@ -262,7 +262,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(episodes);
     } catch (error) {
       console.error("Error fetching podcast episodes:", error);
-      res.status(500).json({ message: "Internal server error", error: error.message });
+      res.status(500).json({ message: "Internal server error", error: error instanceof Error ? error.message : String(error) });
+    }
+  });
+
+  app.post("/api/podcast-episodes", async (req, res) => {
+    try {
+      const validatedData = insertPodcastEpisodeSchema.parse(req.body);
+      const episode = await storage.createPodcastEpisode(validatedData);
+      res.status(201).json(episode);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      console.error("Error creating podcast episode:", error);
+      res.status(500).json({ message: "Internal server error" });
     }
   });
 

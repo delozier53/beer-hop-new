@@ -1,11 +1,35 @@
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Play, ExternalLink, Edit } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { useForm } from "react-hook-form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Play, ExternalLink, Edit, Plus } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { PodcastEpisode, User } from "@shared/schema";
 import podcastBanner from "@assets/BH_Podcast_Banner (5)_1754202035969.jpg";
 
+interface EpisodeFormData {
+  episodeNumber: number;
+  title: string;
+  guest: string;
+  business: string;
+  spotifyUrl: string;
+  image: string;
+  description: string;
+  duration: string;
+  releaseDate: string;
+}
+
 export default function Podcast() {
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const { toast } = useToast();
+  
   const { data: episodes = [], isLoading } = useQuery<PodcastEpisode[]>({
     queryKey: ["/api/podcast-episodes"],
   });
@@ -16,40 +40,55 @@ export default function Podcast() {
   
   const isMasterAdmin = user?.role === 'admin';
 
+  const form = useForm<EpisodeFormData>({
+    defaultValues: {
+      episodeNumber: episodes.length + 1,
+      title: "",
+      guest: "",
+      business: "",
+      spotifyUrl: "",
+      image: "",
+      description: "",
+      duration: "60",
+      releaseDate: new Date().toISOString().split('T')[0],
+    },
+  });
+
+  const createEpisodeMutation = useMutation({
+    mutationFn: async (data: EpisodeFormData) => {
+      const episodeData = {
+        ...data,
+        releaseDate: new Date(data.releaseDate),
+      };
+      return apiRequest("/api/podcast-episodes", {
+        method: "POST",
+        body: JSON.stringify(episodeData),
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Episode created successfully!",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/podcast-episodes"] });
+      setIsDialogOpen(false);
+      form.reset();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create episode",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const onSubmit = (data: EpisodeFormData) => {
+    createEpisodeMutation.mutate(data);
+  };
+
   const openSpotify = (spotifyUrl: string) => {
     window.open(spotifyUrl, '_blank');
-  };
-  
-  const handleEdit = () => {
-    // Create a simple edit interface
-    const newEpisodeData = prompt(
-      "Enter new episode data in format: episodeNumber|title|guest|business|spotifyUrl|imageUrl\n" +
-      "Example: 66|Episode #66|John Doe|Sample Brewery|https://spotify.com/episode/123|https://image.url"
-    );
-    
-    if (newEpisodeData) {
-      const [episodeNumber, title, guest, business, spotifyUrl, imageUrl] = newEpisodeData.split('|');
-      
-      if (episodeNumber && title && guest && business) {
-        // Create new episode object
-        const newEpisode = {
-          episodeNumber: parseInt(episodeNumber),
-          title: title.trim(),
-          guest: guest.trim(),
-          business: business.trim(),
-          duration: "60",
-          releaseDate: new Date().toISOString(),
-          spotifyUrl: spotifyUrl?.trim() || "",
-          image: imageUrl?.trim() || "",
-          description: ""
-        };
-        
-        // For now, just show the data that would be sent
-        alert(`New episode data:\n${JSON.stringify(newEpisode, null, 2)}\n\nNote: This would be sent to the server to create the episode.`);
-      } else {
-        alert("Please provide at least episode number, title, guest, and business name.");
-      }
-    }
   };
   
   // Sort episodes by release date descending (most recent first)
@@ -108,15 +147,174 @@ export default function Podcast() {
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-bold">Latest Episodes</h2>
           {isMasterAdmin && (
-            <Button 
-              size="sm"
-              variant="outline"
-              className="text-[#ff55e1] border-[#ff55e1] hover:bg-[#ff55e1] hover:text-white"
-              onClick={handleEdit}
-            >
-              <Edit className="w-4 h-4 mr-1" />
-              Edit
-            </Button>
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button 
+                  size="sm"
+                  variant="outline"
+                  className="text-[#ff55e1] border-[#ff55e1] hover:bg-[#ff55e1] hover:text-white"
+                >
+                  <Plus className="w-4 h-4 mr-1" />
+                  Add Episode
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>Add New Episode</DialogTitle>
+                </DialogHeader>
+                <Form {...form}>
+                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                    <FormField
+                      control={form.control}
+                      name="episodeNumber"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Episode Number</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              {...field} 
+                              onChange={(e) => field.onChange(parseInt(e.target.value))}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="title"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Title</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="Episode #66" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="guest"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Guest</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="Guest name" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="business"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Business</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="Business/Brewery name" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="spotifyUrl"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Spotify URL</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="https://open.spotify.com/episode/..." />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="image"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Image URL</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="https://..." />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="description"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Description</FormLabel>
+                          <FormControl>
+                            <Textarea {...field} placeholder="Episode description..." rows={3} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="duration"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Duration (minutes)</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="60" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="releaseDate"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Release Date</FormLabel>
+                          <FormControl>
+                            <Input type="date" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <div className="flex gap-2 pt-4">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setIsDialogOpen(false)}
+                        className="flex-1"
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        type="submit"
+                        disabled={createEpisodeMutation.isPending}
+                        className="flex-1 bg-[#ff55e1] hover:bg-[#ff55e1]/90"
+                      >
+                        {createEpisodeMutation.isPending ? "Creating..." : "Create Episode"}
+                      </Button>
+                    </div>
+                  </form>
+                </Form>
+              </DialogContent>
+            </Dialog>
           )}
         </div>
 
