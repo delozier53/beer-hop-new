@@ -74,14 +74,15 @@ export default function Profile() {
       {/* Profile Content */}
       <div className="px-6 -mt-16 relative z-10 pb-20">
         {/* Profile Photo & Info */}
-        <div className="flex items-end space-x-4 mb-4">
+        <div className="flex flex-col items-center mb-4">
           <img 
             src={user.profileImage || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&h=150"} 
             alt="Profile" 
-            className="w-20 h-20 rounded-full border-4 border-white shadow-lg object-cover"
+            className="w-20 h-20 rounded-full border-4 border-white shadow-lg object-cover mb-2"
           />
-          <div className="flex-1 pb-2">
-            <h2 className="text-xl font-bold text-white">{user.name}</h2>
+          <h2 className="text-xl font-bold text-black bg-white px-3 py-1 rounded-lg shadow-md">{user.username || user.name}</h2>
+          <div className="mt-2">
+            <EditProfileDialog user={user} userId={CURRENT_USER_ID} />
           </div>
         </div>
 
@@ -145,7 +146,6 @@ export default function Profile() {
         <div className="mb-6">
           <div className="flex justify-between items-center mb-3">
             <h3 className="text-lg font-semibold">Favorite Breweries</h3>
-            <EditProfileDialog user={user} userId={CURRENT_USER_ID} />
           </div>
 
           {favoriteBreweries.length === 0 ? (

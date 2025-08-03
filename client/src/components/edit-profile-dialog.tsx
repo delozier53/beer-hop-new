@@ -22,7 +22,7 @@ interface EditProfileDialogProps {
 
 export function EditProfileDialog({ user, userId }: EditProfileDialogProps) {
   const [open, setOpen] = useState(false);
-  const [username, setUsername] = useState(user.username);
+  const [username, setUsername] = useState(user.username || user.name);
   const [profileImage, setProfileImage] = useState(user.profileImage || "");
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -61,7 +61,7 @@ export function EditProfileDialog({ user, userId }: EditProfileDialogProps) {
     
     const updates: { username?: string; profileImage?: string } = {};
     
-    if (username !== user.username) {
+    if (username !== (user.username || user.name)) {
       updates.username = username;
     }
     
