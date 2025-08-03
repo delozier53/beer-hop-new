@@ -23,7 +23,7 @@ function loadBreweriesFromCSV(): Brewery[] {
     const csvContent = fs.readFileSync(csvPath, 'utf-8');
     const lines = csvContent.split('\n').filter(line => line.trim());
     
-    return lines.slice(1).map((line, index) => {
+    return lines.slice(1, 74).map((line, index) => { // Only load first 73 breweries
       // Parse CSV line while handling commas inside quoted strings
       const values: string[] = [];
       let current = '';
