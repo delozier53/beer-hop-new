@@ -196,12 +196,14 @@ export default function WeeklyEventCreateModal({
       setUploadedImageUrl('');
       onClose();
       
-      // Then invalidate cache to refresh the display
+      // Force refresh the data immediately
+      queryClient.invalidateQueries({ queryKey: ['/api/weekly-events'] });
+      queryClient.invalidateQueries({ queryKey: [`/api/weekly-events/${defaultDay}`] });
+      
+      // Force refetch to get the latest data
       setTimeout(() => {
-        queryClient.invalidateQueries({ queryKey: ['/api/weekly-events'] });
-        queryClient.invalidateQueries({ queryKey: [`/api/weekly-events/${defaultDay}`] });
         queryClient.refetchQueries({ queryKey: [`/api/weekly-events/${defaultDay}`] });
-      }, 100);
+      }, 200);
     },
     onError: (error) => {
       toast({

@@ -398,6 +398,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Weekly Events routes
   app.get("/api/weekly-events", async (req, res) => {
     try {
+      // Disable caching to ensure fresh data
+      res.set({
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      });
+      
       const events = await storage.getWeeklyEvents();
       res.json(events);
     } catch (error) {
@@ -408,6 +415,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/weekly-events/:day", async (req, res) => {
     try {
+      // Disable caching to ensure fresh data
+      res.set({
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      });
+      
       const events = await storage.getWeeklyEventsByDay(req.params.day);
       res.json(events);
     } catch (error) {
