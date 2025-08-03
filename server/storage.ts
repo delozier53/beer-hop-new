@@ -1278,6 +1278,80 @@ export class DatabaseStorage implements IStorage {
   }
 }
 
+function parseSpecialEventsCSV(csvContent: string): any[] {
+  const records: any[] = [];
+  let position = 0;
+  let currentRow: string[] = [];
+  let insideQuotes = false;
+  let currentField = '';
+  let headers: string[] = [];
+  let isFirstRow = true;
+
+  while (position < csvContent.length) {
+    const char = csvContent[position];
+    
+    if (char === '"') {
+      if (insideQuotes && csvContent[position + 1] === '"') {
+        // Handle escaped quotes
+        currentField += '"';
+        position += 2;
+        continue;
+      } else {
+        insideQuotes = !insideQuotes;
+        position++;
+        continue;
+      }
+    }
+
+    if (!insideQuotes && char === ',') {
+      currentRow.push(currentField.trim());
+      currentField = '';
+    } else if (!insideQuotes && (char === '\n' || char === '\r')) {
+      if (currentField || currentRow.length > 0) {
+        currentRow.push(currentField.trim());
+        
+        if (isFirstRow) {
+          headers = currentRow;
+          isFirstRow = false;
+        } else if (currentRow.length === headers.length) {
+          const obj: any = {};
+          headers.forEach((header, index) => {
+            obj[header.trim()] = currentRow[index] || '';
+          });
+          // Check for Company and Event instead of name for special events
+          if (obj.Company && obj.Event && obj.Company.trim() && obj.Event.trim()) {
+            records.push(obj);
+          }
+        }
+        
+        currentRow = [];
+        currentField = '';
+      }
+    } else {
+      currentField += char;
+    }
+    
+    position++;
+  }
+
+  // Handle the last field if file doesn't end with newline
+  if (currentField || currentRow.length > 0) {
+    currentRow.push(currentField.trim());
+    if (!isFirstRow && currentRow.length === headers.length) {
+      const obj: any = {};
+      headers.forEach((header, index) => {
+        obj[header.trim()] = currentRow[index] || '';
+      });
+      if (obj.Company && obj.Event && obj.Company.trim() && obj.Event.trim()) {
+        records.push(obj);
+      }
+    }
+  }
+
+  console.log(`Parsed ${records.length} valid special event records from CSV`);
+  return records;
+}
+
 async function loadSpecialEventsFromCSV(): Promise<SpecialEvent[]> {
   try {
     const csvPath = path.join(process.cwd(), 'attached_assets/Special Events_1754235280994.csv');
@@ -1288,15 +1362,12 @@ async function loadSpecialEventsFromCSV(): Promise<SpecialEvent[]> {
     const csvContent = fs.readFileSync(csvPath, 'utf-8');
     
     // Parse CSV properly handling multi-line quoted fields
-    const records = parseCSVContent(csvContent);
+    const records = parseSpecialEventsCSV(csvContent);
     console.log(`Total parsed special events CSV records: ${records.length}`);
     
     const events = [];
     for (let i = 0; i < records.length; i++) {
       const record = records[i];
-      
-      // Skip header row and empty rows
-      if (i === 0 || !record.Company || !record.Event) continue;
       
       const specialEvent: InsertSpecialEvent = {
         company: record.Company || '',

@@ -36,23 +36,32 @@ export default function Events() {
   if (isLoading || isLoadingSpecial) {
     return (
       <div className="mobile-container">
-        {/* Removed hero banner header words */}
+        {/* Header image without text overlay */}
+        <div 
+          className="w-full h-48"
+          style={{
+            backgroundImage: `url('https://images.unsplash.com/photo-1558618666-fcd25c85cd64?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=400')`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center'
+          }}
+        />
+        
         <div className="px-6 py-6 space-y-4">
           <h2 className="text-xl font-bold mb-4">Upcoming Events</h2>
           
-          {/* Toggle Buttons */}
-          <div className="flex space-x-2 mb-6">
+          {/* Full-width Toggle Buttons */}
+          <div className="grid grid-cols-2 gap-2 mb-6">
             <Button
               variant={selectedTab === "special" ? "default" : "outline"}
               onClick={() => setSelectedTab("special")}
-              className={selectedTab === "special" ? "bg-[#80bc04] hover:bg-[#80bc04]/90 text-white" : ""}
+              className={`w-full ${selectedTab === "special" ? "bg-[#80bc04] hover:bg-[#80bc04]/90 text-white" : ""}`}
             >
               Special Events
             </Button>
             <Button
               variant={selectedTab === "weekly" ? "default" : "outline"}
               onClick={() => setSelectedTab("weekly")}
-              className={selectedTab === "weekly" ? "bg-[#80bc04] hover:bg-[#80bc04]/90 text-white" : ""}
+              className={`w-full ${selectedTab === "weekly" ? "bg-[#80bc04] hover:bg-[#80bc04]/90 text-white" : ""}`}
             >
               Weekly Events
             </Button>
@@ -77,24 +86,32 @@ export default function Events() {
 
   return (
     <div className="mobile-container pb-20">
-      {/* Removed hero banner with header words */}
+      {/* Header image without text overlay */}
+      <div 
+        className="w-full h-48"
+        style={{
+          backgroundImage: `url('https://images.unsplash.com/photo-1558618666-fcd25c85cd64?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=400')`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center'
+        }}
+      />
       
       <div className="px-6 py-6">
         <h2 className="text-xl font-bold mb-4">Upcoming Events</h2>
         
-        {/* Toggle Buttons - placed below heading */}
-        <div className="flex space-x-2 mb-6">
+        {/* Full-width Toggle Buttons */}
+        <div className="grid grid-cols-2 gap-2 mb-6">
           <Button
             variant={selectedTab === "special" ? "default" : "outline"}
             onClick={() => setSelectedTab("special")}
-            className={selectedTab === "special" ? "bg-[#80bc04] hover:bg-[#80bc04]/90 text-white" : ""}
+            className={`w-full ${selectedTab === "special" ? "bg-[#80bc04] hover:bg-[#80bc04]/90 text-white" : ""}`}
           >
             Special Events
           </Button>
           <Button
             variant={selectedTab === "weekly" ? "default" : "outline"}
             onClick={() => setSelectedTab("weekly")}
-            className={selectedTab === "weekly" ? "bg-[#80bc04] hover:bg-[#80bc04]/90 text-white" : ""}
+            className={`w-full ${selectedTab === "weekly" ? "bg-[#80bc04] hover:bg-[#80bc04]/90 text-white" : ""}`}
           >
             Weekly Events
           </Button>
