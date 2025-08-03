@@ -82,7 +82,6 @@ export default function Profile() {
           />
           <div className="flex-1 pb-2">
             <h2 className="text-xl font-bold text-white">{user.name}</h2>
-            <p className="text-amber-100 text-sm">{user.location}</p>
           </div>
         </div>
 
