@@ -35,10 +35,7 @@ export default function Profile() {
 
   const removeFavoriteMutation = useMutation({
     mutationFn: async (breweryId: string) => {
-      return apiRequest(`/api/users/${CURRENT_USER_ID}/favorites`, {
-        method: "PUT",
-        body: { breweryId }
-      });
+      return apiRequest("PUT", `/api/users/${CURRENT_USER_ID}/favorites`, { breweryId });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/users", CURRENT_USER_ID] });
