@@ -107,13 +107,13 @@ export default function Profile() {
 
         {/* Current Badge */}
         {badge && (
-          <div className="bg-gradient-to-r from-hops to-hops-dark rounded-xl py-1 px-2 mb-2 text-white">
+          <div className="bg-gradient-to-r from-hops to-hops-dark rounded-xl px-2 mb-1 text-white" style={{ paddingTop: '2px', paddingBottom: '2px' }}>
             <div className="flex justify-center">
               <img 
                 src={badge.icon} 
                 alt={badge.name}
                 className="object-contain"
-                style={{ width: '300px', height: '300px', minWidth: '300px', minHeight: '300px' }}
+                style={{ width: '400px', height: '400px', minWidth: '400px', minHeight: '400px' }}
                 onError={(e) => {
                   console.log('Badge image failed to load:', badge.icon);
                   // Try alternative Google Drive URL format
