@@ -65,7 +65,12 @@ export default function BreweryDetail() {
     queryKey: ["/api/users", CURRENT_USER_ID],
   });
 
-
+  // Check if user can check in at this brewery
+  const { data: canCheckInData } = useQuery<{ canCheckIn: boolean; timeRemaining?: number }>({
+    queryKey: ["/api/checkins/can-checkin", CURRENT_USER_ID, id],
+    enabled: !!id,
+    refetchInterval: 60000, // Refetch every minute to update countdown
+  });
 
   const checkInMutation = useMutation({
     mutationFn: async (breweryId: string) => {
@@ -79,17 +84,31 @@ export default function BreweryDetail() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/users", CURRENT_USER_ID] });
       queryClient.invalidateQueries({ queryKey: ["/api/breweries"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/checkins/can-checkin", CURRENT_USER_ID, id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/leaderboard"] }); // Update leaderboard
       toast({
         title: "Check-in successful!",
         description: "Your brewery visit has been recorded.",
       });
     },
-    onError: () => {
-      toast({
-        title: "Check-in failed",
-        description: "Something went wrong. Please try again.",
-        variant: "destructive",
-      });
+    onError: (error: any) => {
+      const errorMessage = error.message;
+      if (errorMessage.includes("Check-in cooldown active")) {
+        // Extract friendly time remaining from error
+        const match = errorMessage.match(/(\d+h \d+m|\d+m)/);
+        const timeRemaining = match ? match[0] : "24 hours";
+        toast({
+          title: "Check-in cooldown active",
+          description: `Please wait ${timeRemaining} before checking in again at this brewery.`,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Check-in failed",
+          description: "Something went wrong. Please try again.",
+          variant: "destructive",
+        });
+      }
     }
   });
 
@@ -266,12 +285,34 @@ export default function BreweryDetail() {
         <div className="mb-6 space-y-3">
           {/* Check In Button - Full Width */}
           <Button 
-            className="w-full bg-green-600 hover:bg-green-700 text-white"
-            onClick={() => checkInMutation.mutate(brewery.id)}
+            className={`w-full text-white ${
+              canCheckInData?.canCheckIn === false 
+                ? "bg-gray-400 hover:bg-gray-500 cursor-not-allowed" 
+                : "bg-green-600 hover:bg-green-700"
+            }`}
+            onClick={() => {
+              if (canCheckInData?.canCheckIn === false) {
+                const hours = Math.floor((canCheckInData.timeRemaining || 0) / 3600);
+                const minutes = Math.floor(((canCheckInData.timeRemaining || 0) % 3600) / 60);
+                const timeRemaining = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
+                toast({
+                  title: "Check-in cooldown active",
+                  description: `Please wait ${timeRemaining} before checking in again at this brewery.`,
+                  variant: "destructive",
+                });
+                return;
+              }
+              checkInMutation.mutate(brewery.id);
+            }}
             disabled={checkInMutation.isPending}
           >
             <MapPin className="w-4 h-4 mr-2" />
-            {checkInMutation.isPending ? "Checking in..." : "Check In"}
+            {checkInMutation.isPending 
+              ? "Checking in..." 
+              : canCheckInData?.canCheckIn === false 
+                ? "Check In (Cooldown Active)" 
+                : "Check In"
+            }
           </Button>
           
           {/* Second Row - View Taplist and Take Notes */}

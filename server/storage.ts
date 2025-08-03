@@ -310,6 +310,8 @@ export interface IStorage {
   createCheckIn(checkIn: InsertCheckIn): Promise<CheckIn>;
   getUserCheckIns(userId: string): Promise<CheckIn[]>;
   getBreweryCheckIns(breweryId: string): Promise<CheckIn[]>;
+  canUserCheckIn(userId: string, breweryId: string): Promise<{ canCheckIn: boolean; timeRemaining?: number }>;
+  getUserLatestCheckInAtBrewery(userId: string, breweryId: string): Promise<CheckIn | null>;
 
   // Events
   getEvents(): Promise<Event[]>;
@@ -941,6 +943,41 @@ export class MemStorage implements IStorage {
     return Array.from(this.checkIns.values()).filter(checkIn => checkIn.breweryId === breweryId);
   }
 
+  async canUserCheckIn(userId: string, breweryId: string): Promise<{ canCheckIn: boolean; timeRemaining?: number }> {
+    // Check if user has checked in at this brewery in the last 24 hours
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    
+    const recentCheckIns = Array.from(this.checkIns.values())
+      .filter(checkIn => 
+        checkIn.userId === userId && 
+        checkIn.breweryId === breweryId &&
+        checkIn.createdAt >= twentyFourHoursAgo
+      )
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+
+    if (recentCheckIns.length === 0) {
+      return { canCheckIn: true };
+    }
+
+    // Calculate time remaining until next check-in is allowed
+    const lastCheckIn = recentCheckIns[0];
+    const nextAllowedTime = new Date(lastCheckIn.createdAt.getTime() + 24 * 60 * 60 * 1000);
+    const timeRemaining = Math.max(0, nextAllowedTime.getTime() - Date.now());
+
+    return {
+      canCheckIn: false,
+      timeRemaining: Math.ceil(timeRemaining / 1000) // Return seconds remaining
+    };
+  }
+
+  async getUserLatestCheckInAtBrewery(userId: string, breweryId: string): Promise<CheckIn | null> {
+    const userCheckIns = Array.from(this.checkIns.values())
+      .filter(checkIn => checkIn.userId === userId && checkIn.breweryId === breweryId)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+
+    return userCheckIns[0] || null;
+  }
+
   // Events
   async getEvents(): Promise<Event[]> {
     return Array.from(this.events.values()).sort((a, b) => a.date.getTime() - b.date.getTime());
@@ -1068,7 +1105,7 @@ export class MemStorage implements IStorage {
 }
 
 import { db } from "./db";
-import { eq } from "drizzle-orm";
+import { eq, and, gte, desc, sql } from "drizzle-orm";
 
 export class DatabaseStorage implements IStorage {
   async getUser(id: string): Promise<User | undefined> {
@@ -1136,7 +1173,68 @@ export class DatabaseStorage implements IStorage {
       .insert(checkIns)
       .values(insertCheckIn)
       .returning();
+
+    // Update user check-in count
+    await db
+      .update(users)
+      .set({ checkins: sql`${users.checkins} + 1` })
+      .where(eq(users.id, insertCheckIn.userId));
+
+    // Update brewery check-in count  
+    await db
+      .update(breweries)
+      .set({ checkins: sql`${breweries.checkins} + 1` })
+      .where(eq(breweries.id, insertCheckIn.breweryId));
+
     return checkIn;
+  }
+
+  async canUserCheckIn(userId: string, breweryId: string): Promise<{ canCheckIn: boolean; timeRemaining?: number }> {
+    // Check if user has checked in at this brewery in the last 24 hours
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    
+    const recentCheckIns = await db
+      .select()
+      .from(checkIns)
+      .where(
+        and(
+          eq(checkIns.userId, userId),
+          eq(checkIns.breweryId, breweryId),
+          gte(checkIns.createdAt, twentyFourHoursAgo)
+        )
+      )
+      .orderBy(desc(checkIns.createdAt))
+      .limit(1);
+
+    if (recentCheckIns.length === 0) {
+      return { canCheckIn: true };
+    }
+
+    // Calculate time remaining until next check-in is allowed
+    const lastCheckIn = recentCheckIns[0];
+    const nextAllowedTime = new Date(lastCheckIn.createdAt.getTime() + 24 * 60 * 60 * 1000);
+    const timeRemaining = Math.max(0, nextAllowedTime.getTime() - Date.now());
+
+    return {
+      canCheckIn: false,
+      timeRemaining: Math.ceil(timeRemaining / 1000) // Return seconds remaining
+    };
+  }
+
+  async getUserLatestCheckInAtBrewery(userId: string, breweryId: string): Promise<CheckIn | null> {
+    const [checkIn] = await db
+      .select()
+      .from(checkIns)
+      .where(
+        and(
+          eq(checkIns.userId, userId),
+          eq(checkIns.breweryId, breweryId)
+        )
+      )
+      .orderBy(desc(checkIns.createdAt))
+      .limit(1);
+
+    return checkIn || null;
   }
 
   async getBreweries(): Promise<Brewery[]> {

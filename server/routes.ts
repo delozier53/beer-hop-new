@@ -209,12 +209,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/checkins", async (req, res) => {
     try {
       const validatedData = insertCheckInSchema.parse(req.body);
+      
+      // Check if user can check in (24-hour cooldown)
+      const checkResult = await storage.canUserCheckIn(validatedData.userId, validatedData.breweryId);
+      
+      if (!checkResult.canCheckIn) {
+        const hours = Math.floor((checkResult.timeRemaining || 0) / 3600);
+        const minutes = Math.floor(((checkResult.timeRemaining || 0) % 3600) / 60);
+        
+        return res.status(400).json({ 
+          message: "Check-in cooldown active", 
+          timeRemaining: checkResult.timeRemaining,
+          friendlyTimeRemaining: hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`
+        });
+      }
+      
       const checkIn = await storage.createCheckIn(validatedData);
       res.status(201).json(checkIn);
     } catch (error) {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid data", errors: error.errors });
       }
+      console.error("Check-in error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Check if user can check in at a brewery
+  app.get("/api/checkins/can-checkin/:userId/:breweryId", async (req, res) => {
+    try {
+      const { userId, breweryId } = req.params;
+      const checkResult = await storage.canUserCheckIn(userId, breweryId);
+      res.json(checkResult);
+    } catch (error) {
+      console.error("Can check-in error:", error);
       res.status(500).json({ message: "Internal server error" });
     }
   });
