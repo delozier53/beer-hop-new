@@ -1141,6 +1141,37 @@ export class DatabaseStorage implements IStorage {
     const allUsers = await db.select().from(users);
     return allUsers.sort((a, b) => b.checkins - a.checkins);
   }
+
+  async getPodcastEpisode(id: string): Promise<PodcastEpisode | undefined> {
+    const [episode] = await db.select().from(podcastEpisodes).where(eq(podcastEpisodes.id, id));
+    return episode || undefined;
+  }
+
+  async createPodcastEpisode(insertEpisode: InsertPodcastEpisode): Promise<PodcastEpisode> {
+    const [episode] = await db
+      .insert(podcastEpisodes)
+      .values(insertEpisode)
+      .returning();
+    return episode;
+  }
+
+  async getBreweryCheckIns(breweryId: string): Promise<CheckIn[]> {
+    return await db.select().from(checkIns).where(eq(checkIns.breweryId, breweryId));
+  }
+
+  async updateEvent(id: string, updates: Partial<Event>): Promise<Event | undefined> {
+    const [event] = await db
+      .update(events)
+      .set(updates)
+      .where(eq(events.id, id))
+      .returning();
+    return event || undefined;
+  }
+
+  async deleteEvent(id: string): Promise<boolean> {
+    const result = await db.delete(events).where(eq(events.id, id));
+    return result.count > 0;
+  }
 }
 
 export const storage = new DatabaseStorage();
