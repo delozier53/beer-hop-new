@@ -97,11 +97,11 @@ export default function Profile() {
                 <div className="text-xs text-gray-600">Check-ins</div>
               </div>
               <div>
-                <div className="text-2xl font-bold text-accent-pink">{user.favoriteBreweries?.length || 0}</div>
-                <div className="text-xs text-gray-600">Favorites</div>
+                <div className="text-2xl font-bold text-hops">{badge?.name || 'No Badge'}</div>
+                <div className="text-xs text-gray-600">Badge</div>
               </div>
               <div>
-                <div className="text-2xl font-bold text-hops">#{leaderboardRank + 1}</div>
+                <div className="text-2xl font-bold text-accent-pink">#{leaderboardRank + 1}</div>
                 <div className="text-xs text-gray-600">Rank</div>
               </div>
             </div>
@@ -110,30 +110,26 @@ export default function Profile() {
 
         {/* Badge */}
         {badge && (
-          <Card className="mb-4">
-            <CardContent className="p-4 text-center">
-              <div className="flex flex-col items-center">
-                <img 
-                  src={badge.icon} 
-                  alt={badge.name}
-                  className="w-[400px] h-[100px] object-contain rounded-lg"
-                  onError={(e) => {
-                    console.log('Badge image failed to load:', badge.icon);
-                    // Try alternative Google Drive URL format
-                    const fileId = badge.icon.match(/id=([a-zA-Z0-9-_]+)/)?.[1];
-                    if (fileId) {
-                      e.currentTarget.src = `https://lh3.googleusercontent.com/d/${fileId}`;
-                    }
-                  }}
-                />
-                {badge.nextBadgeAt && (
-                  <p className="text-xs text-gray-500 mt-2">
-                    Next badge at {badge.nextBadgeAt} check-ins
-                  </p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+          <div className="mb-4 text-center">
+            <img 
+              src={badge.icon} 
+              alt={badge.name}
+              className="w-[400px] h-[100px] object-contain rounded-lg mx-auto"
+              onError={(e) => {
+                console.log('Badge image failed to load:', badge.icon);
+                // Try alternative Google Drive URL format
+                const fileId = badge.icon.match(/id=([a-zA-Z0-9-_]+)/)?.[1];
+                if (fileId) {
+                  e.currentTarget.src = `https://lh3.googleusercontent.com/d/${fileId}`;
+                }
+              }}
+            />
+            {badge.nextBadgeAt && (
+              <p className="text-xs text-gray-500 mt-2">
+                Next badge at {badge.nextBadgeAt} check-ins
+              </p>
+            )}
+          </div>
         )}
 
         {/* Leaderboard Button */}
