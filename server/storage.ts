@@ -1221,7 +1221,17 @@ export class DatabaseStorage implements IStorage {
   // Global podcast header image
   async getPodcastHeaderImage(): Promise<string | null> {
     const [setting] = await db.select().from(settings).where(eq(settings.key, 'podcast_header_image'));
-    return setting?.value || null;
+    const headerValue = setting?.value;
+    
+    // Always return a valid header image - never return null for global podcast header
+    if (!headerValue) {
+      // Set a permanent fallback in database if none exists
+      const fallbackUrl = '/objects/uploads/podcast-header-fallback';
+      await this.setPodcastHeaderImage(fallbackUrl);
+      return fallbackUrl;
+    }
+    
+    return headerValue;
   }
 
   async setPodcastHeaderImage(imageUrl: string): Promise<void> {

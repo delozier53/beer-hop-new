@@ -178,6 +178,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       objectStorageService.downloadObject(objectFile, res);
     } catch (error) {
       console.error("Error serving object:", error);
+      
+      // Special handling for podcast header - provide fallback
+      if (req.path.includes('uploads/test-header') || req.path.includes('podcast-header')) {
+        console.log("Podcast header missing, providing fallback");
+        const fallbackUrl = "https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&h=400";
+        return res.redirect(302, fallbackUrl);
+      }
+      
       res.status(404).json({ message: "Object not found" });
     }
   });
