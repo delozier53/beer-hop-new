@@ -23,7 +23,7 @@ import {
 } from "lucide-react";
 import { Link, useParams, useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { Brewery, User, CheckIn } from "@shared/schema";
 
 const CURRENT_USER_ID = "joshuamdelozier";
@@ -36,6 +36,7 @@ export default function BreweryDetail() {
   const [notes, setNotes] = useState("");
   const [isNotesDialogOpen, setIsNotesDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const [editFormData, setEditFormData] = useState({
     name: "",
     address: "",
@@ -172,6 +173,28 @@ export default function BreweryDetail() {
 
   const isFavorite = user?.favoriteBreweries?.includes(brewery.id) || false;
 
+  // Mock slideshow photos (in production, these would come from the brewery data)
+  const slideshowPhotos = [
+    "https://images.unsplash.com/photo-1558618666-fbd6c1c64c1a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600",
+    "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600",
+    "https://images.unsplash.com/photo-1559954350-b734dd78c889?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600",
+    "https://images.unsplash.com/photo-1536578266687-db9a37a4e5e6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600",
+    "https://images.unsplash.com/photo-1566994620644-5b5b6f0c9b59?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600"
+  ];
+
+  // Auto-advance slideshow every 6 seconds
+  useEffect(() => {
+    if (slideshowPhotos.length > 1) {
+      const interval = setInterval(() => {
+        setCurrentSlideIndex((prevIndex) => 
+          (prevIndex + 1) % slideshowPhotos.length
+        );
+      }, 6000);
+
+      return () => clearInterval(interval);
+    }
+  }, [slideshowPhotos.length]);
+
   return (
     <div className="mobile-container pb-20">
       {/* Hero Banner */}
@@ -188,17 +211,19 @@ export default function BreweryDetail() {
           <ArrowLeft className="w-5 h-5" />
         </button>
         
-        {/* Brewery Logo - Square centered at bottom */}
-        {brewery.logo && (
-          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2">
-            <img 
-              src={brewery.logo} 
-              alt={`${brewery.name} logo`}
-              className="w-16 h-16 rounded-lg object-cover border-2 border-white shadow-lg"
-            />
-          </div>
-        )}
+
       </div>
+
+      {/* Brewery Logo - Overlapping position like profile photo */}
+      {brewery.logo && (
+        <div className="relative -mt-12 mb-6 flex justify-center">
+          <img 
+            src={brewery.logo} 
+            alt={`${brewery.name} logo`}
+            className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg bg-white"
+          />
+        </div>
+      )}
 
       <div className="px-6 py-6">
         {/* Brewery Header */}
@@ -421,6 +446,74 @@ export default function BreweryDetail() {
                 <span className="font-bold text-sm">@</span>
               </a>
             )}
+          </div>
+        </div>
+
+        {/* Photo Slideshow - Auto-advancing every 6 seconds */}
+        {slideshowPhotos.length > 0 && (
+          <div className="mb-6">
+            <h3 className="font-semibold mb-3">Photos</h3>
+            <div className="relative w-full h-48 rounded-lg overflow-hidden bg-gray-200">
+              <img 
+                src={slideshowPhotos[currentSlideIndex]} 
+                alt={`${brewery.name} photo ${currentSlideIndex + 1}`}
+                className="w-full h-full object-cover transition-opacity duration-500"
+              />
+              
+              {/* Slideshow indicators */}
+              <div className="absolute bottom-3 left-1/2 transform -translate-x-1/2 flex space-x-2">
+                {slideshowPhotos.map((_, index) => (
+                  <button
+                    key={index}
+                    className={`w-2 h-2 rounded-full transition-all ${
+                      index === currentSlideIndex 
+                        ? 'bg-white' 
+                        : 'bg-white/50'
+                    }`}
+                    onClick={() => setCurrentSlideIndex(index)}
+                  />
+                ))}
+              </div>
+              
+              {/* Photo counter */}
+              <div className="absolute top-3 right-3 bg-black/50 text-white text-xs px-2 py-1 rounded">
+                {currentSlideIndex + 1} / {slideshowPhotos.length}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Tap Offerings Embed */}
+        <div className="mb-6">
+          <h3 className="font-semibold mb-3">On Tap Now</h3>
+          <div className="bg-gray-100 rounded-lg p-4 min-h-[300px] border-2 border-dashed border-gray-300">
+            <div className="text-center text-gray-600">
+              <p className="text-sm mb-2">Tap offerings embed will appear here</p>
+              <p className="text-xs text-gray-500">
+                This section can display live tap listings, beer menus, or brewery-specific content
+              </p>
+              {/* Placeholder for embed - in production this would be an iframe or integrated widget */}
+              <div className="mt-4 p-4 bg-white rounded border">
+                <h4 className="font-medium text-gray-800 mb-2">Current Tap List</h4>
+                <div className="text-left space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span>Hoppy IPA</span>
+                    <span className="text-gray-500">6.5% ABV</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Wheat Beer</span>
+                    <span className="text-gray-500">4.8% ABV</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Porter</span>
+                    <span className="text-gray-500">5.2% ABV</span>
+                  </div>
+                </div>
+                <p className="text-xs text-gray-400 mt-3 italic">
+                  * Tap list updates in real-time when connected to brewery system
+                </p>
+              </div>
+            </div>
           </div>
         </div>
 
