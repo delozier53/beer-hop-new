@@ -15,7 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Camera, Settings, ImageIcon } from "lucide-react";
 import type { User } from "@shared/schema";
 import { ObjectUploader } from "@/components/ObjectUploader";
-import defaultHeaderImage from "@assets/BH Card Teal_1754198405349.png";
+import defaultHeaderImage from "@assets/BH Card Teal_1754198861134.png";
 
 interface EditProfileDialogProps {
   user: User;
