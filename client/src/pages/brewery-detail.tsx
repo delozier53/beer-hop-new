@@ -329,7 +329,7 @@ export default function BreweryDetail() {
           <p className="text-gray-600">
             {brewery.address}, {brewery.city}, {brewery.state} {brewery.zipCode}
           </p>
-          <Button variant="ghost" className="text-amber text-sm font-medium mt-1 p-0">
+          <Button variant="ghost" className="text-hops text-sm font-medium mt-1 p-0">
             Get Directions
           </Button>
         </div>

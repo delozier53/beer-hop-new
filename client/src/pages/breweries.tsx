@@ -126,28 +126,21 @@ export default function Breweries() {
               <Card className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer">
                 <div className="flex">
                   <img 
-                    src={brewery.image || `https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=200`} 
+                    src={brewery.logo || `https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=200`} 
                     alt={brewery.name} 
                     className="w-24 h-24 object-cover"
                   />
                   <div className="flex-1 p-4">
-                    <div className="flex justify-between items-start mb-1">
-                      <h3 className="font-semibold text-gray-900">{brewery.name}</h3>
-                      {brewery.distance && (
-                        <span className="text-sm font-medium text-amber">
-                          {brewery.distance} mi
-                        </span>
-                      )}
-                    </div>
+                    {brewery.distance && (
+                      <div className="text-sm font-medium text-hops mb-1">
+                        {brewery.distance} mi
+                      </div>
+                    )}
+                    <h3 className="font-semibold text-gray-900 mb-1">{brewery.name}</h3>
                     <p className="text-sm text-gray-600 mb-2">
                       {brewery.address}, {brewery.city}, {brewery.state}
                     </p>
-                    <div className="flex items-center">
-                      {renderStars(brewery.rating)}
-                      <span className="text-xs text-gray-500 ml-2">
-                        {brewery.checkins} check-ins
-                      </span>
-                    </div>
+
                   </div>
                 </div>
               </Card>
