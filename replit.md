@@ -29,6 +29,10 @@ Key recent changes (August 2025):
 - Removed slideshow functionality from brewery screens per user request
 - All 70 authentic Oklahoma breweries from CSV are now properly stored in the database
 - Implemented global podcast header image system - uploaded headers are permanent and visible to ALL users
+- Fixed critical podcast header disappearance issue with bulletproof failsafe system (August 3, 2025)
+- Installed official Beer Hop Podcast banner image - permanent for all users globally
+- Redesigned brewery page button layout: full-width Check In, side-by-side View Taplist (pink) and Take Notes (#004121)
+- Updated breweries list to show only city/state instead of full addresses with compact spacing
 - Added global settings table in database for storing app-wide configuration like podcast header
 
 The database schema supports complex relationships between entities, such as users having multiple check-ins and favorite breweries, breweries having associated podcast episodes, and a badge system based on check-in counts. Geographic data uses authentic latitude and longitude coordinates from the provided brewery coordinate CSV file, ensuring accurate distance calculations for Oklahoma breweries.
