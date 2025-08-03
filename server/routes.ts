@@ -247,6 +247,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Special Events
+  app.get("/api/special-events", async (req, res) => {
+    try {
+      const events = await storage.getSpecialEvents();
+      res.json(events);
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/special-events/:id", async (req, res) => {
+    try {
+      const event = await storage.getSpecialEvent(req.params.id);
+      if (!event) {
+        return res.status(404).json({ message: "Special event not found" });
+      }
+      res.json(event);
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   app.get("/api/events/:id", async (req, res) => {
     try {
       const event = await storage.getEvent(req.params.id);

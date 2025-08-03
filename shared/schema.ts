@@ -100,6 +100,22 @@ export const badges = pgTable("badges", {
   icon: text("icon").notNull(),
 });
 
+export const specialEvents = pgTable("special_events", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  company: text("company").notNull(),
+  event: text("event").notNull(),
+  details: text("details").notNull(),
+  time: text("time").notNull(),
+  date: text("date").notNull(),
+  address: text("address").notNull(),
+  taproom: boolean("taproom").notNull().default(false),
+  logo: text("logo"),
+  location: text("location"),
+  rsvpRequired: boolean("rsvp_required").notNull().default(false),
+  ticketLink: text("ticket_link"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -133,6 +149,11 @@ export const insertBadgeSchema = createInsertSchema(badges).omit({
   id: true,
 });
 
+export const insertSpecialEventSchema = createInsertSchema(specialEvents).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -151,6 +172,9 @@ export type InsertPodcastEpisode = z.infer<typeof insertPodcastEpisodeSchema>;
 
 export type Badge = typeof badges.$inferSelect;
 export type InsertBadge = z.infer<typeof insertBadgeSchema>;
+
+export type SpecialEvent = typeof specialEvents.$inferSelect;
+export type InsertSpecialEvent = z.infer<typeof insertSpecialEventSchema>;
 
 // Global settings table for app-wide configuration
 export const settings = pgTable("settings", {

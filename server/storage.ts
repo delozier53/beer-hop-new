@@ -11,13 +11,16 @@ import {
   type InsertPodcastEpisode,
   type Badge,
   type InsertBadge,
+  type SpecialEvent,
+  type InsertSpecialEvent,
   users,
   breweries,
   checkIns,
   events,
   podcastEpisodes,
   badges,
-  settings
+  settings,
+  specialEvents
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 import * as fs from 'fs';
@@ -326,6 +329,10 @@ export interface IStorage {
   // Global podcast header image
   getPodcastHeaderImage(): Promise<string | null>;
   setPodcastHeaderImage(imageUrl: string): Promise<void>;
+
+  // Special Events
+  getSpecialEvents(): Promise<SpecialEvent[]>;
+  getSpecialEvent(id: string): Promise<SpecialEvent | undefined>;
 }
 
 // CSV processing functions
@@ -1249,6 +1256,70 @@ export class DatabaseStorage implements IStorage {
           updatedAt: new Date(),
         },
       });
+  }
+
+  // Special Events
+  async getSpecialEvents(): Promise<SpecialEvent[]> {
+    let existingEvents = await db.select().from(specialEvents);
+    if (existingEvents.length === 0) {
+      // Initialize from CSV data
+      const csvEvents = await loadSpecialEventsFromCSV();
+      if (csvEvents.length > 0) {
+        await db.insert(specialEvents).values(csvEvents);
+        existingEvents = csvEvents;
+      }
+    }
+    return existingEvents;
+  }
+
+  async getSpecialEvent(id: string): Promise<SpecialEvent | undefined> {
+    const [event] = await db.select().from(specialEvents).where(eq(specialEvents.id, id));
+    return event || undefined;
+  }
+}
+
+async function loadSpecialEventsFromCSV(): Promise<SpecialEvent[]> {
+  try {
+    const csvPath = path.join(process.cwd(), 'attached_assets/Special Events_1754235280994.csv');
+    if (!fs.existsSync(csvPath)) {
+      console.error('Special events CSV file does not exist at:', csvPath);
+      return [];
+    }
+    const csvContent = fs.readFileSync(csvPath, 'utf-8');
+    
+    // Parse CSV properly handling multi-line quoted fields
+    const records = parseCSVContent(csvContent);
+    console.log(`Total parsed special events CSV records: ${records.length}`);
+    
+    const events = [];
+    for (let i = 0; i < records.length; i++) {
+      const record = records[i];
+      
+      // Skip header row and empty rows
+      if (i === 0 || !record.Company || !record.Event) continue;
+      
+      const specialEvent: InsertSpecialEvent = {
+        company: record.Company || '',
+        event: record.Event || '',
+        details: record.Details || '',
+        time: record.Time || '',
+        date: record.Date || '',
+        address: record.Address || '',
+        taproom: record.Taproom === 'true' || record.Taproom === true,
+        logo: record.Logo || null,
+        location: record.Location || null,
+        rsvpRequired: record['RSVP Required'] === 'true' || record['RSVP Required'] === true,
+        ticketLink: record['Ticket Link'] || null,
+      };
+      
+      events.push(specialEvent);
+    }
+    
+    console.log(`Loaded ${events.length} special events from CSV`);
+    return events;
+  } catch (error) {
+    console.error('Error loading special events from CSV:', error);
+    return [];
   }
 }
 

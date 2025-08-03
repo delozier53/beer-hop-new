@@ -10,6 +10,7 @@ import BreweryDetail from "@/pages/brewery-detail";
 import Podcast from "@/pages/podcast";
 import Events from "@/pages/events";
 import EventDetail from "@/pages/event-detail";
+import SpecialEventDetail from "@/pages/special-event-detail";
 import Leaderboard from "@/pages/leaderboard";
 import NotFound from "@/pages/not-found";
 
@@ -23,6 +24,7 @@ function Router() {
         <Route path="/podcast" component={Podcast} />
         <Route path="/events" component={Events} />
         <Route path="/event/:id" component={EventDetail} />
+        <Route path="/special-event/:id" component={SpecialEventDetail} />
         <Route path="/leaderboard" component={Leaderboard} />
         <Route component={NotFound} />
       </Switch>
