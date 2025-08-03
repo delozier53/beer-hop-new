@@ -147,7 +147,7 @@ export default function Welcome() {
               className="h-24 w-auto"
             />
           </div>
-          <p className="text-white">Discover breweries, check in, compete with friends</p>
+          <p className="text-white">Discover breweries and connect with other craft beer lovers</p>
         </div>
 
         {/* Email Step */}
@@ -274,7 +274,12 @@ export default function Welcome() {
 
         {/* Footer */}
         <div className="text-center mt-6 text-sm text-white opacity-80">
-          <p>By continuing, you agree to our Terms of Service and Privacy Policy</p>
+          <p>
+            By continuing, you agree to our{" "}
+            <a href="/terms" className="underline hover:opacity-80">Terms of Service</a>
+            {" "}and{" "}
+            <a href="/privacy" className="underline hover:opacity-80">Privacy Policy</a>
+          </p>
         </div>
       </div>
     </div>

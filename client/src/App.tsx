@@ -15,6 +15,8 @@ import EventDetail from "@/pages/event-detail";
 import SpecialEventDetail from "@/pages/special-event-detail";
 import WeeklyEventsDay from "@/pages/weekly-events-day";
 import Leaderboard from "@/pages/leaderboard";
+import Terms from "@/pages/terms";
+import Privacy from "@/pages/privacy";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -31,25 +33,30 @@ function Router() {
     );
   }
 
-  if (!isAuthenticated) {
-    return <Welcome />;
-  }
-
+  // Show Terms and Privacy pages even when not authenticated
   return (
     <div className="relative">
       <Switch>
-        <Route path="/" component={Profile} />
-        <Route path="/breweries" component={Breweries} />
-        <Route path="/brewery/:id" component={BreweryDetail} />
-        <Route path="/podcast" component={Podcast} />
-        <Route path="/events" component={Events} />
-        <Route path="/event/:id" component={EventDetail} />
-        <Route path="/special-event/:id" component={SpecialEventDetail} />
-        <Route path="/weekly-events/:day" component={WeeklyEventsDay} />
-        <Route path="/leaderboard" component={Leaderboard} />
-        <Route component={NotFound} />
+        <Route path="/terms" component={Terms} />
+        <Route path="/privacy" component={Privacy} />
+        {!isAuthenticated ? (
+          <Route path="*" component={Welcome} />
+        ) : (
+          <>
+            <Route path="/" component={Profile} />
+            <Route path="/breweries" component={Breweries} />
+            <Route path="/brewery/:id" component={BreweryDetail} />
+            <Route path="/podcast" component={Podcast} />
+            <Route path="/events" component={Events} />
+            <Route path="/event/:id" component={EventDetail} />
+            <Route path="/special-event/:id" component={SpecialEventDetail} />
+            <Route path="/weekly-events/:day" component={WeeklyEventsDay} />
+            <Route path="/leaderboard" component={Leaderboard} />
+            <Route component={NotFound} />
+          </>
+        )}
       </Switch>
-      <BottomNavigation />
+      {isAuthenticated && <BottomNavigation />}
     </div>
   );
 }
