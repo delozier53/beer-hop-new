@@ -347,6 +347,7 @@ export interface IStorage {
   getWeeklyEventsByDay(day: string): Promise<WeeklyEvent[]>;
   createWeeklyEvent(event: InsertWeeklyEvent): Promise<WeeklyEvent>;
   updateWeeklyEvent(id: string, updates: Partial<WeeklyEvent>): Promise<WeeklyEvent | undefined>;
+  deleteWeeklyEvent(id: string): Promise<boolean>;
 }
 
 // CSV processing functions
@@ -1408,6 +1409,15 @@ export class DatabaseStorage implements IStorage {
       .where(eq(weeklyEvents.id, id))
       .returning();
     return event || undefined;
+  }
+
+  async deleteWeeklyEvent(id: string): Promise<boolean> {
+    const result = await db
+      .delete(weeklyEvents)
+      .where(eq(weeklyEvents.id, id));
+    
+    // PostgreSQL returns rowCount, not rowsAffected
+    return (result.rowCount || 0) > 0;
   }
 }
 

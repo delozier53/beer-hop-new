@@ -191,7 +191,7 @@ export default function WeeklyEventsDay() {
                 Back
               </Button>
             </Link>
-            <h1 className="text-2xl font-bold text-gray-900">{dayName} Events</h1>
+            <h1 className="text-2xl font-bold text-gray-900">{dayName}</h1>
           </div>
           
           {/* Admin/Owner Create Button */}

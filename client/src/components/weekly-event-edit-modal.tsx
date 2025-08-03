@@ -195,6 +195,48 @@ export default function WeeklyEventEditModal({
     }
   };
 
+  const deleteWeeklyEventMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch(`/api/weekly-events/${event.id}`, {
+        method: 'DELETE',
+        headers: {
+          'x-user-id': 'joshuamdelozier', // TODO: Make this dynamic based on actual user
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete weekly event');
+      }
+
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Weekly event deleted successfully!",
+      });
+      
+      onClose();
+      
+      // Force refresh the data immediately
+      queryClient.invalidateQueries({ queryKey: ['/api/weekly-events'] });
+      queryClient.invalidateQueries({ queryKey: [`/api/weekly-events/${event.day.toLowerCase()}`] });
+      
+      // Force refetch to get the latest data
+      setTimeout(() => {
+        queryClient.refetchQueries({ queryKey: [`/api/weekly-events/${event.day.toLowerCase()}`] });
+      }, 200);
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to delete weekly event. Please try again.",
+        variant: "destructive",
+      });
+      console.error('Error deleting weekly event:', error);
+    },
+  });
+
   const updateWeeklyEventMutation = useMutation({
     mutationFn: async (data: z.infer<typeof formSchema>) => {
       const finalData = {
@@ -443,17 +485,28 @@ export default function WeeklyEventEditModal({
               </div>
             </div>
 
-            <div className="flex justify-end space-x-4 pt-4">
-              <Button type="button" variant="outline" onClick={onClose}>
-                Cancel
-              </Button>
+            <div className="flex justify-between pt-4">
               <Button 
-                type="submit" 
-                className="bg-[#1a5632] hover:bg-[#1a5632]/90"
-                disabled={updateWeeklyEventMutation.isPending}
+                type="button" 
+                variant="destructive" 
+                onClick={() => deleteWeeklyEventMutation.mutate()}
+                disabled={deleteWeeklyEventMutation.isPending}
               >
-                {updateWeeklyEventMutation.isPending ? "Updating..." : "Update Event"}
+                {deleteWeeklyEventMutation.isPending ? "Deleting..." : "Delete Event"}
               </Button>
+              
+              <div className="flex space-x-4">
+                <Button type="button" variant="outline" onClick={onClose}>
+                  Cancel
+                </Button>
+                <Button 
+                  type="submit" 
+                  className="bg-[#1a5632] hover:bg-[#1a5632]/90"
+                  disabled={updateWeeklyEventMutation.isPending}
+                >
+                  {updateWeeklyEventMutation.isPending ? "Updating..." : "Update Event"}
+                </Button>
+              </div>
             </div>
           </form>
         </Form>
