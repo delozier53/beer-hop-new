@@ -511,6 +511,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Event image processing endpoint
+  app.put("/api/event-images", async (req, res) => {
+    try {
+      const { imageUrl } = req.body;
+      const userId = req.headers['x-user-id'] as string;
+      
+      if (!userId) {
+        return res.status(401).json({ message: "User ID required" });
+      }
+
+      const objectStorageService = new ObjectStorageService();
+      const objectPath = await objectStorageService.trySetObjectEntityAclPolicy(
+        imageUrl,
+        {
+          owner: userId,
+          visibility: "public", // Event images should be public
+        },
+      );
+
+      res.status(200).json({
+        objectPath: objectPath,
+      });
+    } catch (error) {
+      console.error("Error processing event image:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
   // Global podcast header image
   app.get("/api/podcast/header", async (req, res) => {
     try {

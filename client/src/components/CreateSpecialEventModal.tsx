@@ -66,19 +66,45 @@ export function CreateSpecialEventModal({ open, onOpenChange }: CreateSpecialEve
     };
   };
 
-  const handleUploadComplete = (result: UploadResult<any, any>) => {
+  const handleUploadComplete = async (result: UploadResult<any, any>) => {
     if (result.successful && result.successful.length > 0) {
       const uploadedFile = result.successful[0];
       const imageUrl = uploadedFile.uploadURL;
       
-      // Update form data with the uploaded image URL
-      setFormData(prev => ({ ...prev, logo: imageUrl }));
-      setUploadedImagePreview(imageUrl);
-      
-      toast({
-        title: "Image uploaded successfully",
-        description: "Event image has been uploaded and will be saved with the event.",
-      });
+      try {
+        // Set ACL policy for the uploaded image
+        const response = await fetch('/api/event-images', {
+          method: 'PUT',
+          headers: {
+            'x-user-id': 'joshuamdelozier',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ imageUrl }),
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          const normalizedPath = data.objectPath;
+          
+          // Update form data with the normalized object path
+          setFormData(prev => ({ ...prev, logo: normalizedPath }));
+          setUploadedImagePreview(normalizedPath);
+          
+          toast({
+            title: "Image uploaded successfully",
+            description: "Event image has been uploaded and will be saved with the event.",
+          });
+        } else {
+          throw new Error('Failed to process image');
+        }
+      } catch (error) {
+        console.error('Error processing image:', error);
+        toast({
+          title: "Image processing failed",
+          description: "Please try uploading again.",
+          variant: "destructive",
+        });
+      }
     }
   };
 
