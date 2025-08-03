@@ -15,6 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Camera, Settings, ImageIcon } from "lucide-react";
 import type { User } from "@shared/schema";
 import { ObjectUploader } from "@/components/ObjectUploader";
+import defaultHeaderImage from "@assets/BH Card Teal_1754198405349.png";
 
 interface EditProfileDialogProps {
   user: User;
@@ -156,7 +157,7 @@ export function EditProfileDialog({ user, userId }: EditProfileDialogProps) {
             <div className="flex flex-col space-y-3">
               <div className="w-full h-24 rounded-lg overflow-hidden bg-gray-100">
                 <img 
-                  src={headerImage || '/public-objects/default-header.png'} 
+                  src={headerImage || defaultHeaderImage} 
                   alt="Header preview" 
                   className="w-full h-full object-cover"
                 />
@@ -187,7 +188,7 @@ export function EditProfileDialog({ user, userId }: EditProfileDialogProps) {
                     }
                   }
                 }}
-                buttonClassName="w-full"
+                buttonClassName="w-full bg-[#ff55e1] hover:bg-[#ff55e1]/90 text-white"
               >
                 <div className="flex items-center gap-2">
                   <ImageIcon className="w-4 h-4" />

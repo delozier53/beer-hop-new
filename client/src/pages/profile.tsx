@@ -6,6 +6,7 @@ import { Medal, Trophy, Heart, MapPin, Settings } from "lucide-react";
 import { Link } from "wouter";
 import { EditProfileDialog } from "@/components/edit-profile-dialog";
 import type { User, Badge, Brewery } from "@shared/schema";
+import defaultHeaderImage from "@assets/BH Card Teal_1754198405349.png";
 
 const CURRENT_USER_ID = "joshuamdelozier";
 
@@ -65,7 +66,7 @@ export default function Profile() {
       <div 
         className="hero-banner from-amber to-hops relative"
         style={{
-          backgroundImage: `url('${user.headerImage || '/public-objects/default-header.png'}')`
+          backgroundImage: `url('${user.headerImage || defaultHeaderImage}')`
         }}
       >
         <div className="hero-overlay" />
