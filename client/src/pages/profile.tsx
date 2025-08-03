@@ -97,12 +97,12 @@ export default function Profile() {
                 <div className="text-xs text-gray-600">Check-ins</div>
               </div>
               <div>
-                <div className="text-2xl font-bold text-hops">{badge?.name || 'No Badge'}</div>
-                <div className="text-xs text-gray-600">Badge</div>
-              </div>
-              <div>
                 <div className="text-2xl font-bold text-accent-pink">#{leaderboardRank + 1}</div>
                 <div className="text-xs text-gray-600">Rank</div>
+              </div>
+              <div>
+                <div className="text-2xl font-bold text-hops">{badge?.name?.replace(' Hop', '') || 'No Badge'}</div>
+                <div className="text-xs text-gray-600">Badge</div>
               </div>
             </div>
           </CardContent>
