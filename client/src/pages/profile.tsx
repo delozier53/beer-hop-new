@@ -33,6 +33,18 @@ export default function Profile() {
     queryKey: ["/api/leaderboard"],
   }).data?.findIndex(u => u.id === CURRENT_USER_ID) || 0;
 
+  const removeFavoriteMutation = useMutation({
+    mutationFn: async (breweryId: string) => {
+      return apiRequest(`/api/users/${CURRENT_USER_ID}/favorites`, {
+        method: "PUT",
+        body: { breweryId }
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/users", CURRENT_USER_ID] });
+    }
+  });
+
   if (userLoading) {
     return (
       <div className="mobile-container">
@@ -155,8 +167,8 @@ export default function Profile() {
           ) : (
             <div className="space-y-3">
               {favoriteBreweries.map((brewery) => (
-                <Link key={brewery.id} href={`/brewery/${brewery.id}`}>
-                  <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                <div key={brewery.id} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                  <Link href={`/brewery/${brewery.id}`} className="flex items-center space-x-3 flex-1">
                     <img 
                       src={brewery.image} 
                       alt={brewery.name}
@@ -169,9 +181,21 @@ export default function Profile() {
                         {brewery.city}, {brewery.state}
                       </p>
                     </div>
-                    <Heart className="w-5 h-5 text-red-500" fill="currentColor" />
-                  </div>
-                </Link>
+                  </Link>
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      removeFavoriteMutation.mutate(brewery.id);
+                    }}
+                    disabled={removeFavoriteMutation.isPending}
+                    className="p-1 hover:bg-red-100 rounded transition-colors"
+                  >
+                    <Heart 
+                      className="w-5 h-5 text-red-500" 
+                      fill="currentColor"
+                    />
+                  </button>
+                </div>
               ))}
             </div>
           )}
