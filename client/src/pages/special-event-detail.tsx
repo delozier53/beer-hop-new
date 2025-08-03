@@ -54,20 +54,20 @@ export default function SpecialEventDetail() {
       <div className="px-6 py-6">
         {/* Back Button */}
         <Link href="/events">
-          <Button variant="ghost" className="mb-4 p-0">
+          <Button variant="outline" className="mb-4">
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Events
           </Button>
         </Link>
 
         <Card className="overflow-hidden">
-          {/* Large Event Photo */}
+          {/* Full Event Photo - shows complete image regardless of dimensions */}
           {event.logo && (
-            <div className="w-full h-64 overflow-hidden">
+            <div className="w-full">
               <img 
                 src={event.logo} 
                 alt={event.event}
-                className="w-full h-full object-cover"
+                className="w-full h-auto"
               />
             </div>
           )}
