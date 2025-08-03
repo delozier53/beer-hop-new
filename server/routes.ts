@@ -122,6 +122,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.put("/api/breweries/:id", async (req, res) => {
+    try {
+      const updates = req.body;
+      const updatedBrewery = await storage.updateBrewery(req.params.id, updates);
+      
+      if (!updatedBrewery) {
+        return res.status(404).json({ message: "Brewery not found" });
+      }
+
+      res.json(updatedBrewery);
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Check-ins
   app.post("/api/checkins", async (req, res) => {
     try {

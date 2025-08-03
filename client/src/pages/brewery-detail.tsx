@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { 
   ArrowLeft, 
   Edit, 
@@ -32,6 +34,21 @@ export default function BreweryDetail() {
   const queryClient = useQueryClient();
   const [notes, setNotes] = useState("");
   const [isNotesDialogOpen, setIsNotesDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editFormData, setEditFormData] = useState({
+    name: "",
+    address: "",
+    city: "",
+    state: "",
+    zipCode: "",
+    phone: "",
+    hours: "",
+    about: "",
+    image: "",
+    website: "",
+    facebook: "",
+    instagram: ""
+  });
 
   const { data: brewery, isLoading } = useQuery<Brewery>({
     queryKey: ["/api/breweries", id],
@@ -79,6 +96,36 @@ export default function BreweryDetail() {
       toast({
         title: "Favorites updated",
         description: "Your favorite breweries have been updated.",
+      });
+    }
+  });
+
+  const updateBreweryMutation = useMutation({
+    mutationFn: async (updates: any) => {
+      const response = await apiRequest("PUT", `/api/breweries/${id}`, {
+        ...updates,
+        socialLinks: {
+          website: updates.website || null,
+          facebook: updates.facebook || null,
+          instagram: updates.instagram || null
+        }
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Brewery updated!",
+        description: "Brewery information has been updated successfully.",
+      });
+      setIsEditDialogOpen(false);
+      queryClient.invalidateQueries({ queryKey: ["/api/breweries", id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/breweries"] });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update brewery. Please try again.",
+        variant: "destructive",
       });
     }
   });
@@ -151,11 +198,23 @@ export default function BreweryDetail() {
                 size="sm"
                 className="text-gray-600 hover:text-gray-800"
                 onClick={() => {
-                  // TODO: Navigate to edit brewery page
-                  toast({
-                    title: "Edit Mode",
-                    description: "Brewery editing functionality coming soon.",
-                  });
+                  if (brewery) {
+                    setEditFormData({
+                      name: brewery.name,
+                      address: brewery.address,
+                      city: brewery.city,
+                      state: brewery.state,
+                      zipCode: brewery.zipCode,
+                      phone: brewery.phone || "",
+                      hours: brewery.hours || "",
+                      about: brewery.about || "",
+                      image: brewery.image || "",
+                      website: brewery.socialLinks?.website || "",
+                      facebook: brewery.socialLinks?.facebook || "",
+                      instagram: brewery.socialLinks?.instagram || ""
+                    });
+                    setIsEditDialogOpen(true);
+                  }
                 }}
               >
                 <Edit className="w-4 h-4 mr-1" />
@@ -383,6 +442,138 @@ export default function BreweryDetail() {
           </Card>
         )}
       </div>
+
+      {/* Edit Brewery Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Brewery</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="name">Name</Label>
+              <Input
+                id="name"
+                value={editFormData.name}
+                onChange={(e) => setEditFormData({...editFormData, name: e.target.value})}
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="address">Address</Label>
+              <Input
+                id="address"
+                value={editFormData.address}
+                onChange={(e) => setEditFormData({...editFormData, address: e.target.value})}
+              />
+            </div>
+            
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label htmlFor="city">City</Label>
+                <Input
+                  id="city"
+                  value={editFormData.city}
+                  onChange={(e) => setEditFormData({...editFormData, city: e.target.value})}
+                />
+              </div>
+              <div>
+                <Label htmlFor="zipCode">Zip Code</Label>
+                <Input
+                  id="zipCode"
+                  value={editFormData.zipCode}
+                  onChange={(e) => setEditFormData({...editFormData, zipCode: e.target.value})}
+                />
+              </div>
+            </div>
+            
+            <div>
+              <Label htmlFor="phone">Phone</Label>
+              <Input
+                id="phone"
+                value={editFormData.phone}
+                onChange={(e) => setEditFormData({...editFormData, phone: e.target.value})}
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="hours">Hours</Label>
+              <Textarea
+                id="hours"
+                value={editFormData.hours}
+                onChange={(e) => setEditFormData({...editFormData, hours: e.target.value})}
+                rows={3}
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="about">About</Label>
+              <Textarea
+                id="about"
+                value={editFormData.about}
+                onChange={(e) => setEditFormData({...editFormData, about: e.target.value})}
+                rows={4}
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="image">Header Image URL</Label>
+              <Input
+                id="image"
+                value={editFormData.image}
+                onChange={(e) => setEditFormData({...editFormData, image: e.target.value})}
+                placeholder="https://example.com/image.jpg"
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="website">Website</Label>
+              <Input
+                id="website"
+                value={editFormData.website}
+                onChange={(e) => setEditFormData({...editFormData, website: e.target.value})}
+                placeholder="https://brewery-website.com"
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="facebook">Facebook</Label>
+              <Input
+                id="facebook"
+                value={editFormData.facebook}
+                onChange={(e) => setEditFormData({...editFormData, facebook: e.target.value})}
+                placeholder="https://facebook.com/brewery"
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="instagram">Instagram</Label>
+              <Input
+                id="instagram"
+                value={editFormData.instagram}
+                onChange={(e) => setEditFormData({...editFormData, instagram: e.target.value})}
+                placeholder="https://instagram.com/brewery"
+              />
+            </div>
+            
+            <div className="flex justify-end space-x-2 pt-4">
+              <Button 
+                variant="outline" 
+                onClick={() => setIsEditDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={() => updateBreweryMutation.mutate(editFormData)}
+                disabled={updateBreweryMutation.isPending}
+                className="bg-green-600 hover:bg-green-700"
+              >
+                {updateBreweryMutation.isPending ? "Saving..." : "Save Changes"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
