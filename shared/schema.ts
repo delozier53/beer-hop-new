@@ -95,7 +95,9 @@ export const badges = pgTable("badges", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   name: text("name").notNull(),
   description: text("description").notNull(),
-  requiredCheckins: integer("required_checkins").notNull(),
+  minCheckins: integer("min_checkins").notNull(),
+  maxCheckins: integer("max_checkins"),
+  nextBadgeAt: integer("next_badge_at"),
   icon: text("icon").notNull(),
 });
 

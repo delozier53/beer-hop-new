@@ -109,8 +109,16 @@ export default function Profile() {
         {badge && (
           <div className="bg-gradient-to-r from-hops to-hops-dark rounded-xl p-4 mb-4 text-white">
             <div className="flex items-center space-x-3">
-              <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
-                <Medal className="w-6 h-6" />
+              <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center overflow-hidden">
+                {badge.icon.startsWith('http') ? (
+                  <img 
+                    src={badge.icon} 
+                    alt={badge.name}
+                    className="w-10 h-10 object-contain"
+                  />
+                ) : (
+                  <span className="text-2xl">{badge.icon}</span>
+                )}
               </div>
               <div>
                 <h3 className="font-semibold">{badge.name}</h3>

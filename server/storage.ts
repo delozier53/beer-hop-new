@@ -153,6 +153,75 @@ function loadUsersFromCSV(): User[] {
   }
 }
 
+function loadBadgesFromCSV(): Badge[] {
+  try {
+    const csvPath = path.join(process.cwd(), 'attached_assets', 'Badges1_1754190437299.csv');
+    if (!fs.existsSync(csvPath)) {
+      console.log('Badge CSV file not found, using fallback badges');
+      return getFallbackBadges();
+    }
+    
+    const csvContent = fs.readFileSync(csvPath, 'utf-8');
+    const csvBadges = parseCSV(csvContent);
+    
+    const badges = csvBadges
+      .filter(badge => badge.rank && badge.badge_no)
+      .map((csvBadge, index) => {
+        // Convert Google Drive links to direct image URLs
+        let icon = csvBadge.badge_icon;
+        if (icon && icon.includes('drive.google.com')) {
+          const fileId = icon.match(/\/d\/([a-zA-Z0-9-_]+)/)?.[1];
+          if (fileId) {
+            icon = `https://drive.google.com/uc?id=${fileId}`;
+          }
+        }
+        
+        const minCheckins = parseInt(csvBadge.min_checkins) || 0;
+        const maxCheckins = csvBadge.max_checkins ? parseInt(csvBadge.max_checkins) : null;
+        const nextBadgeAt = csvBadge.next_badge_at ? parseInt(csvBadge.next_badge_at) : null;
+        
+        return {
+          id: `badge${index + 1}`,
+          name: csvBadge.rank,
+          description: csvBadge.badge_no,
+          minCheckins,
+          maxCheckins,
+          nextBadgeAt,
+          icon
+        };
+      });
+    
+    console.log(`Loaded ${badges.length} badges from CSV`);
+    return badges;
+  } catch (error) {
+    console.error('Error loading badges CSV:', error);
+    return getFallbackBadges();
+  }
+}
+
+function getFallbackBadges(): Badge[] {
+  return [
+    {
+      id: "1",
+      name: "White Hop",
+      description: "Badge 1",
+      minCheckins: 1,
+      maxCheckins: 4,
+      nextBadgeAt: 5,
+      icon: "🍺"
+    },
+    {
+      id: "2", 
+      name: "Yellow Hop",
+      description: "Badge 2",
+      minCheckins: 5,
+      maxCheckins: 9,
+      nextBadgeAt: 10,
+      icon: "🏅"
+    }
+  ];
+}
+
 function getFallbackUsers(): User[] {
   return [
     {
@@ -217,38 +286,8 @@ export class MemStorage implements IStorage {
   }
 
   private initializeData() {
-    // Initialize badges
-    const badgesList: Badge[] = [
-      {
-        id: "1",
-        name: "Beer Newbie",
-        description: "First brewery check-in",
-        requiredCheckins: 1,
-        icon: "🍺"
-      },
-      {
-        id: "2", 
-        name: "Hop Enthusiast",
-        description: "25+ brewery check-ins",
-        requiredCheckins: 25,
-        icon: "🏅"
-      },
-      {
-        id: "3",
-        name: "Brewery Explorer",
-        description: "50+ brewery check-ins", 
-        requiredCheckins: 50,
-        icon: "🎖️"
-      },
-      {
-        id: "4",
-        name: "Beer Master",
-        description: "100+ brewery check-ins",
-        requiredCheckins: 100,
-        icon: "👑"
-      }
-    ];
-
+    // Initialize badges from CSV
+    const badgesList = loadBadgesFromCSV();
     badgesList.forEach(badge => this.badges.set(badge.id, badge));
 
     // Initialize sample breweries
@@ -657,12 +696,15 @@ export class MemStorage implements IStorage {
 
   // Badges
   async getBadges(): Promise<Badge[]> {
-    return Array.from(this.badges.values()).sort((a, b) => a.requiredCheckins - b.requiredCheckins);
+    return Array.from(this.badges.values()).sort((a, b) => a.minCheckins - b.minCheckins);
   }
 
   async getUserBadge(checkins: number): Promise<Badge | undefined> {
     const badges = await this.getBadges();
-    return badges.reverse().find(badge => checkins >= badge.requiredCheckins);
+    return badges
+      .sort((a, b) => b.minCheckins - a.minCheckins)
+      .find(badge => checkins >= badge.minCheckins && 
+                    (badge.maxCheckins === null || checkins <= badge.maxCheckins));
   }
 }
 
