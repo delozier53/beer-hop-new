@@ -461,7 +461,7 @@ export default function Events() {
                         </p>
                         <div className="flex items-center text-sm text-gray-600 mb-2">
                           <Calendar className="w-3 h-3 mr-1" />
-                          <span className="mr-3">{formatEventDate(event.date)}</span>
+                          <span className="mr-3">{formatEventDate(event.date.toString())}</span>
                           <Clock className="w-3 h-3 mr-1" />
                           <span>{event.startTime}</span>
                         </div>

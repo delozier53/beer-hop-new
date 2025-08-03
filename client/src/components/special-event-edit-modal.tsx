@@ -12,6 +12,26 @@ import { ObjectUploader } from "@/components/ObjectUploader";
 import type { SpecialEvent } from "@shared/schema";
 import type { UploadResult } from "@uppy/core";
 
+// Helper function to convert object storage paths to proper URLs
+function getImageUrl(imagePath: string): string {
+  if (!imagePath) return '';
+  
+  // If it's already a full URL, return as is
+  if (imagePath.startsWith('http')) {
+    return imagePath;
+  }
+  
+  // Convert object storage path to accessible URL
+  if (imagePath.startsWith('/') && imagePath.includes('uploads/')) {
+    // Extract the object ID from the path
+    const parts = imagePath.split('/');
+    const objectId = parts[parts.length - 1];
+    return `/objects/uploads/${objectId}`;
+  }
+  
+  return imagePath;
+}
+
 interface SpecialEventEditModalProps {
   event: SpecialEvent;
   isOpen: boolean;
@@ -280,7 +300,7 @@ export function SpecialEventEditModal({ event, isOpen, onClose }: SpecialEventEd
               {formData.logo && (
                 <div className="w-full">
                   <img 
-                    src={formData.logo} 
+                    src={getImageUrl(formData.logo)} 
                     alt="Current event image"
                     className="w-full h-32 object-cover rounded-md border"
                     onError={(e) => {
