@@ -131,16 +131,15 @@ export default function Breweries() {
                     className="w-24 h-24 object-cover"
                   />
                   <div className="flex-1 p-4">
+                    <h3 className="font-semibold text-gray-900 mb-1">{brewery.name}</h3>
+                    <p className="text-sm text-gray-600">
+                      {brewery.city}, {brewery.state}
+                    </p>
                     {brewery.distance && (
-                      <div className="text-sm font-medium text-hops mb-1">
+                      <div className="text-sm font-medium text-hops mt-1">
                         {brewery.distance} mi
                       </div>
                     )}
-                    <h3 className="font-semibold text-gray-900 mb-1">{brewery.name}</h3>
-                    <p className="text-sm text-gray-600 mb-2">
-                      {brewery.address}, {brewery.city}, {brewery.state}
-                    </p>
-
                   </div>
                 </div>
               </Card>
