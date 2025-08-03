@@ -369,7 +369,7 @@ export default function Events() {
                       </div>
                       <div className="flex items-center text-sm text-gray-600 mb-3">
                         <Calendar className="w-4 h-4 mr-1" />
-                        <span className="mr-3">{formatEventDate(event.date)}</span>
+                        <span className="mr-3" title={`Raw: ${event.date}`}>{formatEventDate(event.date)}</span>
                         <Clock className="w-4 h-4 mr-1" />
                         <span>{event.time}</span>
                       </div>
@@ -429,7 +429,7 @@ export default function Events() {
                         </p>
                         <div className="flex items-center text-sm text-gray-600 mb-2">
                           <Calendar className="w-3 h-3 mr-1" />
-                          <span className="mr-3">{formatEventDate(event.date)}</span>
+                          <span className="mr-3" title={`Raw: ${event.date}`}>{formatEventDate(event.date)}</span>
                           <Clock className="w-3 h-3 mr-1" />
                           <span>{event.startTime}</span>
                         </div>
