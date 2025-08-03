@@ -61,10 +61,7 @@ export default function Podcast() {
         duration: "60", // Default 60 minutes
         releaseDate: new Date(data.releaseDate),
       };
-      return apiRequest("/api/podcast-episodes", {
-        method: "POST",
-        body: JSON.stringify(episodeData),
-      });
+      return apiRequest("POST", "/api/podcast-episodes", episodeData);
     },
     onSuccess: () => {
       toast({
@@ -90,12 +87,21 @@ export default function Podcast() {
 
   const handleImageUpload = async () => {
     try {
-      const response = await apiRequest("/api/objects/upload", {
+      const response = await fetch("/api/objects/upload", {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
       });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
       return {
         method: "PUT" as const,
-        url: response.uploadURL,
+        url: data.uploadURL,
       };
     } catch (error) {
       console.error("Error getting upload URL:", error);
@@ -103,15 +109,42 @@ export default function Podcast() {
     }
   };
 
-  const handleUploadComplete = (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
+  const handleUploadComplete = async (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
     if (result.successful && result.successful.length > 0) {
       const uploadedFile = result.successful[0];
-      const imageUrl = uploadedFile.uploadURL;
-      form.setValue("image", imageUrl);
-      toast({
-        title: "Success",
-        description: "Image uploaded successfully!",
-      });
+      const uploadURL = uploadedFile.uploadURL;
+      
+      try {
+        // Normalize the upload URL to get the object path
+        const response = await fetch("/api/objects/normalize", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ url: uploadURL }),
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          form.setValue("image", data.objectPath);
+        } else {
+          // Fallback to using the upload URL directly
+          form.setValue("image", uploadURL);
+        }
+        
+        toast({
+          title: "Success",
+          description: "Image uploaded successfully!",
+        });
+      } catch (error) {
+        console.error("Error normalizing image URL:", error);
+        // Fallback to using the upload URL directly
+        form.setValue("image", uploadURL);
+        toast({
+          title: "Success",
+          description: "Image uploaded successfully!",
+        });
+      }
     }
   };
 
