@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ObjectUploader } from "@/components/ObjectUploader";
 import { 
   ArrowLeft, 
   Edit, 
@@ -45,9 +46,13 @@ export default function BreweryDetail() {
     hours: "",
     about: "",
     image: "",
+    logo: "",
     website: "",
     facebook: "",
-    instagram: ""
+    instagram: "",
+    x: "",
+    threads: "",
+    tiktok: ""
   });
 
   const { data: brewery, isLoading } = useQuery<Brewery>({
@@ -107,7 +112,10 @@ export default function BreweryDetail() {
         socialLinks: {
           website: updates.website || null,
           facebook: updates.facebook || null,
-          instagram: updates.instagram || null
+          instagram: updates.instagram || null,
+          x: updates.x || null,
+          threads: updates.threads || null,
+          tiktok: updates.tiktok || null
         }
       });
       return response.json();
@@ -180,7 +188,16 @@ export default function BreweryDetail() {
           <ArrowLeft className="w-5 h-5" />
         </button>
         
-        {/* Removed logo box from header as requested */}
+        {/* Brewery Logo - Square centered at bottom */}
+        {brewery.logo && (
+          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2">
+            <img 
+              src={brewery.logo} 
+              alt={`${brewery.name} logo`}
+              className="w-16 h-16 rounded-lg object-cover border-2 border-white shadow-lg"
+            />
+          </div>
+        )}
       </div>
 
       <div className="px-6 py-6">
@@ -209,9 +226,13 @@ export default function BreweryDetail() {
                       hours: brewery.hours || "",
                       about: brewery.about || "",
                       image: brewery.image || "",
+                      logo: brewery.logo || "",
                       website: brewery.socialLinks?.website || "",
                       facebook: brewery.socialLinks?.facebook || "",
-                      instagram: brewery.socialLinks?.instagram || ""
+                      instagram: brewery.socialLinks?.instagram || "",
+                      x: brewery.socialLinks?.x || "",
+                      threads: brewery.socialLinks?.threads || "",
+                      tiktok: brewery.socialLinks?.tiktok || ""
                     });
                     setIsEditDialogOpen(true);
                   }
@@ -517,43 +538,141 @@ export default function BreweryDetail() {
             </div>
             
             <div>
-              <Label htmlFor="image">Header Image URL</Label>
-              <Input
-                id="image"
-                value={editFormData.image}
-                onChange={(e) => setEditFormData({...editFormData, image: e.target.value})}
-                placeholder="https://example.com/image.jpg"
-              />
+              <Label htmlFor="image">Header Image</Label>
+              <div className="space-y-2">
+                <Input
+                  id="image"
+                  value={editFormData.image}
+                  onChange={(e) => setEditFormData({...editFormData, image: e.target.value})}
+                  placeholder="Current image URL or upload new..."
+                />
+                <ObjectUploader
+                  maxNumberOfFiles={1}
+                  maxFileSize={10485760}
+                  onGetUploadParameters={async () => {
+                    const response = await apiRequest("POST", "/api/objects/upload", {});
+                    const data = await response.json();
+                    return {
+                      method: "PUT" as const,
+                      url: data.uploadURL,
+                    };
+                  }}
+                  onComplete={(result) => {
+                    if (result.successful && result.successful[0]) {
+                      const uploadURL = result.successful[0].uploadURL;
+                      setEditFormData({...editFormData, image: uploadURL});
+                      toast({
+                        title: "Header image uploaded!",
+                        description: "Your brewery header image has been uploaded successfully.",
+                      });
+                    }
+                  }}
+                  buttonClassName="variant-outline"
+                >
+                  Upload Header Image
+                </ObjectUploader>
+              </div>
             </div>
             
             <div>
-              <Label htmlFor="website">Website</Label>
-              <Input
-                id="website"
-                value={editFormData.website}
-                onChange={(e) => setEditFormData({...editFormData, website: e.target.value})}
-                placeholder="https://brewery-website.com"
-              />
+              <Label htmlFor="logo">Brewery Logo</Label>
+              <div className="space-y-2">
+                <Input
+                  id="logo"
+                  value={editFormData.logo}
+                  onChange={(e) => setEditFormData({...editFormData, logo: e.target.value})}
+                  placeholder="Current logo URL or upload new..."
+                />
+                <ObjectUploader
+                  maxNumberOfFiles={1}
+                  maxFileSize={10485760}
+                  onGetUploadParameters={async () => {
+                    const response = await apiRequest("POST", "/api/objects/upload", {});
+                    const data = await response.json();
+                    return {
+                      method: "PUT" as const,
+                      url: data.uploadURL,
+                    };
+                  }}
+                  onComplete={(result) => {
+                    if (result.successful && result.successful[0]) {
+                      const uploadURL = result.successful[0].uploadURL;
+                      setEditFormData({...editFormData, logo: uploadURL});
+                      toast({
+                        title: "Logo uploaded!",
+                        description: "Your brewery logo has been uploaded successfully.",
+                      });
+                    }
+                  }}
+                  buttonClassName="variant-outline"
+                >
+                  Upload Logo
+                </ObjectUploader>
+              </div>
             </div>
             
-            <div>
-              <Label htmlFor="facebook">Facebook</Label>
-              <Input
-                id="facebook"
-                value={editFormData.facebook}
-                onChange={(e) => setEditFormData({...editFormData, facebook: e.target.value})}
-                placeholder="https://facebook.com/brewery"
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="instagram">Instagram</Label>
-              <Input
-                id="instagram"
-                value={editFormData.instagram}
-                onChange={(e) => setEditFormData({...editFormData, instagram: e.target.value})}
-                placeholder="https://instagram.com/brewery"
-              />
+            <div className="space-y-4">
+              <Label className="text-base font-semibold">Social Media Links</Label>
+              
+              <div>
+                <Label htmlFor="website">Website</Label>
+                <Input
+                  id="website"
+                  value={editFormData.website}
+                  onChange={(e) => setEditFormData({...editFormData, website: e.target.value})}
+                  placeholder="https://brewery-website.com"
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="facebook">Facebook</Label>
+                <Input
+                  id="facebook"
+                  value={editFormData.facebook}
+                  onChange={(e) => setEditFormData({...editFormData, facebook: e.target.value})}
+                  placeholder="https://facebook.com/brewery"
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="instagram">Instagram</Label>
+                <Input
+                  id="instagram"
+                  value={editFormData.instagram}
+                  onChange={(e) => setEditFormData({...editFormData, instagram: e.target.value})}
+                  placeholder="https://instagram.com/brewery"
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="x">X (Twitter)</Label>
+                <Input
+                  id="x"
+                  value={editFormData.x}
+                  onChange={(e) => setEditFormData({...editFormData, x: e.target.value})}
+                  placeholder="https://x.com/brewery"
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="threads">Threads</Label>
+                <Input
+                  id="threads"
+                  value={editFormData.threads}
+                  onChange={(e) => setEditFormData({...editFormData, threads: e.target.value})}
+                  placeholder="https://threads.net/@brewery"
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="tiktok">TikTok</Label>
+                <Input
+                  id="tiktok"
+                  value={editFormData.tiktok}
+                  onChange={(e) => setEditFormData({...editFormData, tiktok: e.target.value})}
+                  placeholder="https://tiktok.com/@brewery"
+                />
+              </div>
             </div>
             
             <div className="flex justify-end space-x-2 pt-4">
