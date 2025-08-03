@@ -557,14 +557,27 @@ export default function BreweryDetail() {
                       url: data.uploadURL,
                     };
                   }}
-                  onComplete={(result) => {
+                  onComplete={async (result) => {
                     if (result.successful && result.successful[0]) {
                       const uploadURL = result.successful[0].uploadURL;
-                      setEditFormData({...editFormData, image: uploadURL});
-                      toast({
-                        title: "Header image uploaded!",
-                        description: "Your brewery header image has been uploaded successfully.",
-                      });
+                      try {
+                        // Convert the upload URL to an object path using the objectStorage service
+                        const response = await apiRequest("POST", "/api/objects/normalize", { url: uploadURL });
+                        const data = await response.json();
+                        setEditFormData({...editFormData, image: data.objectPath});
+                        toast({
+                          title: "Header image uploaded!",
+                          description: "Your brewery header image has been uploaded successfully.",
+                        });
+                      } catch (error) {
+                        console.error("Error normalizing upload URL:", error);
+                        // Fallback to direct URL
+                        setEditFormData({...editFormData, image: uploadURL});
+                        toast({
+                          title: "Header image uploaded!",
+                          description: "Your brewery header image has been uploaded successfully.",
+                        });
+                      }
                     }
                   }}
                   buttonClassName="w-full border-gray-300"
@@ -594,14 +607,27 @@ export default function BreweryDetail() {
                       url: data.uploadURL,
                     };
                   }}
-                  onComplete={(result) => {
+                  onComplete={async (result) => {
                     if (result.successful && result.successful[0]) {
                       const uploadURL = result.successful[0].uploadURL;
-                      setEditFormData({...editFormData, logo: uploadURL});
-                      toast({
-                        title: "Logo uploaded!",
-                        description: "Your brewery logo has been uploaded successfully.",
-                      });
+                      try {
+                        // Convert the upload URL to an object path using the objectStorage service
+                        const response = await apiRequest("POST", "/api/objects/normalize", { url: uploadURL });
+                        const data = await response.json();
+                        setEditFormData({...editFormData, logo: data.objectPath});
+                        toast({
+                          title: "Logo uploaded!",
+                          description: "Your brewery logo has been uploaded successfully.",
+                        });
+                      } catch (error) {
+                        console.error("Error normalizing upload URL:", error);
+                        // Fallback to direct URL
+                        setEditFormData({...editFormData, logo: uploadURL});
+                        toast({
+                          title: "Logo uploaded!",
+                          description: "Your brewery logo has been uploaded successfully.",
+                        });
+                      }
                     }
                   }}
                   buttonClassName="w-full border-gray-300"
