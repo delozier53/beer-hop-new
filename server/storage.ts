@@ -1195,7 +1195,7 @@ export class DatabaseStorage implements IStorage {
 
   async deletePodcastEpisode(id: string): Promise<boolean> {
     const result = await db.delete(podcastEpisodes).where(eq(podcastEpisodes.id, id));
-    return result.count > 0;
+    return result.rowCount > 0;
   }
 }
 
