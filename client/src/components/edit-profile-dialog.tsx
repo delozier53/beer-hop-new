@@ -30,6 +30,10 @@ export function EditProfileDialog({ user, userId }: EditProfileDialogProps) {
   const updateProfileMutation = useMutation({
     mutationFn: async (updates: { username?: string; profileImage?: string }) => {
       const response = await apiRequest("PUT", `/api/users/${userId}`, updates);
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
+        throw new Error(errorData.message || `HTTP ${response.status}`);
+      }
       return response.json();
     },
     onSuccess: () => {
@@ -40,10 +44,13 @@ export function EditProfileDialog({ user, userId }: EditProfileDialogProps) {
       });
       setOpen(false);
     },
-    onError: () => {
+    onError: (error: Error) => {
+      console.error('Profile update error:', error);
       toast({
         title: "Update failed",
-        description: "Something went wrong. Please try again.",
+        description: error.message.includes('too large') 
+          ? "Image file is too large. Please choose a smaller image."
+          : "Something went wrong. Please try again.",
         variant: "destructive",
       });
     }
