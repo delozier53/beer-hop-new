@@ -108,16 +108,15 @@ export default function Profile() {
           </CardContent>
         </Card>
 
-        {/* Current Badge */}
+        {/* Badge */}
         {badge && (
           <Card className="mb-4">
             <CardContent className="p-4 text-center">
-              <h3 className="text-lg font-semibold mb-3">Current Badge</h3>
               <div className="flex flex-col items-center">
                 <img 
                   src={badge.icon} 
                   alt={badge.name}
-                  className="w-24 h-24 object-contain rounded-lg mb-2"
+                  className="w-[400px] h-[400px] object-contain rounded-lg"
                   onError={(e) => {
                     console.log('Badge image failed to load:', badge.icon);
                     // Try alternative Google Drive URL format
@@ -127,10 +126,8 @@ export default function Profile() {
                     }
                   }}
                 />
-                <h4 className="font-semibold text-hops">{badge.name}</h4>
-                <p className="text-sm text-gray-600">{badge.description}</p>
                 {badge.nextBadgeAt && (
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-gray-500 mt-2">
                     Next badge at {badge.nextBadgeAt} check-ins
                   </p>
                 )}
