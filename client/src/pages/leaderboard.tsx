@@ -77,6 +77,12 @@ export default function Leaderboard() {
         <p className="text-center text-white/90 text-sm">Top brewers by check-ins</p>
       </div>
 
+      {/* Screen Title */}
+      <div className="px-6 py-4 bg-white border-b">
+        <h2 className="text-2xl font-bold text-gray-900 text-center">Badge Rankings</h2>
+        <p className="text-center text-gray-600 text-sm mt-1">Users grouped by achievement level</p>
+      </div>
+
       {/* All Users */}
       <div className="px-6 py-4">
         {leaderboard.length === 0 ? (
