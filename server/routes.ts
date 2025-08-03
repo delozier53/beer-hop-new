@@ -563,14 +563,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "User ID required" });
       }
 
-      const objectStorageService = new ObjectStorageService();
-      const objectPath = await objectStorageService.trySetObjectEntityAclPolicy(
-        imageUrl,
-        {
-          owner: userId,
-          visibility: "public", // Event images should be public
-        },
-      );
+      // For now, just return the imageUrl as the objectPath since we're using a simplified object storage
+      // The image upload was already successful, we just need to normalize the path
+      let objectPath = imageUrl;
+      
+      // If it's a Google Storage URL, normalize it to our object path format
+      if (imageUrl.startsWith("https://storage.googleapis.com/")) {
+        const url = new URL(imageUrl);
+        objectPath = url.pathname;
+      }
 
       res.status(200).json({
         objectPath: objectPath,
