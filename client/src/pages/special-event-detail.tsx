@@ -11,6 +11,11 @@ import type { SpecialEvent } from "@shared/schema";
 // Helper function to format date from YYYY-MM-DD to "Month Day, Year"
 function formatEventDate(dateString: string): string {
   try {
+    // If already in the correct format (contains comma), return as is
+    if (dateString.includes(',')) {
+      return dateString;
+    }
+    
     // Parse the date string as YYYY-MM-DD
     const [year, month, day] = dateString.split('-').map(Number);
     const date = new Date(year, month - 1, day); // month is 0-indexed
