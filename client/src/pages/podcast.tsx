@@ -29,7 +29,6 @@ export default function Podcast() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingEpisode, setEditingEpisode] = useState<PodcastEpisode | null>(null);
   const [isHeaderImageDialogOpen, setIsHeaderImageDialogOpen] = useState(false);
-  const [headerImage, setHeaderImage] = useState(podcastBanner);
   const { toast } = useToast();
   
   const { data: episodes = [], isLoading } = useQuery<PodcastEpisode[]>({
@@ -39,6 +38,12 @@ export default function Podcast() {
   const { data: user } = useQuery<User>({
     queryKey: ["/api/users/joshuamdelozier"],
   });
+
+  const { data: podcastHeader } = useQuery<{ headerImage: string | null }>({
+    queryKey: ["/api/podcast/header"],
+  });
+
+  const headerImage = podcastHeader?.headerImage || podcastBanner;
   
   const isMasterAdmin = user?.role === 'admin';
 
@@ -251,7 +256,8 @@ export default function Podcast() {
       const uploadURL = uploadedFile.uploadURL;
       
       try {
-        const response = await fetch("/api/objects/normalize", {
+        // First normalize the URL
+        const normalizeResponse = await fetch("/api/objects/normalize", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -259,26 +265,41 @@ export default function Podcast() {
           body: JSON.stringify({ url: uploadURL }),
         });
         
-        if (response.ok) {
-          const data = await response.json();
-          setHeaderImage(data.objectPath);
-        } else {
-          setHeaderImage(uploadURL);
+        let finalImagePath = uploadURL;
+        if (normalizeResponse.ok) {
+          const normalizeData = await normalizeResponse.json();
+          finalImagePath = normalizeData.objectPath;
         }
         
-        setIsHeaderImageDialogOpen(false);
-        
-        toast({
-          title: "Success",
-          description: "Header image updated successfully!",
+        // Now save it as the global podcast header for ALL users
+        const headerResponse = await fetch("/api/podcast/header", {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ headerImage: finalImagePath }),
         });
+        
+        if (headerResponse.ok) {
+          // Invalidate the header query to refresh the header for everyone
+          queryClient.invalidateQueries({ queryKey: ["/api/podcast/header"] });
+          
+          setIsHeaderImageDialogOpen(false);
+          
+          toast({
+            title: "Success",
+            description: "Global podcast header updated successfully! All users will see the new header.",
+          });
+        } else {
+          throw new Error("Failed to save global header image");
+        }
       } catch (error) {
-        console.error("Error normalizing header image URL:", error);
-        setHeaderImage(uploadURL);
+        console.error("Error updating global header image:", error);
         setIsHeaderImageDialogOpen(false);
         toast({
-          title: "Success",
-          description: "Header image updated successfully!",
+          title: "Error",
+          description: "Failed to update global header image. Please try again.",
+          variant: "destructive",
         });
       }
     }

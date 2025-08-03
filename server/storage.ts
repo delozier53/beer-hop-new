@@ -103,7 +103,6 @@ async function loadBreweriesFromCSV(): Promise<Brewery[]> {
         phone,
         podcastUrl,
         photos: [],
-        slideshowPhotos: [],
         tapListUrl: null,
         podcastEpisode: podcastUrl ? `Featured Episode` : null,
         checkins: Math.floor(Math.random() * 200) + 10,
@@ -1011,7 +1010,6 @@ import { db } from "./db";
 import { eq } from "drizzle-orm";
 
 export class DatabaseStorage implements IStorage {
-  private globalPodcastHeader: string | null = null;
   async getUser(id: string): Promise<User | undefined> {
     let [user] = await db.select().from(users).where(eq(users.id, id));
     
@@ -1222,11 +1220,25 @@ export class DatabaseStorage implements IStorage {
 
   // Global podcast header image
   async getPodcastHeaderImage(): Promise<string | null> {
-    return this.globalPodcastHeader;
+    const [setting] = await db.select().from(settings).where(eq(settings.key, 'podcast_header_image'));
+    return setting?.value || null;
   }
 
   async setPodcastHeaderImage(imageUrl: string): Promise<void> {
-    this.globalPodcastHeader = imageUrl;
+    await db
+      .insert(settings)
+      .values({
+        key: 'podcast_header_image',
+        value: imageUrl,
+        updatedAt: new Date(),
+      })
+      .onConflictDoUpdate({
+        target: settings.key,
+        set: {
+          value: imageUrl,
+          updatedAt: new Date(),
+        },
+      });
   }
 }
 

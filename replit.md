@@ -25,9 +25,11 @@ The application uses PostgreSQL as the primary database with Drizzle ORM for typ
 
 Key recent changes (August 2025):
 - Switched from MemStorage to DatabaseStorage for data persistence
-- Updated brewery schema to remove 'about' field and add 'slideshowPhotos' and 'tapListUrl' fields
-- Enhanced brewery edit functionality with 5-photo slideshow support and tap list URL integration
+- Updated brewery schema to remove 'about' field and add 'tapListUrl' field
+- Removed slideshow functionality from brewery screens per user request
 - All 70 authentic Oklahoma breweries from CSV are now properly stored in the database
+- Implemented global podcast header image system - uploaded headers are permanent and visible to ALL users
+- Added global settings table in database for storing app-wide configuration like podcast header
 
 The database schema supports complex relationships between entities, such as users having multiple check-ins and favorite breweries, breweries having associated podcast episodes, and a badge system based on check-in counts. Geographic data uses authentic latitude and longitude coordinates from the provided brewery coordinate CSV file, ensuring accurate distance calculations for Oklahoma breweries.
 

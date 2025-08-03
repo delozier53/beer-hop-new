@@ -44,7 +44,6 @@ export const breweries = pgTable("breweries", {
   phone: text("phone"),
   podcastUrl: text("podcast_url"),
   photos: json("photos").$type<string[]>().notNull().default([]),
-  slideshowPhotos: json("slideshow_photos").$type<string[]>().notNull().default([]),
   tapListUrl: text("tap_list_url"),
   podcastEpisode: text("podcast_episode"),
   checkins: integer("checkins").notNull().default(0),
