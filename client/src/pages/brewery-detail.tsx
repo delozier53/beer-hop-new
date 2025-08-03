@@ -550,8 +550,7 @@ export default function BreweryDetail() {
                   maxNumberOfFiles={1}
                   maxFileSize={10485760}
                   onGetUploadParameters={async () => {
-                    const response = await apiRequest("POST", "/api/objects/upload", {});
-                    const data = await response.json();
+                    const data = await apiRequest("POST", "/api/objects/upload", {});
                     return {
                       method: "PUT" as const,
                       url: data.uploadURL,
@@ -567,7 +566,7 @@ export default function BreweryDetail() {
                       });
                     }
                   }}
-                  buttonClassName="variant-outline"
+                  buttonClassName="w-full border-gray-300"
                 >
                   Upload Header Image
                 </ObjectUploader>
@@ -587,8 +586,7 @@ export default function BreweryDetail() {
                   maxNumberOfFiles={1}
                   maxFileSize={10485760}
                   onGetUploadParameters={async () => {
-                    const response = await apiRequest("POST", "/api/objects/upload", {});
-                    const data = await response.json();
+                    const data = await apiRequest("POST", "/api/objects/upload", {});
                     return {
                       method: "PUT" as const,
                       url: data.uploadURL,
@@ -604,7 +602,7 @@ export default function BreweryDetail() {
                       });
                     }
                   }}
-                  buttonClassName="variant-outline"
+                  buttonClassName="w-full border-gray-300"
                 >
                   Upload Logo
                 </ObjectUploader>
