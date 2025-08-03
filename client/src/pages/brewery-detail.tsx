@@ -133,16 +133,7 @@ export default function BreweryDetail() {
           <ArrowLeft className="w-5 h-5" />
         </button>
         
-        {/* Logo in banner */}
-        <div className="absolute bottom-4 left-4">
-          <img 
-            src={brewery.logo || `https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=200`} 
-            alt={`${brewery.name} logo`}
-            className="w-16 h-16 rounded-lg object-cover border-2 border-white shadow-lg"
-          />
-        </div>
-
-        {/* Removed podcast button from header */}
+        {/* Removed logo box from header as requested */}
       </div>
 
       <div className="px-6 py-6">
@@ -164,7 +155,7 @@ export default function BreweryDetail() {
         {/* Action Buttons */}
         <div className="grid grid-cols-2 gap-3 mb-6">
           <Button 
-            className="bg-amber hover:bg-amber-dark text-white"
+            className="bg-green-600 hover:bg-green-700 text-white"
             onClick={() => checkInMutation.mutate(brewery.id)}
             disabled={checkInMutation.isPending}
           >
@@ -174,7 +165,7 @@ export default function BreweryDetail() {
           
           <Dialog open={isNotesDialogOpen} onOpenChange={setIsNotesDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="bg-brown hover:bg-brown-light text-white">
+              <Button className="bg-pink-600 hover:bg-pink-700 text-white">
                 <StickyNote className="w-4 h-4 mr-2" />
                 Take Notes
               </Button>
@@ -355,9 +346,6 @@ export default function BreweryDetail() {
           <Card className="bg-gradient-to-r from-pink-500 to-pink-600 text-white">
             <CardContent className="p-4">
               <div className="flex items-center space-x-3">
-                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
-                  <Headphones className="w-6 h-6" />
-                </div>
                 <div className="flex-1">
                   <h3 className="font-semibold">Beer Hop Podcast</h3>
                   <p className="text-sm opacity-90">{brewery.podcastEpisode}</p>
