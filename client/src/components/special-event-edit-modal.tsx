@@ -7,8 +7,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
+import { ObjectUploader } from "@/components/ObjectUploader";
 import type { SpecialEvent } from "@shared/schema";
+import type { UploadResult } from "@uppy/core";
 
 interface SpecialEventEditModalProps {
   event: SpecialEvent;
@@ -29,7 +30,6 @@ export function SpecialEventEditModal({ event, isOpen, onClose }: SpecialEventEd
     address: event.address,
     location: event.location || '',
     logo: event.logo || '',
-    taproom: event.taproom,
     rsvpRequired: event.rsvpRequired,
     ticketLink: event.ticketLink || '',
   });
@@ -88,6 +88,43 @@ export function SpecialEventEditModal({ event, isOpen, onClose }: SpecialEventEd
 
   const handleInputChange = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleGetUploadParameters = async () => {
+    const response = await fetch('/api/objects/upload', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    const data = await response.json();
+    return {
+      method: 'PUT' as const,
+      url: data.uploadURL,
+    };
+  };
+
+  const handleUploadComplete = (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
+    if (result.successful.length > 0) {
+      const uploadedFile = result.successful[0];
+      if (uploadedFile.uploadURL) {
+        // Convert the upload URL to an object path
+        const objectPath = convertUploadUrlToObjectPath(uploadedFile.uploadURL);
+        handleInputChange('logo', objectPath);
+        toast({
+          title: "Image uploaded",
+          description: "Event image has been uploaded successfully.",
+        });
+      }
+    }
+  };
+
+  const convertUploadUrlToObjectPath = (uploadUrl: string): string => {
+    // Extract object path from the upload URL and convert to /objects/ format
+    const url = new URL(uploadUrl);
+    const pathParts = url.pathname.split('/');
+    const objectId = pathParts[pathParts.length - 1];
+    return `/objects/uploads/${objectId}`;
   };
 
   return (
@@ -167,7 +204,7 @@ export function SpecialEventEditModal({ event, isOpen, onClose }: SpecialEventEd
           </div>
 
           <div>
-            <Label htmlFor="location">Location (Optional)</Label>
+            <Label htmlFor="location">Location (Leave blank if in your taproom)</Label>
             <Input
               id="location"
               value={formData.location}
@@ -177,13 +214,42 @@ export function SpecialEventEditModal({ event, isOpen, onClose }: SpecialEventEd
           </div>
 
           <div>
-            <Label htmlFor="logo">Logo/Image URL</Label>
-            <Input
-              id="logo"
-              value={formData.logo}
-              onChange={(e) => handleInputChange('logo', e.target.value)}
-              placeholder="https://example.com/image.jpg"
+            <Label htmlFor="logo">Event Image</Label>
+            <div className="space-y-2">
+              {formData.logo && (
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm text-gray-600">Current image:</span>
+                  <span className="text-sm font-mono bg-gray-100 px-2 py-1 rounded">
+                    {formData.logo}
+                  </span>
+                </div>
+              )}
+              <ObjectUploader
+                maxNumberOfFiles={1}
+                maxFileSize={10485760}
+                onGetUploadParameters={handleGetUploadParameters}
+                onComplete={handleUploadComplete}
+                buttonClassName="w-full"
+              >
+                <span>Upload New Image</span>
+              </ObjectUploader>
+              <Input
+                id="logo"
+                value={formData.logo}
+                onChange={(e) => handleInputChange('logo', e.target.value)}
+                placeholder="Or enter image URL directly"
+                className="text-sm"
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="rsvpRequired"
+              checked={formData.rsvpRequired}
+              onCheckedChange={(checked) => handleInputChange('rsvpRequired', checked)}
             />
+            <Label htmlFor="rsvpRequired">RSVP Required</Label>
           </div>
 
           <div>
@@ -194,26 +260,6 @@ export function SpecialEventEditModal({ event, isOpen, onClose }: SpecialEventEd
               onChange={(e) => handleInputChange('ticketLink', e.target.value)}
               placeholder="https://example.com/tickets"
             />
-          </div>
-
-          <div className="flex items-center space-x-6">
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="taproom"
-                checked={formData.taproom}
-                onCheckedChange={(checked) => handleInputChange('taproom', checked)}
-              />
-              <Label htmlFor="taproom">Taproom Event</Label>
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="rsvpRequired"
-                checked={formData.rsvpRequired}
-                onCheckedChange={(checked) => handleInputChange('rsvpRequired', checked)}
-              />
-              <Label htmlFor="rsvpRequired">RSVP Required</Label>
-            </div>
           </div>
 
           <div className="flex justify-end space-x-2 pt-4">
