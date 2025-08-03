@@ -58,9 +58,12 @@ export default function Podcast() {
     <div className="mobile-container pb-20">
       {/* Hero Banner */}
       <div 
-        className="hero-banner from-purple-600 to-pink-600"
+        className="hero-banner"
         style={{
-          backgroundImage: `linear-gradient(rgba(147, 51, 234, 0.8), rgba(219, 39, 119, 0.8)), url('https://images.unsplash.com/photo-1590602847861-f357a9332bbc?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=400')`
+          backgroundImage: `url('@assets/BH_Podcast_Banner (5)_1754202035969.jpg')`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat'
         }}
       >
         <div className="hero-overlay" />
@@ -76,6 +79,10 @@ export default function Podcast() {
               size="sm"
               variant="outline"
               className="text-[#ff55e1] border-[#ff55e1] hover:bg-[#ff55e1] hover:text-white"
+              onClick={() => {
+                // TODO: Implement edit functionality
+                alert('Edit functionality coming soon!');
+              }}
             >
               <Edit className="w-4 h-4 mr-1" />
               Edit
