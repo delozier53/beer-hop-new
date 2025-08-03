@@ -191,11 +191,17 @@ export default function WeeklyEventCreateModal({
         title: "Success",
         description: "Weekly event created successfully!",
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/weekly-events'] });
-      queryClient.invalidateQueries({ queryKey: [`/api/weekly-events/${defaultDay}`] });
-      onClose();
+      // Reset form and close modal first
       form.reset();
       setUploadedImageUrl('');
+      onClose();
+      
+      // Then invalidate cache to refresh the display
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ['/api/weekly-events'] });
+        queryClient.invalidateQueries({ queryKey: [`/api/weekly-events/${defaultDay}`] });
+        queryClient.refetchQueries({ queryKey: [`/api/weekly-events/${defaultDay}`] });
+      }, 100);
     },
     onError: (error) => {
       toast({
