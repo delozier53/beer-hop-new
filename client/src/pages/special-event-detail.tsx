@@ -8,6 +8,22 @@ import { Link, useParams } from "wouter";
 import { SpecialEventEditModal } from "@/components/special-event-edit-modal";
 import type { SpecialEvent } from "@shared/schema";
 
+// Helper function to format date from YYYY-MM-DD to "Month Day, Year"
+function formatEventDate(dateString: string): string {
+  try {
+    // Parse the date string as YYYY-MM-DD
+    const [year, month, day] = dateString.split('-').map(Number);
+    const date = new Date(year, month - 1, day); // month is 0-indexed
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  } catch (error) {
+    return dateString; // Return original if parsing fails
+  }
+}
+
 export default function SpecialEventDetail() {
   const { id } = useParams();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -113,7 +129,7 @@ export default function SpecialEventDetail() {
             {/* Date and Time */}
             <div className="flex items-center text-gray-700 mb-3">
               <Calendar className="w-5 h-5 mr-2" />
-              <span className="mr-4 font-medium">{event.date}</span>
+              <span className="mr-4 font-medium">{formatEventDate(event.date)}</span>
               <Clock className="w-5 h-5 mr-2" />
               <span className="font-medium">{event.time}</span>
             </div>
