@@ -345,49 +345,89 @@ function loadUsersFromCSV(): User[] {
     const csvContent = fs.readFileSync(csvPath, 'utf-8');
     const csvUsers = parseCSV(csvContent);
     
+    // Track used IDs, emails, and usernames to handle duplicates
+    const usedIds = new Set<string>();
+    const usedEmails = new Set<string>();
+    const usedUsernames = new Set<string>();
+    
     const users = csvUsers
       .filter(user => user.email && user.username) // Load ALL users from CSV
+      .filter((csvUser, index, array) => {
+        // Filter out duplicate emails - keep first occurrence
+        if (usedEmails.has(csvUser.email)) {
+          return false;
+        }
+        usedEmails.add(csvUser.email);
+        return true;
+      })
       .map((csvUser, index) => {
         // Create deterministic ID from email to ensure consistency across restarts
-        const id = csvUser.email ? 
-          csvUser.email.split('@')[0].replace(/[^a-zA-Z0-9]/g, '') : 
-          `user${index + 1}`;
+        let id = csvUser.email.includes('joshuamdelozier') ? 
+          'joshuamdelozier' : 
+          csvUser.email.split('@')[0].replace(/[^a-zA-Z0-9]/g, '');
         
+        // Handle duplicate IDs by appending index
+        if (usedIds.has(id)) {
+          id = `${id}_${index}`;
+        }
+        usedIds.add(id);
+        
+        // Handle duplicate usernames by appending suffix
+        let username = csvUser.username;
+        if (usedUsernames.has(username)) {
+          username = `${username}_${index}`;
+        }
+        usedUsernames.add(username);
+        
+        // Handle photo URLs - convert Google Drive and Google Storage URLs properly
         let profileImage = csvUser.photo;
-        if (profileImage && profileImage.includes('drive.google.com')) {
-          const fileId = profileImage.match(/\/d\/([a-zA-Z0-9-_]+)/)?.[1];
-          if (fileId) {
-            profileImage = `https://drive.google.com/uc?id=${fileId}`;
+        if (profileImage) {
+          if (profileImage.includes('drive.google.com')) {
+            const fileId = profileImage.match(/\/d\/([a-zA-Z0-9-_]+)/)?.[1];
+            if (fileId) {
+              profileImage = `https://drive.google.com/uc?id=${fileId}`;
+            }
           }
+          // Google Storage URLs are already direct URLs, keep them as-is
         }
         
         const checkins = parseInt(csvUser.checkins) || 0;
-        const breweryIds = ['1', '2', '3', '4', '5', '6', '7', '8'];
+        const breweryIds = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'];
         let favoriteBreweries: string[] = [];
         
+        // Generate favorites based on check-in count - more check-ins = more favorites
         if (checkins > 0) {
-          const numFavorites = Math.min(Math.floor(checkins / 20) + 1, 3);
+          const numFavorites = Math.min(Math.floor(checkins / 30) + 1, 4);
           const shuffled = [...breweryIds].sort(() => Math.random() - 0.5);
           favoriteBreweries = shuffled.slice(0, numFavorites);
+        }
+        
+        // Determine role from CSV flags
+        let role = 'user';
+        if (csvUser.master_admin === 'TRUE') {
+          role = 'admin';
+        } else if (csvUser.brewery_owner === 'TRUE') {
+          role = 'brewery_owner';
         }
         
         return {
           id,
           email: csvUser.email,
-          username: csvUser.username || `User${index + 1}`,
-          name: csvUser.username || `User${index + 1}`,
+          username: username,
+          name: username, // Use username as display name
           profileImage: profileImage || null,
-          location: 'Oklahoma City, OK',
-          role: id === 'joshuamdelozier' ? 'admin' : 'user', // Make joshuamdelozier an admin
+          headerImage: null, // CSV doesn't have header images
+          location: 'Oklahoma City, OK', // Default location for all users
+          role,
           checkins,
           favoriteBreweries,
-          latitude: "35.4676",
-          longitude: "-97.5164", 
+          latitude: "35.4676", // Default to OKC coordinates
+          longitude: "-97.5164",
           createdAt: new Date()
         };
       });
     
-    console.log(`Loaded ${users.length} users from CSV`);
+    console.log(`Loaded ${users.length} authentic users from CSV`);
     return users;
   } catch (error) {
     console.error('Error loading CSV:', error);
@@ -877,54 +917,21 @@ export class DatabaseStorage implements IStorage {
     const existingUsers = await db.select().from(users);
     if (existingUsers.length === 0) {
       try {
-        // Load users from CSV first
+        // Load authentic users from CSV
         const csvUsers = loadUsersFromCSV();
         
         if (csvUsers.length > 0) {
-          // Filter to valid users with proper typing
-          const validUsers = csvUsers
-            .filter(user => user.id && user.username && user.email)
-            .map(user => ({
-              id: user.id,
-              username: user.username,
-              email: user.email,
-              name: user.name,
-              location: user.location || null,
-              profileImage: user.profileImage || null,
-              headerImage: null,
-              role: user.role || 'user',
-              checkins: user.checkins || 0,
-              favoriteBreweries: Array.isArray(user.favoriteBreweries) ? user.favoriteBreweries : [],
-              latitude: user.latitude || null,
-              longitude: user.longitude || null
-            }));
-          
-          console.log(`Inserting ${validUsers.length} users into database`);
-          await db.insert(users).values(validUsers);
-          console.log('Users loaded successfully from CSV');
+          console.log(`Loading ${csvUsers.length} authentic users from CSV into database`);
+          await db.insert(users).values(csvUsers);
+          console.log('Authentic users loaded successfully from CSV');
         } else {
-          // Fallback - create test user with realistic data
-          const testUser = {
-            id: 'joshuamdelozier',
-            username: 'joshuamdelozier',
-            email: 'josh@example.com',
-            name: 'Joshua M. DeLozier',
-            location: 'Oklahoma City, OK',
-            profileImage: null,
-            headerImage: null,
-            role: 'admin',
-            checkins: 15,
-            favoriteBreweries: ['1', '2', '5'],
-            latitude: "35.4676",
-            longitude: "-97.5164"
-          };
-          
-          await db.insert(users).values([testUser]);
-          console.log('Created test user with sample data');
+          console.log('No users found in CSV');
         }
       } catch (error) {
-        console.error('Error initializing users:', error);
+        console.error('Error loading authentic users from CSV:', error);
       }
+    } else {
+      console.log(`Database already has ${existingUsers.length} users, skipping CSV load`);
     }
   }
 
