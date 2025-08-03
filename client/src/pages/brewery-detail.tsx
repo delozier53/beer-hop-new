@@ -36,7 +36,6 @@ export default function BreweryDetail() {
   const [notes, setNotes] = useState("");
   const [isNotesDialogOpen, setIsNotesDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const [editFormData, setEditFormData] = useState({
     name: "",
     address: "",
@@ -54,11 +53,6 @@ export default function BreweryDetail() {
     x: "",
     threads: "",
     tiktok: "",
-    slideshowPhoto1: "",
-    slideshowPhoto2: "",
-    slideshowPhoto3: "",
-    slideshowPhoto4: "",
-    slideshowPhoto5: "",
     tapListUrl: ""
   });
 
@@ -70,21 +64,7 @@ export default function BreweryDetail() {
     queryKey: ["/api/users", CURRENT_USER_ID],
   });
 
-  // Get slideshow photos from brewery data, fallback to mock for demo purposes
-  const slideshowPhotos = brewery?.slideshowPhotos?.filter(photo => photo && photo.trim()) || [];
 
-  // Auto-advance slideshow every 6 seconds
-  useEffect(() => {
-    if (slideshowPhotos.length > 1) {
-      const interval = setInterval(() => {
-        setCurrentSlideIndex((prevIndex) => 
-          (prevIndex + 1) % slideshowPhotos.length
-        );
-      }, 6000);
-
-      return () => clearInterval(interval);
-    }
-  }, [slideshowPhotos.length]);
 
   const checkInMutation = useMutation({
     mutationFn: async (breweryId: string) => {
@@ -130,18 +110,8 @@ export default function BreweryDetail() {
 
   const updateBreweryMutation = useMutation({
     mutationFn: async (updates: any) => {
-      // Prepare slideshow photos array
-      const slideshowPhotos = [
-        updates.slideshowPhoto1,
-        updates.slideshowPhoto2, 
-        updates.slideshowPhoto3,
-        updates.slideshowPhoto4,
-        updates.slideshowPhoto5
-      ].filter(photo => photo && photo.trim());
-
       const response = await apiRequest("PUT", `/api/breweries/${id}`, {
         ...updates,
-        slideshowPhotos,
         socialLinks: {
           website: updates.website || null,
           facebook: updates.facebook || null,
@@ -149,13 +119,7 @@ export default function BreweryDetail() {
           x: updates.x || null,
           threads: updates.threads || null,
           tiktok: updates.tiktok || null
-        },
-        // Remove individual photo fields from the main update object
-        slideshowPhoto1: undefined,
-        slideshowPhoto2: undefined,
-        slideshowPhoto3: undefined,
-        slideshowPhoto4: undefined,
-        slideshowPhoto5: undefined
+        }
       });
       return response.json();
     },
@@ -236,7 +200,7 @@ export default function BreweryDetail() {
           <img 
             src={brewery.logo} 
             alt={`${brewery.name} logo`}
-            className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg bg-white"
+            className="w-24 h-24 rounded-lg object-cover border-4 border-white shadow-lg bg-white"
           />
         </div>
       )}
@@ -274,11 +238,6 @@ export default function BreweryDetail() {
                       x: brewery.socialLinks?.x || "",
                       threads: brewery.socialLinks?.threads || "",
                       tiktok: brewery.socialLinks?.tiktok || "",
-                      slideshowPhoto1: brewery.slideshowPhotos?.[0] || "",
-                      slideshowPhoto2: brewery.slideshowPhotos?.[1] || "",
-                      slideshowPhoto3: brewery.slideshowPhotos?.[2] || "",
-                      slideshowPhoto4: brewery.slideshowPhotos?.[3] || "",
-                      slideshowPhoto5: brewery.slideshowPhotos?.[4] || "",
                       tapListUrl: brewery.tapListUrl || ""
                     });
                     setIsEditDialogOpen(true);
@@ -376,7 +335,15 @@ export default function BreweryDetail() {
           <p className="text-gray-600">
             {brewery.address}, {brewery.city}, {brewery.state} {brewery.zipCode}
           </p>
-          <Button variant="ghost" className="text-hops text-sm font-medium mt-1 p-0">
+          <Button 
+            variant="ghost" 
+            className="text-hops text-sm font-medium mt-1 p-0"
+            onClick={() => {
+              const address = `${brewery.address}, ${brewery.city}, ${brewery.state} ${brewery.zipCode}`;
+              const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
+              window.open(mapsUrl, '_blank');
+            }}
+          >
             Get Directions
           </Button>
         </div>
@@ -397,7 +364,7 @@ export default function BreweryDetail() {
         {/* Policies */}
         {brewery.policies && (
           <div className="mb-6">
-            <h3 className="font-semibold mb-2">Policies & Amenities</h3>
+            <h3 className="font-semibold mb-2">Policies</h3>
             <div className="text-sm text-gray-600 whitespace-pre-line">
               {brewery.policies}
             </div>
@@ -471,73 +438,43 @@ export default function BreweryDetail() {
           </div>
         </div>
 
-        {/* Photo Slideshow - Auto-advancing every 6 seconds */}
-        {slideshowPhotos.length > 0 && (
+
+
+        {/* Tap List - Only show if URL is provided */}
+        {brewery.tapListUrl && (
           <div className="mb-6">
-            <h3 className="font-semibold mb-3">Photos</h3>
-            <div className="relative w-full h-48 rounded-lg overflow-hidden bg-gray-200">
-              <img 
-                src={slideshowPhotos[currentSlideIndex]} 
-                alt={`${brewery.name} photo ${currentSlideIndex + 1}`}
-                className="w-full h-full object-cover transition-opacity duration-500"
-              />
-              
-              {/* Slideshow indicators */}
-              <div className="absolute bottom-3 left-1/2 transform -translate-x-1/2 flex space-x-2">
-                {slideshowPhotos.map((_, index) => (
-                  <button
-                    key={index}
-                    className={`w-2 h-2 rounded-full transition-all ${
-                      index === currentSlideIndex 
-                        ? 'bg-white' 
-                        : 'bg-white/50'
-                    }`}
-                    onClick={() => setCurrentSlideIndex(index)}
-                  />
-                ))}
-              </div>
-              
-              {/* Photo counter */}
-              <div className="absolute top-3 right-3 bg-black/50 text-white text-xs px-2 py-1 rounded">
-                {currentSlideIndex + 1} / {slideshowPhotos.length}
+            <h3 className="font-semibold mb-3">On Tap Now</h3>
+            <div className="bg-gray-100 rounded-lg p-4 min-h-[300px] border-2 border-dashed border-gray-300">
+              <div className="text-center text-gray-600">
+                <p className="text-sm mb-2">Tap offerings embed will appear here</p>
+                <p className="text-xs text-gray-500">
+                  URL: {brewery.tapListUrl}
+                </p>
+                {/* Placeholder for embed - in production this would be an iframe or integrated widget */}
+                <div className="mt-4 p-4 bg-white rounded border">
+                  <h4 className="font-medium text-gray-800 mb-2">Current Tap List</h4>
+                  <div className="text-left space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span>Hoppy IPA</span>
+                      <span className="text-gray-500">6.5% ABV</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Wheat Beer</span>
+                      <span className="text-gray-500">4.8% ABV</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Porter</span>
+                      <span className="text-gray-500">5.2% ABV</span>
+                    </div>
+                  </div>
+                  <p className="text-xs text-gray-400 mt-3 italic">
+                    * Tap list updates in real-time when connected to brewery system
+                  </p>
+                </div>
               </div>
             </div>
           </div>
         )}
-
-        {/* Tap Offerings Embed */}
-        <div className="mb-6">
-          <h3 className="font-semibold mb-3">On Tap Now</h3>
-          <div className="bg-gray-100 rounded-lg p-4 min-h-[300px] border-2 border-dashed border-gray-300">
-            <div className="text-center text-gray-600">
-              <p className="text-sm mb-2">Tap offerings embed will appear here</p>
-              <p className="text-xs text-gray-500">
-                This section can display live tap listings, beer menus, or brewery-specific content
-              </p>
-              {/* Placeholder for embed - in production this would be an iframe or integrated widget */}
-              <div className="mt-4 p-4 bg-white rounded border">
-                <h4 className="font-medium text-gray-800 mb-2">Current Tap List</h4>
-                <div className="text-left space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span>Hoppy IPA</span>
-                    <span className="text-gray-500">6.5% ABV</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Wheat Beer</span>
-                    <span className="text-gray-500">4.8% ABV</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Porter</span>
-                    <span className="text-gray-500">5.2% ABV</span>
-                  </div>
-                </div>
-                <p className="text-xs text-gray-400 mt-3 italic">
-                  * Tap list updates in real-time when connected to brewery system
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
 
         {/* Photo Gallery */}
         {brewery.photos.length > 0 && (
@@ -653,57 +590,7 @@ export default function BreweryDetail() {
               />
             </div>
             
-            {/* Slideshow Photos */}
-            <div className="space-y-4">
-              <Label>Slideshow Photos</Label>
-              <div className="grid gap-3">
-                <div>
-                  <Label htmlFor="slideshowPhoto1" className="text-sm text-gray-600">Photo 1 URL</Label>
-                  <Input
-                    id="slideshowPhoto1"
-                    value={editFormData.slideshowPhoto1}
-                    onChange={(e) => setEditFormData({...editFormData, slideshowPhoto1: e.target.value})}
-                    placeholder="https://example.com/photo1.jpg"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="slideshowPhoto2" className="text-sm text-gray-600">Photo 2 URL</Label>
-                  <Input
-                    id="slideshowPhoto2"
-                    value={editFormData.slideshowPhoto2}
-                    onChange={(e) => setEditFormData({...editFormData, slideshowPhoto2: e.target.value})}
-                    placeholder="https://example.com/photo2.jpg"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="slideshowPhoto3" className="text-sm text-gray-600">Photo 3 URL</Label>
-                  <Input
-                    id="slideshowPhoto3"
-                    value={editFormData.slideshowPhoto3}
-                    onChange={(e) => setEditFormData({...editFormData, slideshowPhoto3: e.target.value})}
-                    placeholder="https://example.com/photo3.jpg"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="slideshowPhoto4" className="text-sm text-gray-600">Photo 4 URL</Label>
-                  <Input
-                    id="slideshowPhoto4"
-                    value={editFormData.slideshowPhoto4}
-                    onChange={(e) => setEditFormData({...editFormData, slideshowPhoto4: e.target.value})}
-                    placeholder="https://example.com/photo4.jpg"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="slideshowPhoto5" className="text-sm text-gray-600">Photo 5 URL</Label>
-                  <Input
-                    id="slideshowPhoto5"
-                    value={editFormData.slideshowPhoto5}
-                    onChange={(e) => setEditFormData({...editFormData, slideshowPhoto5: e.target.value})}
-                    placeholder="https://example.com/photo5.jpg"
-                  />
-                </div>
-              </div>
-            </div>
+
             
             <div>
               <Label htmlFor="tapListUrl">Tap List URL</Label>
