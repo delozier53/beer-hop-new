@@ -296,7 +296,6 @@ export default function BreweryDetail() {
                 const minutes = Math.floor(((canCheckInData.timeRemaining || 0) % 3600) / 60);
                 const timeRemaining = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
                 toast({
-                  title: "Check-in cooldown active",
                   description: `Please wait ${timeRemaining} before checking in again at this brewery.`,
                   variant: "destructive",
                 });
@@ -310,7 +309,7 @@ export default function BreweryDetail() {
             {checkInMutation.isPending 
               ? "Checking in..." 
               : canCheckInData?.canCheckIn === false 
-                ? "Check In (Cooldown Active)" 
+                ? "Check In Again Tomorrow" 
                 : "Check In"
             }
           </Button>
