@@ -202,6 +202,9 @@ export default function BreweryDetail() {
             src={convertGoogleDriveImageUrl(brewery.logo)} 
             alt={`${brewery.name} logo`}
             className="w-24 h-24 rounded-lg object-cover border-4 border-white shadow-lg bg-white"
+            onError={(e) => {
+              e.currentTarget.style.display = 'none';
+            }}
           />
         </div>
       )}

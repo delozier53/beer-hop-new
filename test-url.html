@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Logo URLs</title>
+</head>
+<body>
+    <h1>Testing Brewery Logo URLs</h1>
+    
+    <h2>The Standard's Original Google Drive URL:</h2>
+    <img src="https://drive.google.com/file/d/132enzHrYyi8jDM0ZU5maWudq3ZjNQgri/view?usp=drive_link" alt="Original" style="width:100px;height:100px;border:1px solid red;">
+    
+    <h2>The Standard's Converted Thumbnail URL:</h2>
+    <img src="https://drive.google.com/thumbnail?id=132enzHrYyi8jDM0ZU5maWudq3ZjNQgri&sz=w200-h200" alt="Converted" style="width:100px;height:100px;border:1px solid green;">
+    
+    <h2>The Standard's Direct Google Content URL:</h2>
+    <img src="https://lh3.googleusercontent.com/d/132enzHrYyi8jDM0ZU5maWudq3ZjNQgri=w200-h200" alt="Direct" style="width:100px;height:100px;border:1px solid blue;">
+    
+    <script>
+        // Test image load events
+        document.querySelectorAll('img').forEach((img, index) => {
+            img.onload = () => console.log(`Image ${index + 1} loaded successfully`);
+            img.onerror = () => console.log(`Image ${index + 1} failed to load`);
+        });
+    </script>
+</body>
+</html>

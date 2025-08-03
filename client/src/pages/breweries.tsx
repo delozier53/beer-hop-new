@@ -130,6 +130,9 @@ export default function Breweries() {
                     src={convertGoogleDriveImageUrl(brewery.logo) || `https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=200`} 
                     alt={brewery.name} 
                     className="w-24 h-24 object-cover"
+                    onError={(e) => {
+                      e.currentTarget.src = `https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=200`;
+                    }}
                   />
                   <div className="flex-1 p-4">
                     <h3 className="font-semibold text-gray-900 mb-1">{brewery.name}</h3>
