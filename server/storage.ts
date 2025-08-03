@@ -346,6 +346,7 @@ export interface IStorage {
   getWeeklyEvents(): Promise<WeeklyEvent[]>;
   getWeeklyEventsByDay(day: string): Promise<WeeklyEvent[]>;
   createWeeklyEvent(event: InsertWeeklyEvent): Promise<WeeklyEvent>;
+  updateWeeklyEvent(id: string, updates: Partial<WeeklyEvent>): Promise<WeeklyEvent | undefined>;
 }
 
 // CSV processing functions
@@ -1398,6 +1399,15 @@ export class DatabaseStorage implements IStorage {
       .values(event)
       .returning();
     return inserted;
+  }
+
+  async updateWeeklyEvent(id: string, updates: Partial<WeeklyEvent>): Promise<WeeklyEvent | undefined> {
+    const [event] = await db
+      .update(weeklyEvents)
+      .set(updates)
+      .where(eq(weeklyEvents.id, id))
+      .returning();
+    return event || undefined;
   }
 }
 

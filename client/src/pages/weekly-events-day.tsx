@@ -3,9 +3,10 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Clock, Plus } from "lucide-react";
+import { ArrowLeft, Clock, Plus, Edit } from "lucide-react";
 import { Link, useParams } from "wouter";
 import WeeklyEventCreateModal from "@/components/weekly-event-create-modal";
+import WeeklyEventEditModal from "@/components/weekly-event-edit-modal";
 
 interface WeeklyEvent {
   id: string;
@@ -78,6 +79,8 @@ export default function WeeklyEventsDay() {
   const [userLocation, setUserLocation] = useState<{lat: number, lon: number} | null>(null);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingEvent, setEditingEvent] = useState<WeeklyEvent | null>(null);
   
   const { data: weeklyEvents = [], isLoading } = useQuery<WeeklyEvent[]>({
     queryKey: [`/api/weekly-events/${day}`],
@@ -265,6 +268,21 @@ export default function WeeklyEventsDay() {
                       <h3 className="font-bold text-lg text-gray-900">{event.title}</h3>
                       <p className="text-sm text-[#80bc04] font-medium">{event.brewery}</p>
                     </div>
+                    
+                    {/* Edit Button - Only visible to admin/brewery owners */}
+                    {currentUser && ('role' in currentUser) && (currentUser.role === 'admin' || currentUser.role === 'brewery_owner') && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setEditingEvent(event);
+                          setIsEditModalOpen(true);
+                        }}
+                        className="text-gray-500 hover:text-gray-700"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                    )}
                   </div>
 
                   {/* Time */}
@@ -292,6 +310,18 @@ export default function WeeklyEventsDay() {
           onClose={() => setIsCreateModalOpen(false)}
           defaultDay={day}
         />
+
+        {/* Edit Modal */}
+        {editingEvent && (
+          <WeeklyEventEditModal
+            isOpen={isEditModalOpen}
+            onClose={() => {
+              setIsEditModalOpen(false);
+              setEditingEvent(null);
+            }}
+            event={editingEvent}
+          />
+        )}
       </div>
     </div>
   );

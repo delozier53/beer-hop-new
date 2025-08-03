@@ -466,6 +466,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.put("/api/weekly-events/:id", async (req, res) => {
+    try {
+      const eventId = req.params.id;
+      const userId = req.headers['x-user-id'] as string;
+      
+      if (!userId) {
+        return res.status(401).json({ message: "User ID required" });
+      }
+
+      // Get user to check permissions
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(401).json({ message: "User not found" });
+      }
+
+      // Check permissions: master admin or brewery owner
+      const isMasterAdmin = user.role === 'admin';
+      const isBreweryOwner = user.role === 'brewery_owner';
+      
+      if (!isMasterAdmin && !isBreweryOwner) {
+        return res.status(403).json({ message: "Not authorized to edit weekly events" });
+      }
+
+      // Validate the request body
+      const validatedData = insertWeeklyEventSchema.parse(req.body);
+      
+      const updatedEvent = await storage.updateWeeklyEvent(eventId, validatedData);
+      if (!updatedEvent) {
+        return res.status(404).json({ message: "Weekly event not found" });
+      }
+      
+      res.json(updatedEvent);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      console.error("Error updating weekly event:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Object storage upload endpoint for event images
   app.post("/api/objects/upload", async (req, res) => {
     try {
