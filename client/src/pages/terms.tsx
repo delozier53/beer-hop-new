@@ -71,7 +71,26 @@ export default function Terms() {
               </section>
 
               <section>
-                <h3 className="text-lg font-semibold mb-3">6. Content and Intellectual Property</h3>
+                <h3 className="text-lg font-semibold mb-3">6. Push Notifications</h3>
+                <p className="text-gray-700 leading-relaxed">
+                  Beer Hop may send you push notifications to enhance your experience, including but not limited to:
+                </p>
+                <ul className="list-disc pl-6 text-gray-700 space-y-1 mb-3">
+                  <li>Notifications about new breweries in your area</li>
+                  <li>Reminders about brewery events and special offers</li>
+                  <li>Updates about new podcast episodes</li>
+                  <li>Social notifications about friends' activities and achievements</li>
+                  <li>Leaderboard updates and badge achievements</li>
+                  <li>Important service announcements and updates</li>
+                </ul>
+                <p className="text-gray-700 leading-relaxed">
+                  You can control your notification preferences through your device settings or within the app. 
+                  Disabling notifications may limit certain features of the Service.
+                </p>
+              </section>
+
+              <section>
+                <h3 className="text-lg font-semibold mb-3">7. Content and Intellectual Property</h3>
                 <p className="text-gray-700 leading-relaxed">
                   All content on Beer Hop, including but not limited to text, graphics, logos, images, and software, is the property 
                   of Beer Hop or its content suppliers and is protected by copyright and other intellectual property laws. 
@@ -80,7 +99,7 @@ export default function Terms() {
               </section>
 
               <section>
-                <h3 className="text-lg font-semibold mb-3">7. Privacy</h3>
+                <h3 className="text-lg font-semibold mb-3">8. Privacy</h3>
                 <p className="text-gray-700 leading-relaxed">
                   Your privacy is important to us. Please review our Privacy Policy, which also governs your use of the Service, 
                   to understand our practices regarding the collection and use of your personal information.
@@ -88,7 +107,7 @@ export default function Terms() {
               </section>
 
               <section>
-                <h3 className="text-lg font-semibold mb-3">8. Disclaimers</h3>
+                <h3 className="text-lg font-semibold mb-3">9. Disclaimers</h3>
                 <p className="text-gray-700 leading-relaxed">
                   The Service is provided "as is" and "as available" without any warranties of any kind. We do not warrant that 
                   the Service will be uninterrupted, error-free, or completely secure. Beer Hop is not responsible for the accuracy 
@@ -97,7 +116,7 @@ export default function Terms() {
               </section>
 
               <section>
-                <h3 className="text-lg font-semibold mb-3">9. Limitation of Liability</h3>
+                <h3 className="text-lg font-semibold mb-3">10. Limitation of Liability</h3>
                 <p className="text-gray-700 leading-relaxed">
                   In no event shall Beer Hop be liable for any indirect, incidental, special, consequential, or punitive damages, 
                   including without limitation, loss of profits, data, use, goodwill, or other intangible losses, resulting from 
@@ -106,7 +125,7 @@ export default function Terms() {
               </section>
 
               <section>
-                <h3 className="text-lg font-semibold mb-3">10. Termination</h3>
+                <h3 className="text-lg font-semibold mb-3">11. Termination</h3>
                 <p className="text-gray-700 leading-relaxed">
                   We may terminate or suspend your account and bar access to the Service immediately, without prior notice or liability, 
                   under our sole discretion, for any reason whatsoever, including without limitation if you breach the Terms.
@@ -114,7 +133,7 @@ export default function Terms() {
               </section>
 
               <section>
-                <h3 className="text-lg font-semibold mb-3">11. Changes to Terms</h3>
+                <h3 className="text-lg font-semibold mb-3">12. Changes to Terms</h3>
                 <p className="text-gray-700 leading-relaxed">
                   We reserve the right to modify or replace these Terms at any time. If a revision is material, we will provide 
                   at least 30 days notice prior to any new terms taking effect.
@@ -122,7 +141,7 @@ export default function Terms() {
               </section>
 
               <section>
-                <h3 className="text-lg font-semibold mb-3">12. Contact Information</h3>
+                <h3 className="text-lg font-semibold mb-3">13. Contact Information</h3>
                 <p className="text-gray-700 leading-relaxed">
                   If you have any questions about these Terms of Service, please contact us through the app or via email.
                 </p>

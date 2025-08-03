@@ -39,9 +39,16 @@ export default function Privacy() {
                 </p>
 
                 <h4 className="font-semibold mb-2">Usage Information</h4>
-                <p className="text-gray-700 leading-relaxed">
+                <p className="text-gray-700 leading-relaxed mb-3">
                   We automatically collect information about how you use Beer Hop, including check-ins, favorite breweries, 
                   and interaction with podcast content. This helps us improve the service and provide personalized recommendations.
+                </p>
+
+                <h4 className="font-semibold mb-2">Device and Notification Information</h4>
+                <p className="text-gray-700 leading-relaxed">
+                  To send push notifications, we collect device tokens and notification preferences. We may also collect 
+                  information about your device type, operating system, and app version to ensure notifications are 
+                  delivered properly and formatted correctly for your device.
                 </p>
               </section>
 
@@ -53,6 +60,7 @@ export default function Privacy() {
                   <li>Verify brewery check-ins using location data</li>
                   <li>Create and maintain leaderboards and user statistics</li>
                   <li>Send you verification codes and important service notifications</li>
+                  <li>Deliver push notifications about breweries, events, podcasts, and social activities based on your preferences</li>
                   <li>Improve our service and develop new features</li>
                   <li>Prevent fraud and ensure the security of our platform</li>
                   <li>Comply with legal obligations</li>
@@ -71,8 +79,8 @@ export default function Privacy() {
                 <h4 className="font-semibold mb-2">Service Providers</h4>
                 <p className="text-gray-700 leading-relaxed mb-3">
                   We use third-party service providers to help us operate Beer Hop, including email delivery services 
-                  (SendGrid) and database hosting. These providers have access to your personal information only to 
-                  perform specific tasks on our behalf and are obligated to keep it confidential.
+                  (SendGrid), push notification providers, and database hosting. These providers have access to your 
+                  personal information only to perform specific tasks on our behalf and are obligated to keep it confidential.
                 </p>
 
                 <h4 className="font-semibold mb-2">Legal Requirements</h4>
@@ -107,6 +115,7 @@ export default function Privacy() {
                   <li>Access and update your personal information through your account settings</li>
                   <li>Delete your account and associated data</li>
                   <li>Opt out of location services (though this will disable check-in functionality)</li>
+                  <li>Control push notification preferences through your device settings or app settings</li>
                   <li>Request a copy of your personal data</li>
                   <li>Request correction of inaccurate personal data</li>
                 </ul>
