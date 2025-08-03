@@ -35,6 +35,7 @@ const formSchema = insertWeeklyEventSchema.extend({
   day: z.enum(['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']),
 }).transform((data) => ({
   ...data,
+  day: data.day.charAt(0).toUpperCase() + data.day.slice(1), // Capitalize first letter to match existing data
   event: data.title, // Use title as the event type
   eventPhoto: data.eventPhoto || undefined,
 }));
