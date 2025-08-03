@@ -3,8 +3,9 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Clock } from "lucide-react";
+import { ArrowLeft, Clock, Plus } from "lucide-react";
 import { Link, useParams } from "wouter";
+import WeeklyEventCreateModal from "@/components/weekly-event-create-modal";
 
 interface WeeklyEvent {
   id: string;
@@ -76,6 +77,7 @@ export default function WeeklyEventsDay() {
   const { day } = useParams();
   const [userLocation, setUserLocation] = useState<{lat: number, lon: number} | null>(null);
   const [locationError, setLocationError] = useState<string | null>(null);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   
   const { data: weeklyEvents = [], isLoading } = useQuery<WeeklyEvent[]>({
     queryKey: [`/api/weekly-events/${day}`],
@@ -83,6 +85,10 @@ export default function WeeklyEventsDay() {
 
   const { data: breweries = [] } = useQuery<Brewery[]>({
     queryKey: ['/api/breweries'],
+  });
+
+  const { data: currentUser } = useQuery<{role: string}>({
+    queryKey: ['/api/users/joshuamdelozier'], // TODO: Make this dynamic based on actual user
   });
 
   // Get user's current location
@@ -116,12 +122,6 @@ export default function WeeklyEventsDay() {
     );
     
     if (!breweryA || !breweryB) {
-      console.log('Missing brewery data:', { 
-        eventA: a.brewery, 
-        eventB: b.brewery, 
-        foundA: !!breweryA, 
-        foundB: !!breweryB 
-      });
       // If we can't find brewery data, put events without brewery data at the end
       if (!breweryA && !breweryB) return 0;
       if (!breweryA) return 1;
@@ -143,13 +143,7 @@ export default function WeeklyEventsDay() {
       parseFloat(breweryB.longitude)
     );
     
-    console.log('Distance comparison:', {
-      breweryA: a.brewery,
-      breweryB: b.brewery,
-      distanceA: distanceA.toFixed(2),
-      distanceB: distanceB.toFixed(2),
-      result: distanceA - distanceB
-    });
+    // Removed debug logging - sorting is working correctly
     
     // Sort ascending (closest first)
     return distanceA - distanceB;
@@ -186,14 +180,27 @@ export default function WeeklyEventsDay() {
     <div className="mobile-container">
       <div className="px-6 py-6">
         {/* Header */}
-        <div className="flex items-center mb-6">
-          <Link href="/events">
-            <Button variant="ghost" size="sm" className="mr-3">
-              <ArrowLeft className="w-4 h-4 mr-1" />
-              Back
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center">
+            <Link href="/events">
+              <Button variant="ghost" size="sm" className="mr-3">
+                <ArrowLeft className="w-4 h-4 mr-1" />
+                Back
+              </Button>
+            </Link>
+            <h1 className="text-2xl font-bold text-gray-900">{dayName} Events</h1>
+          </div>
+          
+          {/* Admin/Owner Create Button */}
+          {currentUser && ('role' in currentUser) && (currentUser.role === 'admin' || currentUser.role === 'brewery_owner') && (
+            <Button 
+              className="bg-[#1a5632] hover:bg-[#1a5632]/90 text-white"
+              onClick={() => setIsCreateModalOpen(true)}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Add Event
             </Button>
-          </Link>
-          <h1 className="text-2xl font-bold text-gray-900">{dayName} Events</h1>
+          )}
         </div>
 
         {/* Location Status */}
@@ -297,6 +304,13 @@ export default function WeeklyEventsDay() {
             })}
           </div>
         )}
+
+        {/* Create Modal */}
+        <WeeklyEventCreateModal
+          isOpen={isCreateModalOpen}
+          onClose={() => setIsCreateModalOpen(false)}
+          defaultDay={day}
+        />
       </div>
     </div>
   );

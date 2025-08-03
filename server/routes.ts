@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertCheckInSchema, insertUserSchema, insertPodcastEpisodeSchema, insertSpecialEventSchema } from "@shared/schema";
+import { insertCheckInSchema, insertUserSchema, insertPodcastEpisodeSchema, insertSpecialEventSchema, insertWeeklyEventSchema } from "@shared/schema";
 import { z } from "zod";
 import { ObjectStorageService } from "./objectStorage";
 
@@ -412,6 +412,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(events);
     } catch (error) {
       console.error("Error fetching weekly events for day:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post("/api/weekly-events", async (req, res) => {
+    try {
+      const userId = req.headers['x-user-id'] as string;
+      
+      if (!userId) {
+        return res.status(401).json({ message: "User ID required" });
+      }
+
+      // Get user to check permissions
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(401).json({ message: "User not found" });
+      }
+
+      // Check permissions: master admin or brewery owner
+      const isMasterAdmin = user.role === 'admin';
+      const isBreweryOwner = user.role === 'brewery_owner';
+      
+      if (!isMasterAdmin && !isBreweryOwner) {
+        return res.status(403).json({ message: "Not authorized to create weekly events" });
+      }
+
+      // Validate the request body
+      const validatedData = insertWeeklyEventSchema.parse(req.body);
+      
+      const event = await storage.createWeeklyEvent(validatedData);
+      res.status(201).json(event);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      console.error("Error creating weekly event:", error);
       res.status(500).json({ message: "Internal server error" });
     }
   });
