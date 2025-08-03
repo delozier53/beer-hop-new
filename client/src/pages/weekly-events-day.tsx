@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -20,6 +20,16 @@ interface WeeklyEvent {
   twitter: string;
   facebook: string;
   address: string;
+}
+
+interface Brewery {
+  id: string;
+  name: string;
+  latitude: string;
+  longitude: string;
+  address: string;
+  city: string;
+  state: string;
 }
 
 // Helper function to convert URLs to accessible format
@@ -49,11 +59,77 @@ function getImageUrl(imagePath: string): string {
   return imagePath;
 }
 
+// Function to calculate distance between two coordinates using Haversine formula
+function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 3959; // Earth's radius in miles
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = 
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+    Math.sin(dLon/2) * Math.sin(dLon/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c;
+}
+
 export default function WeeklyEventsDay() {
   const { day } = useParams();
+  const [userLocation, setUserLocation] = useState<{lat: number, lon: number} | null>(null);
+  const [locationError, setLocationError] = useState<string | null>(null);
   
   const { data: weeklyEvents = [], isLoading } = useQuery<WeeklyEvent[]>({
     queryKey: [`/api/weekly-events/${day}`],
+  });
+
+  const { data: breweries = [] } = useQuery<Brewery[]>({
+    queryKey: ['/api/breweries'],
+  });
+
+  // Get user's current location
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserLocation({
+            lat: position.coords.latitude,
+            lon: position.coords.longitude
+          });
+        },
+        (error) => {
+          console.error('Error getting location:', error);
+          setLocationError('Location access denied or unavailable');
+        }
+      );
+    } else {
+      setLocationError('Geolocation not supported');
+    }
+  }, []);
+
+  // Sort events by brewery distance from user's location
+  const sortedEvents = weeklyEvents.sort((a, b) => {
+    if (!userLocation) return 0; // No sorting if no location
+    
+    // Find brewery coordinates for each event
+    const breweryA = breweries.find((brewery) => brewery.name === a.brewery);
+    const breweryB = breweries.find((brewery) => brewery.name === b.brewery);
+    
+    if (!breweryA || !breweryB) return 0;
+    
+    const distanceA = calculateDistance(
+      userLocation.lat, 
+      userLocation.lon, 
+      parseFloat(breweryA.latitude), 
+      parseFloat(breweryA.longitude)
+    );
+    
+    const distanceB = calculateDistance(
+      userLocation.lat, 
+      userLocation.lon, 
+      parseFloat(breweryB.latitude), 
+      parseFloat(breweryB.longitude)
+    );
+    
+    return distanceA - distanceB;
   });
 
   if (isLoading) {
@@ -97,8 +173,17 @@ export default function WeeklyEventsDay() {
           <h1 className="text-2xl font-bold text-gray-900">{dayName} Events</h1>
         </div>
 
+        {/* Location Status */}
+        {locationError && (
+          <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <p className="text-sm text-yellow-800">
+              {locationError} - Events shown in default order
+            </p>
+          </div>
+        )}
+
         {/* Events List */}
-        {weeklyEvents.length === 0 ? (
+        {sortedEvents.length === 0 ? (
           <div className="text-center py-12 text-gray-500">
             <Clock className="w-12 h-12 mx-auto mb-4 opacity-50" />
             <h3 className="text-lg font-medium mb-2">No events scheduled</h3>
@@ -106,8 +191,19 @@ export default function WeeklyEventsDay() {
           </div>
         ) : (
           <div className="space-y-4">
-            {weeklyEvents.map((event) => (
-              <Card key={event.id} className="overflow-hidden">
+            {sortedEvents.map((event, index) => {
+              // Calculate distance for display
+              const brewery = breweries.find((b) => b.name === event.brewery);
+              const distance = userLocation && brewery ? 
+                calculateDistance(
+                  userLocation.lat, 
+                  userLocation.lon, 
+                  parseFloat(brewery.latitude), 
+                  parseFloat(brewery.longitude)
+                ).toFixed(1) : null;
+
+              return (
+              <Card key={event.id} className="overflow-hidden relative">
                 {/* Event Photo */}
                 {event.eventPhoto && (
                   <div className="w-full h-48 overflow-hidden">
@@ -123,6 +219,15 @@ export default function WeeklyEventsDay() {
                 )}
                 
                 <CardContent className="p-4">
+                  {/* Distance Badge */}
+                  {distance && (
+                    <div className="absolute top-4 right-4">
+                      <Badge variant="outline" className="bg-white text-gray-600 text-xs">
+                        {distance} mi
+                      </Badge>
+                    </div>
+                  )}
+
                   {/* Brewery Logo and Name */}
                   <div className="flex items-center mb-3">
                     {event.logo && (
@@ -135,7 +240,7 @@ export default function WeeklyEventsDay() {
                         }}
                       />
                     )}
-                    <div>
+                    <div className="flex-1">
                       <h3 className="font-bold text-lg text-gray-900">{event.title}</h3>
                       <p className="text-sm text-[#80bc04] font-medium">{event.brewery}</p>
                     </div>
@@ -165,7 +270,8 @@ export default function WeeklyEventsDay() {
                   </p>
                 </CardContent>
               </Card>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
