@@ -448,7 +448,7 @@ export default function Events() {
               <Button
                 key={day}
                 variant="outline"
-                className="w-full h-14 text-lg font-medium bg-white hover:bg-gray-50 border-gray-200 text-gray-900 justify-start px-6"
+                className="w-full h-14 text-lg font-medium bg-[#1a5632] hover:bg-[#1a5632]/90 border-[#1a5632] text-white justify-center px-6"
                 onClick={() => {
                   // TODO: Navigate to day-specific events or handle day selection
                   console.log(`Selected ${day}`);
