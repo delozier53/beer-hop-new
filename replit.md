@@ -39,6 +39,8 @@ Key recent changes (August 2025):
 - Created special event detail pages with full image display and ticket links
 - Implemented admin/owner edit functionality for special events with permission-based access control
 - Added ownerId field to special events schema for ownership tracking
+- Fixed critical special event deletion bug - PostgreSQL uses rowCount instead of rowsAffected property (August 3, 2025)
+- Successfully resolved event deletion failures with proper database query result handling
 
 The database schema supports complex relationships between entities, such as users having multiple check-ins and favorite breweries, breweries having associated podcast episodes, and a badge system based on check-in counts. Geographic data uses authentic latitude and longitude coordinates from the provided brewery coordinate CSV file, ensuring accurate distance calculations for Oklahoma breweries.
 

@@ -1336,7 +1336,9 @@ export class DatabaseStorage implements IStorage {
     const result = await db
       .delete(specialEvents)
       .where(eq(specialEvents.id, id));
-    return result.rowsAffected > 0;
+    
+    // PostgreSQL returns rowCount, not rowsAffected
+    return (result.rowCount || 0) > 0;
   }
 
   // Global Settings

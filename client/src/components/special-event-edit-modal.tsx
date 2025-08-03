@@ -335,6 +335,9 @@ export function SpecialEventEditModal({ event, isOpen, onClose }: SpecialEventEd
               <AlertDialogContent>
                 <AlertDialogHeader>
                   <AlertDialogTitle>Confirm Delete</AlertDialogTitle>
+                  <AlertDialogDescription className="sr-only">
+                    Confirm deletion of this event
+                  </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel>Cancel</AlertDialogCancel>
