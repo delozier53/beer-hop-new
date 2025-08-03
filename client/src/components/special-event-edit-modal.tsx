@@ -104,31 +104,86 @@ export function SpecialEventEditModal({ event, isOpen, onClose }: SpecialEventEd
     };
   };
 
-  const handleUploadComplete = (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
-    if (result.successful.length > 0) {
+  const handleUploadComplete = async (result: UploadResult<any, any>) => {
+    if (result.successful && result.successful.length > 0) {
       const uploadedFile = result.successful[0];
-      if (uploadedFile.uploadURL) {
-        // Convert the upload URL to an object path
-        const objectPath = convertUploadUrlToObjectPath(uploadedFile.uploadURL);
-        handleInputChange('logo', objectPath);
+      const imageUrl = uploadedFile.uploadURL;
+      
+      try {
+        // Process the uploaded image with ACL policy
+        const response = await fetch('/api/event-images', {
+          method: 'PUT',
+          headers: {
+            'x-user-id': 'joshuamdelozier',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ imageUrl }),
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          const normalizedPath = data.objectPath;
+          
+          // Update form data with the normalized object path
+          handleInputChange('logo', normalizedPath);
+          
+          toast({
+            title: "Image uploaded successfully",
+            description: "Event image has been uploaded and will be saved.",
+          });
+        } else {
+          throw new Error('Failed to process image');
+        }
+      } catch (error) {
+        console.error('Error processing image:', error);
         toast({
-          title: "Image uploaded",
-          description: "Event image has been uploaded successfully.",
+          title: "Image processing failed",
+          description: "Please try uploading again.",
+          variant: "destructive",
         });
       }
     }
   };
 
-  const convertUploadUrlToObjectPath = (uploadUrl: string): string => {
-    // Extract object path from the upload URL and convert to /objects/ format
-    try {
-      const url = new URL(uploadUrl);
-      const pathParts = url.pathname.split('/');
-      const objectId = pathParts[pathParts.length - 1];
-      return `/objects/uploads/${objectId}`;
-    } catch (error) {
-      // If URL parsing fails, return the original URL
-      return uploadUrl;
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
+      const userId = 'joshuamdelozier';
+      
+      const response = await fetch(`/api/special-events/${event.id}`, {
+        method: 'DELETE',
+        headers: {
+          'x-user-id': userId,
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to delete event');
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Event deleted",
+        description: "The special event has been deleted successfully",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/special-events'] });
+      onClose();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete event",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleDelete = () => {
+    if (confirm('Are you sure you want to delete this event? This action cannot be undone.')) {
+      deleteMutation.mutate();
     }
   };
 
@@ -265,17 +320,28 @@ export function SpecialEventEditModal({ event, isOpen, onClose }: SpecialEventEd
             />
           </div>
 
-          <div className="flex justify-end space-x-2 pt-4">
-            <Button type="button" variant="outline" onClick={onClose}>
-              Cancel
-            </Button>
+          <div className="flex justify-between pt-4">
             <Button 
-              type="submit" 
-              disabled={updateMutation.isPending}
-              className="bg-[#80bc04] hover:bg-[#80bc04]/90 text-white"
+              type="button" 
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={deleteMutation.isPending}
             >
-              {updateMutation.isPending ? "Saving..." : "Save Changes"}
+              {deleteMutation.isPending ? "Deleting..." : "Delete Event"}
             </Button>
+            
+            <div className="flex space-x-2">
+              <Button type="button" variant="outline" onClick={onClose}>
+                Cancel
+              </Button>
+              <Button 
+                type="submit" 
+                disabled={updateMutation.isPending}
+                className="bg-[#80bc04] hover:bg-[#80bc04]/90 text-white"
+              >
+                {updateMutation.isPending ? "Saving..." : "Save Changes"}
+              </Button>
+            </div>
           </div>
         </form>
       </DialogContent>

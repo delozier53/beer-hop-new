@@ -353,6 +353,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.delete("/api/special-events/:id", async (req, res) => {
+    try {
+      const eventId = req.params.id;
+      const userId = req.headers['x-user-id'] as string;
+      
+      if (!userId) {
+        return res.status(401).json({ message: "User ID required" });
+      }
+
+      // Get the event to check ownership
+      const event = await storage.getSpecialEvent(eventId);
+      if (!event) {
+        return res.status(404).json({ message: "Special event not found" });
+      }
+
+      // Get user to check permissions
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(401).json({ message: "User not found" });
+      }
+
+      // Check permissions: master admin or event owner
+      const isMasterAdmin = user.role === 'admin';
+      const isEventOwner = event.ownerId === userId;
+      
+      if (!isMasterAdmin && !isEventOwner) {
+        return res.status(403).json({ message: "Not authorized to delete this event" });
+      }
+
+      // Delete the event
+      const success = await storage.deleteSpecialEvent(eventId);
+      if (!success) {
+        return res.status(404).json({ message: "Event not found" });
+      }
+
+      res.json({ message: "Event deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting special event:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Object storage upload endpoint for event images
   app.post("/api/objects/upload", async (req, res) => {
     try {

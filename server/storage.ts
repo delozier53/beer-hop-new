@@ -1332,6 +1332,13 @@ export class DatabaseStorage implements IStorage {
     return event || undefined;
   }
 
+  async deleteSpecialEvent(id: string): Promise<boolean> {
+    const result = await db
+      .delete(specialEvents)
+      .where(eq(specialEvents.id, id));
+    return result.rowsAffected > 0;
+  }
+
   // Global Settings
   async getGlobalSettings(): Promise<Record<string, any>> {
     const settingsData = await db.select().from(settings);
