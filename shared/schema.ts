@@ -24,27 +24,24 @@ export const breweries = pgTable("breweries", {
   city: text("city").notNull(),
   state: text("state").notNull(),
   zipCode: text("zip_code").notNull(),
-  latitude: decimal("latitude", { precision: 10, scale: 8 }).notNull(),
-  longitude: decimal("longitude", { precision: 11, scale: 8 }).notNull(),
-  image: text("image").notNull(),
-  logo: text("logo").notNull(),
+  latitude: decimal("latitude", { precision: 10, scale: 8 }),
+  longitude: decimal("longitude", { precision: 11, scale: 8 }),
+  image: text("image"),
+  logo: text("logo"),
   type: text("type").notNull().default("Craft Brewery"),
-  about: text("about").notNull(),
-  hours: json("hours").$type<{
-    weekday: string;
-    weekend: string;
-    sunday: string;
-  }>().notNull(),
-  policies: json("policies").$type<{
-    dogs: string;
-    food: string;
-    parking: string;
-  }>().notNull(),
+  about: text("about"),
+  hours: text("hours"),
+  policies: text("policies"),
   socialLinks: json("social_links").$type<{
     facebook?: string;
     instagram?: string;
     website?: string;
+    x?: string;
+    tiktok?: string;
+    threads?: string;
   }>().notNull().default({}),
+  phone: text("phone"),
+  podcastUrl: text("podcast_url"),
   photos: json("photos").$type<string[]>().notNull().default([]),
   podcastEpisode: text("podcast_episode"),
   checkins: integer("checkins").notNull().default(0),

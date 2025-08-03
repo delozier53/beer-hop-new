@@ -17,6 +17,105 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { nanoid } from 'nanoid';
 
+function loadBreweriesFromCSV(): Brewery[] {
+  try {
+    const csvPath = path.join(process.cwd(), 'attached_assets/Breweries_Corrected_1754192600901.csv');
+    const csvContent = fs.readFileSync(csvPath, 'utf-8');
+    const lines = csvContent.split('\n').filter(line => line.trim());
+    
+    return lines.slice(1).map((line, index) => {
+      // Parse CSV line while handling commas inside quoted strings
+      const values: string[] = [];
+      let current = '';
+      let inQuotes = false;
+      
+      for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        if (char === '"') {
+          inQuotes = !inQuotes;
+        } else if (char === ',' && !inQuotes) {
+          values.push(current.trim());
+          current = '';
+        } else {
+          current += char;
+        }
+      }
+      values.push(current.trim());
+      
+      // Parse brewery data
+      const name = values[0]?.replace(/"/g, '') || '';
+      const address = values[1]?.replace(/"/g, '') || '';
+      const hours = values[2]?.replace(/"/g, '') || '';
+      const about = values[3]?.replace(/"/g, '') || '';
+      const policies = values[4]?.replace(/"/g, '') || '';
+      const instagram = values[5]?.replace(/"/g, '') || '';
+      const facebook = values[6]?.replace(/"/g, '') || '';
+      const x = values[7]?.replace(/"/g, '') || '';
+      const tiktok = values[8]?.replace(/"/g, '') || '';
+      const threads = values[9]?.replace(/"/g, '') || '';
+      const website = values[10]?.replace(/"/g, '') || '';
+      const phone = values[11]?.replace(/"/g, '') || '';
+      const podcastUrl = values[12]?.replace(/"/g, '') || '';
+      
+      // Extract city and state from address
+      const addressParts = address.split(',');
+      let city = 'Unknown';
+      let state = 'OK';
+      let zipCode = '';
+      
+      if (addressParts.length >= 2) {
+        const lastPart = addressParts[addressParts.length - 1].trim();
+        const stateZipMatch = lastPart.match(/([A-Z]{2})\s+(\d{5})/);
+        if (stateZipMatch) {
+          state = stateZipMatch[1];
+          zipCode = stateZipMatch[2];
+          city = addressParts[addressParts.length - 2]?.trim() || 'Unknown';
+        }
+      }
+      
+      // Generate random coordinates in Oklahoma area for breweries without specific coords
+      const latitude = (35.0 + Math.random() * 1.5).toFixed(6);
+      const longitude = (-99.0 + Math.random() * 2.0).toFixed(6);
+      
+      return {
+        id: (index + 1).toString(),
+        name,
+        address: addressParts[0]?.trim() || address,
+        city,
+        state,
+        zipCode,
+        latitude,
+        longitude,
+        image: `https://images.unsplash.com/photo-${1570000000000 + index}?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600`,
+        logo: `https://images.unsplash.com/photo-${1570000000000 + index}?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=200`,
+        type: "Craft Brewery",
+        about: about || `${name} is a craft brewery dedicated to creating exceptional beers in the heart of Oklahoma.`,
+        hours,
+        policies,
+        socialLinks: {
+          facebook: facebook || undefined,
+          instagram: instagram || undefined,
+          website: website || undefined,
+          x: x || undefined,
+          tiktok: tiktok || undefined,
+          threads: threads || undefined,
+        },
+        phone,
+        podcastUrl,
+        photos: [],
+        podcastEpisode: podcastUrl ? `Featured Episode` : null,
+        checkins: Math.floor(Math.random() * 200) + 10,
+        rating: (3.5 + Math.random() * 1.5).toFixed(1),
+        ownerId: null,
+        createdAt: new Date()
+      };
+    }).filter(brewery => brewery.name); // Filter out empty entries
+  } catch (error) {
+    console.error('Error loading breweries from CSV:', error);
+    return [];
+  }
+}
+
 export interface IStorage {
   // Users
   getUser(id: string): Promise<User | undefined>;
@@ -299,8 +398,13 @@ export class MemStorage implements IStorage {
     const badgesList = loadBadgesFromCSV();
     badgesList.forEach(badge => this.badges.set(badge.id, badge));
 
-    // Initialize sample breweries
-    const breweriesList: Brewery[] = [
+    // Initialize breweries from CSV
+    const breweriesList = loadBreweriesFromCSV();
+    console.log(`Loaded ${breweriesList.length} breweries from CSV`);
+    breweriesList.forEach(brewery => this.breweries.set(brewery.id, brewery));
+
+    // Initialize sample legacy breweries for compatibility
+    const legacyBreweriesList: Brewery[] = [
       {
         id: "1",
         name: "Golden Gate Brewing",
@@ -412,7 +516,8 @@ export class MemStorage implements IStorage {
       }
     ];
 
-    breweriesList.forEach(brewery => this.breweries.set(brewery.id, brewery));
+    // Add legacy breweries for compatibility (different ID range)
+    legacyBreweriesList.forEach(brewery => this.breweries.set(`legacy-${brewery.id}`, brewery));
 
     // Initialize sample podcast episodes
     const episodes: PodcastEpisode[] = [

@@ -117,7 +117,7 @@ export default function BreweryDetail() {
       <div 
         className="relative h-56 bg-cover bg-center"
         style={{ 
-          backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url('${brewery.image}')`
+          backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url('${brewery.image || `https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600`}')`
         }}
       >
         <button 
@@ -143,7 +143,7 @@ export default function BreweryDetail() {
         <div className="flex items-start justify-between mb-6">
           <div className="flex items-center space-x-4">
             <img 
-              src={brewery.logo} 
+              src={brewery.logo || `https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=200`} 
               alt={`${brewery.name} logo`}
               className="w-16 h-16 rounded-full object-cover"
             />
@@ -184,19 +184,8 @@ export default function BreweryDetail() {
               <Clock className="w-4 h-4 mr-2" />
               Hours
             </h3>
-            <div className="space-y-1 text-sm">
-              <div className="flex justify-between">
-                <span>Monday - Thursday</span>
-                <span>{brewery.hours.weekday}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Friday - Saturday</span>
-                <span>{brewery.hours.weekend}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Sunday</span>
-                <span>{brewery.hours.sunday}</span>
-              </div>
+            <div className="text-sm text-gray-600 whitespace-pre-line">
+              {brewery.hours || "Hours not available"}
             </div>
           </CardContent>
         </Card>
@@ -210,50 +199,60 @@ export default function BreweryDetail() {
           <p className="text-gray-600">
             {brewery.address}, {brewery.city}, {brewery.state} {brewery.zipCode}
           </p>
+          {brewery.phone && (
+            <p className="text-gray-600 text-sm mt-1">
+              📞 {brewery.phone}
+            </p>
+          )}
           <Button variant="ghost" className="text-amber text-sm font-medium mt-1 p-0">
             Get Directions
           </Button>
         </div>
 
         {/* About */}
-        <div className="mb-6">
-          <h3 className="font-semibold mb-2">About</h3>
-          <p className="text-gray-600 text-sm leading-relaxed">
-            {brewery.about}
-          </p>
-        </div>
+        {brewery.about && (
+          <div className="mb-6">
+            <h3 className="font-semibold mb-2">About</h3>
+            <p className="text-gray-600 text-sm leading-relaxed">
+              {brewery.about}
+            </p>
+          </div>
+        )}
 
         {/* Policies */}
-        <div className="mb-6">
-          <h3 className="font-semibold mb-2">Policies</h3>
-          <div className="space-y-2 text-sm text-gray-600">
-            <div className="flex items-center">
-              <span className="w-6 h-6 bg-hops text-white rounded-full flex items-center justify-center text-xs mr-2">🐕</span>
-              <span>{brewery.policies.dogs}</span>
-            </div>
-            <div className="flex items-center">
-              <span className="w-6 h-6 bg-brown text-white rounded-full flex items-center justify-center text-xs mr-2">🍽️</span>
-              <span>{brewery.policies.food}</span>
-            </div>
-            <div className="flex items-center">
-              <span className="w-6 h-6 bg-amber text-white rounded-full flex items-center justify-center text-xs mr-2">🚗</span>
-              <span>{brewery.policies.parking}</span>
+        {brewery.policies && (
+          <div className="mb-6">
+            <h3 className="font-semibold mb-2">Policies & Amenities</h3>
+            <div className="text-sm text-gray-600 whitespace-pre-line">
+              {brewery.policies}
             </div>
           </div>
-        </div>
+        )}
 
         {/* Social Links */}
         <div className="mb-6">
           <h3 className="font-semibold mb-3">Connect</h3>
-          <div className="flex space-x-4">
+          <div className="grid grid-cols-2 gap-3">
+            {brewery.socialLinks.website && (
+              <a 
+                href={brewery.socialLinks.website} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="flex items-center space-x-2 text-hops hover:text-hops-dark p-2 border rounded-lg"
+              >
+                <Globe className="w-5 h-5" />
+                <span>Website</span>
+              </a>
+            )}
             {brewery.socialLinks.facebook && (
               <a 
                 href={brewery.socialLinks.facebook} 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="bg-blue-600 text-white p-3 rounded-lg hover:bg-blue-700 transition-colors"
+                className="flex items-center space-x-2 text-blue-600 hover:text-blue-700 p-2 border rounded-lg"
               >
                 <Facebook className="w-5 h-5" />
+                <span>Facebook</span>
               </a>
             )}
             {brewery.socialLinks.instagram && (
@@ -261,19 +260,32 @@ export default function BreweryDetail() {
                 href={brewery.socialLinks.instagram} 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="bg-pink-600 text-white p-3 rounded-lg hover:bg-pink-700 transition-colors"
+                className="flex items-center space-x-2 text-pink-600 hover:text-pink-700 p-2 border rounded-lg"
               >
                 <Instagram className="w-5 h-5" />
+                <span>Instagram</span>
               </a>
             )}
-            {brewery.socialLinks.website && (
+            {brewery.socialLinks.x && (
               <a 
-                href={brewery.socialLinks.website} 
+                href={brewery.socialLinks.x} 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="bg-gray-900 text-white p-3 rounded-lg hover:bg-gray-800 transition-colors"
+                className="flex items-center space-x-2 text-gray-600 hover:text-gray-700 p-2 border rounded-lg"
               >
-                <Globe className="w-5 h-5" />
+                <span className="w-5 h-5 font-bold">𝕏</span>
+                <span>Twitter</span>
+              </a>
+            )}
+            {brewery.podcastUrl && (
+              <a 
+                href={brewery.podcastUrl} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="flex items-center space-x-2 text-purple-600 hover:text-purple-700 p-2 border rounded-lg"
+              >
+                <Headphones className="w-5 h-5" />
+                <span>Podcast</span>
               </a>
             )}
           </div>
