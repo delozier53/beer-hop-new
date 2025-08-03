@@ -105,8 +105,7 @@ function loadUsersFromCSV(): User[] {
     const csvUsers = parseCSV(csvContent);
     
     const users = csvUsers
-      .filter(user => user.email && user.username)
-      .slice(0, 300) // Load more users to include high check-in users
+      .filter(user => user.email && user.username) // Load ALL users from CSV
       .map((csvUser, index) => {
         // Create deterministic ID from email to ensure consistency across restarts
         const id = csvUser.email ? 
@@ -498,7 +497,7 @@ export class MemStorage implements IStorage {
   async getLeaderboard(): Promise<User[]> {
     return Array.from(this.users.values())
       .sort((a, b) => b.checkins - a.checkins)
-      .slice(0, 25);
+      .slice(0, 50);
   }
 
   // Breweries
