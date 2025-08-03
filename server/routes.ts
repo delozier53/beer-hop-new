@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertCheckInSchema, insertUserSchema, insertPodcastEpisodeSchema } from "@shared/schema";
+import { insertCheckInSchema, insertUserSchema, insertPodcastEpisodeSchema, insertSpecialEventSchema } from "@shared/schema";
 import { z } from "zod";
 import { ObjectStorageService } from "./objectStorage";
 
@@ -265,6 +265,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       res.json(event);
     } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post("/api/special-events", async (req, res) => {
+    try {
+      const userId = req.headers['x-user-id'] as string;
+      
+      if (!userId) {
+        return res.status(401).json({ message: "User ID required" });
+      }
+
+      // Get user to check permissions
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(401).json({ message: "User not found" });
+      }
+
+      // Check permissions: master admin or brewery owner
+      const isMasterAdmin = user.role === 'admin';
+      const isBreweryOwner = user.role === 'brewery_owner';
+      
+      if (!isMasterAdmin && !isBreweryOwner) {
+        return res.status(403).json({ message: "Not authorized to create events" });
+      }
+
+      // Validate the request body
+      const validatedData = insertSpecialEventSchema.parse(req.body);
+      
+      // Add the owner ID to the event data
+      const eventDataWithOwner = {
+        ...validatedData,
+        ownerId: userId,
+      };
+      
+      const event = await storage.createSpecialEvent(eventDataWithOwner);
+      res.status(201).json(event);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      console.error("Error creating special event:", error);
       res.status(500).json({ message: "Internal server error" });
     }
   });

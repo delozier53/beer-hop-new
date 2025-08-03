@@ -1315,6 +1315,14 @@ export class DatabaseStorage implements IStorage {
     return event || undefined;
   }
 
+  async createSpecialEvent(insertEvent: InsertSpecialEvent & { ownerId: string }): Promise<SpecialEvent> {
+    const [event] = await db
+      .insert(specialEvents)
+      .values(insertEvent)
+      .returning();
+    return event;
+  }
+
   async updateSpecialEvent(id: string, updates: Partial<SpecialEvent>): Promise<SpecialEvent | undefined> {
     const [event] = await db
       .update(specialEvents)

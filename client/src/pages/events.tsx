@@ -3,9 +3,10 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, Clock, MapPin, Users, ExternalLink, Edit } from "lucide-react";
+import { Calendar, Clock, MapPin, Users, ExternalLink, Edit, Plus } from "lucide-react";
 import { Link } from "wouter";
 import { ObjectUploader } from "@/components/ObjectUploader";
+import { CreateSpecialEventModal } from "@/components/CreateSpecialEventModal";
 import { useToast } from "@/hooks/use-toast";
 import type { Event, SpecialEvent } from "@shared/schema";
 import type { UploadResult } from "@uppy/core";
@@ -20,6 +21,7 @@ interface EventWithBrewery extends Event {
 export default function Events() {
   const [selectedTab, setSelectedTab] = useState<"special" | "weekly">("special");
   const [showHeaderEdit, setShowHeaderEdit] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
@@ -56,8 +58,10 @@ export default function Events() {
     }).format(new Date(date));
   };
 
-  // Check if user is master admin
+  // Check if user is master admin or brewery owner
   const isMasterAdmin = currentUser?.role === 'admin';
+  const isBreweryOwner = currentUser?.role === 'brewery_owner';
+  const canCreateEvents = isMasterAdmin || isBreweryOwner;
 
   // Header image upload functions
   const handleGetUploadParameters = async () => {
@@ -270,7 +274,19 @@ export default function Events() {
       </div>
       
       <div className="px-6 py-6">
-        <h2 className="text-xl font-bold mb-4">Upcoming Events</h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-bold">Upcoming Events</h2>
+          {canCreateEvents && (
+            <Button
+              onClick={() => setShowCreateModal(true)}
+              className="bg-[#80bc04] hover:bg-[#80bc04]/90 text-white"
+              size="sm"
+            >
+              <Plus className="w-4 h-4 mr-1" />
+              Create Event
+            </Button>
+          )}
+        </div>
         
         {/* Full-width Toggle Buttons */}
         <div className="grid grid-cols-2 gap-2 mb-6">
@@ -410,6 +426,12 @@ export default function Events() {
           )
         )}
       </div>
+
+      {/* Create Special Event Modal */}
+      <CreateSpecialEventModal 
+        open={showCreateModal} 
+        onOpenChange={setShowCreateModal} 
+      />
     </div>
   );
 }
