@@ -391,12 +391,22 @@ export default function WeeklyEventCreateModal({
                     )}
                   </Button>
                   {uploadedImageUrl && (
-                    <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded">
+                    <div className="mt-3 space-y-2">
                       <p className="text-sm text-green-700">✓ Photo uploaded successfully</p>
+                      <div className="border border-gray-200 rounded-lg overflow-hidden">
+                        <img 
+                          src={uploadedImageUrl} 
+                          alt="Event photo preview" 
+                          className="w-full h-32 object-cover"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                          }}
+                        />
+                      </div>
                       <button 
                         type="button"
                         onClick={() => setUploadedImageUrl('')}
-                        className="text-xs text-red-600 hover:text-red-800 mt-1"
+                        className="text-xs text-red-600 hover:text-red-800"
                       >
                         Remove photo
                       </button>
