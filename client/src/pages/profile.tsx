@@ -107,23 +107,21 @@ export default function Profile() {
 
         {/* Current Badge */}
         {badge && (
-          <div className="bg-gradient-to-r from-hops to-hops-dark rounded-xl px-2 mb-1 text-white" style={{ paddingTop: '0px', paddingBottom: '0px' }}>
-            <div className="flex justify-center">
-              <img 
-                src={badge.icon} 
-                alt={badge.name}
-                className="object-contain"
-                style={{ width: '400px', height: '400px', minWidth: '400px', minHeight: '400px' }}
-                onError={(e) => {
-                  console.log('Badge image failed to load:', badge.icon);
-                  // Try alternative Google Drive URL format
-                  const fileId = badge.icon.match(/id=([a-zA-Z0-9-_]+)/)?.[1];
-                  if (fileId) {
-                    e.currentTarget.src = `https://lh3.googleusercontent.com/d/${fileId}`;
-                  }
-                }}
-              />
-            </div>
+          <div className="bg-gradient-to-r from-hops to-hops-dark rounded-xl mb-1 text-white flex justify-center" style={{ padding: '0px', height: 'fit-content' }}>
+            <img 
+              src={badge.icon} 
+              alt={badge.name}
+              className="object-contain"
+              style={{ width: '400px', height: '400px', minWidth: '400px', minHeight: '400px', display: 'block' }}
+              onError={(e) => {
+                console.log('Badge image failed to load:', badge.icon);
+                // Try alternative Google Drive URL format
+                const fileId = badge.icon.match(/id=([a-zA-Z0-9-_]+)/)?.[1];
+                if (fileId) {
+                  e.currentTarget.src = `https://lh3.googleusercontent.com/d/${fileId}`;
+                }
+              }}
+            />
           </div>
         )}
 
