@@ -28,6 +28,8 @@ export default function Podcast() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingEpisode, setEditingEpisode] = useState<PodcastEpisode | null>(null);
+  const [isHeaderImageDialogOpen, setIsHeaderImageDialogOpen] = useState(false);
+  const [headerImage, setHeaderImage] = useState(podcastBanner);
   const { toast } = useToast();
   
   const { data: episodes = [], isLoading } = useQuery<PodcastEpisode[]>({
@@ -219,6 +221,69 @@ export default function Podcast() {
     }
   };
 
+  const handleHeaderImageUpload = async () => {
+    try {
+      const response = await fetch("/api/objects/upload", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      return {
+        method: "PUT" as const,
+        url: data.uploadURL,
+      };
+    } catch (error) {
+      console.error("Error getting upload URL:", error);
+      throw error;
+    }
+  };
+
+  const handleHeaderImageUploadComplete = async (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
+    if (result.successful && result.successful.length > 0) {
+      const uploadedFile = result.successful[0];
+      const uploadURL = uploadedFile.uploadURL;
+      
+      try {
+        const response = await fetch("/api/objects/normalize", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ url: uploadURL }),
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          setHeaderImage(`http://localhost:5000${data.objectPath}`);
+        } else {
+          setHeaderImage(uploadURL);
+        }
+        
+        setIsHeaderImageDialogOpen(false);
+        
+        toast({
+          title: "Success",
+          description: "Header image updated successfully!",
+        });
+      } catch (error) {
+        console.error("Error normalizing header image URL:", error);
+        setHeaderImage(uploadURL);
+        setIsHeaderImageDialogOpen(false);
+        toast({
+          title: "Success",
+          description: "Header image updated successfully!",
+        });
+      }
+    }
+  };
+
   const openSpotify = (spotifyUrl: string) => {
     window.open(spotifyUrl, '_blank');
   };
@@ -262,16 +327,30 @@ export default function Podcast() {
     <div className="mobile-container pb-20">
       {/* Hero Banner */}
       <div 
-        className="hero-banner"
+        className="hero-banner relative"
         style={{
-          backgroundImage: `url(${podcastBanner})`,
+          backgroundImage: `url(${headerImage})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat'
         }}
       >
         <div className="hero-overlay" />
-
+        <div className="absolute bottom-4 left-4 text-white">
+          <h1 className="text-2xl font-bold">Beer Hop Podcast</h1>
+          <p className="text-sm opacity-90">Stories from Local Brewers</p>
+        </div>
+        {isMasterAdmin && (
+          <Button
+            size="sm"
+            variant="outline"
+            className="absolute top-4 right-4 bg-black/50 text-white border-white/50 hover:bg-white hover:text-black"
+            onClick={() => setIsHeaderImageDialogOpen(true)}
+          >
+            <Edit className="w-4 h-4 mr-1" />
+            Edit Image
+          </Button>
+        )}
       </div>
 
       {/* Episodes List */}
@@ -634,6 +713,30 @@ export default function Podcast() {
           </div>
         )}
       </div>
+
+      {/* Header Image Upload Dialog */}
+      <Dialog open={isHeaderImageDialogOpen} onOpenChange={setIsHeaderImageDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Update Header Image</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-gray-600">
+              Upload a new header image for the podcast page. The image will be displayed as the banner background.
+            </p>
+            <ObjectUploader
+              maxNumberOfFiles={1}
+              maxFileSize={10485760} // 10MB
+              onGetUploadParameters={handleHeaderImageUpload}
+              onComplete={handleHeaderImageUploadComplete}
+              buttonClassName="w-full bg-[#ff55e1] hover:bg-[#ff55e1]/90 text-white"
+            >
+              <Upload className="w-4 h-4 mr-2" />
+              Choose Image
+            </ObjectUploader>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
