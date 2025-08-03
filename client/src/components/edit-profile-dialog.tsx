@@ -12,8 +12,9 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Camera, Settings } from "lucide-react";
+import { Camera, Settings, ImageIcon } from "lucide-react";
 import type { User } from "@shared/schema";
+import { ObjectUploader } from "@/components/ObjectUploader";
 
 interface EditProfileDialogProps {
   user: User;
@@ -24,11 +25,12 @@ export function EditProfileDialog({ user, userId }: EditProfileDialogProps) {
   const [open, setOpen] = useState(false);
   const [username, setUsername] = useState(user.username || user.name);
   const [profileImage, setProfileImage] = useState(user.profileImage || "");
+  const [headerImage, setHeaderImage] = useState(user.headerImage || "");
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const updateProfileMutation = useMutation({
-    mutationFn: async (updates: { username?: string; profileImage?: string }) => {
+    mutationFn: async (updates: { username?: string; profileImage?: string; headerImage?: string }) => {
       const response = await apiRequest("PUT", `/api/users/${userId}`, updates);
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
@@ -59,7 +61,7 @@ export function EditProfileDialog({ user, userId }: EditProfileDialogProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    const updates: { username?: string; profileImage?: string } = {};
+    const updates: { username?: string; profileImage?: string; headerImage?: string } = {};
     
     if (username !== (user.username || user.name)) {
       updates.username = username;
@@ -67,6 +69,10 @@ export function EditProfileDialog({ user, userId }: EditProfileDialogProps) {
     
     if (profileImage !== user.profileImage) {
       updates.profileImage = profileImage || undefined;
+    }
+    
+    if (headerImage !== user.headerImage) {
+      updates.headerImage = headerImage || undefined;
     }
     
     if (Object.keys(updates).length > 0) {
@@ -142,6 +148,53 @@ export function EditProfileDialog({ user, userId }: EditProfileDialogProps) {
               minLength={3}
               maxLength={20}
             />
+          </div>
+
+          {/* Header Image Upload */}
+          <div className="space-y-2">
+            <Label>Header Image</Label>
+            <div className="flex flex-col space-y-3">
+              <div className="w-full h-24 rounded-lg overflow-hidden bg-gray-100">
+                <img 
+                  src={headerImage || '/public-objects/default-header.png'} 
+                  alt="Header preview" 
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <ObjectUploader
+                maxNumberOfFiles={1}
+                maxFileSize={5242880} // 5MB
+                onGetUploadParameters={async () => {
+                  const response = await apiRequest("POST", "/api/objects/upload");
+                  const data = await response.json();
+                  return {
+                    method: "PUT" as const,
+                    url: data.uploadURL,
+                  };
+                }}
+                onComplete={(result) => {
+                  if (result.successful && result.successful.length > 0) {
+                    const uploadedFile = result.successful[0];
+                    if (uploadedFile.uploadURL) {
+                      // Normalize the upload URL to object path
+                      apiRequest("POST", "/api/objects/normalize", { url: uploadedFile.uploadURL })
+                        .then(res => res.json())
+                        .then(data => setHeaderImage(data.objectPath || uploadedFile.uploadURL))
+                        .catch(err => {
+                          console.error("Error normalizing path:", err);
+                          setHeaderImage(uploadedFile.uploadURL);
+                        });
+                    }
+                  }
+                }}
+                buttonClassName="w-full"
+              >
+                <div className="flex items-center gap-2">
+                  <ImageIcon className="w-4 h-4" />
+                  <span>Upload Header Image</span>
+                </div>
+              </ObjectUploader>
+            </div>
           </div>
 
           {/* Profile Image URL (Advanced) */}

@@ -26,7 +26,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "User not found" });
       }
       
-      const badge = await storage.getUserBadge(user.checkins);
+      const badge = await storage.getUserBadge(user.checkins || 0);
       res.json(badge);
     } catch (error) {
       res.status(500).json({ message: "Internal server error" });
@@ -99,8 +99,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           distance: calculateDistance(
             userLat, 
             userLng, 
-            parseFloat(brewery.latitude), 
-            parseFloat(brewery.longitude)
+            parseFloat(brewery.latitude || '0'), 
+            parseFloat(brewery.longitude || '0')
           )
         })).sort((a, b) => (a.distance || 0) - (b.distance || 0));
       }

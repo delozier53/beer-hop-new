@@ -65,7 +65,7 @@ export default function Profile() {
       <div 
         className="hero-banner from-amber to-hops relative"
         style={{
-          backgroundImage: `linear-gradient(rgba(245, 158, 11, 0.8), rgba(128, 188, 4, 0.8)), url('https://images.unsplash.com/photo-1516594915697-87eb3b1c14ea?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=400')`
+          backgroundImage: `url('${user.headerImage || '/public-objects/default-header.png'}')`
         }}
       >
         <div className="hero-overlay" />
