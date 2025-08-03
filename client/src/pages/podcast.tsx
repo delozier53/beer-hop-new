@@ -109,7 +109,7 @@ export default function Podcast() {
                         {episode.business}
                       </p>
                       <p className="text-xs text-gray-500">
-                        Released {episode.releaseDate.toLocaleDateString('en-US', {
+                        Released {new Date(episode.releaseDate).toLocaleDateString('en-US', {
                           year: 'numeric',
                           month: 'long',
                           day: 'numeric'

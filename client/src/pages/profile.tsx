@@ -2,8 +2,9 @@ import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Settings, Medal, Trophy, Heart, MapPin } from "lucide-react";
+import { Medal, Trophy, Heart, MapPin } from "lucide-react";
 import { Link } from "wouter";
+import { EditProfileDialog } from "@/components/edit-profile-dialog";
 import type { User, Badge, Brewery } from "@shared/schema";
 
 const CURRENT_USER_ID = "user1";
@@ -36,10 +37,6 @@ export default function Profile() {
       <div className="mobile-container">
         <div className="hero-banner from-amber to-hops">
           <div className="hero-overlay" />
-          <div className="absolute top-4 left-4 text-white">
-            <h1 className="text-xl font-bold">Beer Hop</h1>
-            <p className="text-sm opacity-90">Discover. Check-in. Connect.</p>
-          </div>
         </div>
         <div className="px-6 py-6">
           <div className="animate-pulse space-y-4">
@@ -68,17 +65,10 @@ export default function Profile() {
       <div 
         className="hero-banner from-amber to-hops"
         style={{
-          backgroundImage: `linear-gradient(rgba(245, 158, 11, 0.8), rgba(22, 163, 74, 0.8)), url('https://images.unsplash.com/photo-1516594915697-87eb3b1c14ea?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=400')`
+          backgroundImage: `linear-gradient(rgba(245, 158, 11, 0.8), rgba(128, 188, 4, 0.8)), url('https://images.unsplash.com/photo-1516594915697-87eb3b1c14ea?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=400')`
         }}
       >
         <div className="hero-overlay" />
-        <div className="absolute top-4 left-4 text-white">
-          <h1 className="text-xl font-bold">Beer Hop</h1>
-          <p className="text-sm opacity-90">Discover. Check-in. Connect.</p>
-        </div>
-        <button className="absolute top-4 right-4 text-white">
-          <Settings className="w-6 h-6" />
-        </button>
       </div>
 
       {/* Profile Content */}
@@ -101,15 +91,15 @@ export default function Profile() {
           <CardContent className="p-4">
             <div className="grid grid-cols-3 gap-4 text-center">
               <div>
-                <div className="text-2xl font-bold text-amber">{user.checkins}</div>
+                <div className="text-2xl font-bold text-hops">{user.checkins}</div>
                 <div className="text-xs text-gray-600">Check-ins</div>
               </div>
               <div>
-                <div className="text-2xl font-bold text-hops">{user.favoriteBreweries?.length || 0}</div>
+                <div className="text-2xl font-bold text-accent-pink">{user.favoriteBreweries?.length || 0}</div>
                 <div className="text-xs text-gray-600">Favorites</div>
               </div>
               <div>
-                <div className="text-2xl font-bold text-brown">#{leaderboardRank + 1}</div>
+                <div className="text-2xl font-bold text-hops">#{leaderboardRank + 1}</div>
                 <div className="text-xs text-gray-600">Rank</div>
               </div>
             </div>
@@ -118,7 +108,7 @@ export default function Profile() {
 
         {/* Current Badge */}
         {badge && (
-          <div className="bg-gradient-to-r from-amber to-amber-dark rounded-xl p-4 mb-4 text-white">
+          <div className="bg-gradient-to-r from-hops to-hops-dark rounded-xl p-4 mb-4 text-white">
             <div className="flex items-center space-x-3">
               <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
                 <Medal className="w-6 h-6" />
@@ -143,9 +133,7 @@ export default function Profile() {
         <div className="mb-6">
           <div className="flex justify-between items-center mb-3">
             <h3 className="text-lg font-semibold">Favorite Breweries</h3>
-            <Button variant="ghost" className="text-amber text-sm font-medium">
-              Edit Profile
-            </Button>
+            <EditProfileDialog user={user} userId={CURRENT_USER_ID} />
           </div>
 
           {favoriteBreweries.length === 0 ? (

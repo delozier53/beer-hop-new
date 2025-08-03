@@ -27,8 +27,10 @@
   /* Beer/Brewery themed colors */
   --amber: hsl(45, 93%, 47%);
   --amber-dark: hsl(45, 93%, 35%);
-  --hops: hsl(142, 71%, 45%);
-  --hops-dark: hsl(142, 71%, 35%);
+  --hops: hsl(72, 96%, 38%);
+  --hops-dark: hsl(72, 96%, 30%);
+  --accent-pink: hsl(312, 100%, 62%);
+  --accent-pink-dark: hsl(312, 100%, 50%);
   --brown: hsl(30, 67%, 28%);
   --brown-light: hsl(30, 67%, 45%);
 }
@@ -133,6 +135,30 @@
   
   .hover\:bg-hops-dark:hover {
     background-color: var(--hops-dark);
+  }
+  
+  .bg-accent-pink {
+    background-color: var(--accent-pink);
+  }
+  
+  .bg-accent-pink-dark {
+    background-color: var(--accent-pink-dark);
+  }
+  
+  .text-accent-pink {
+    color: var(--accent-pink);
+  }
+  
+  .text-accent-pink-dark {
+    color: var(--accent-pink-dark);
+  }
+  
+  .border-accent-pink {
+    border-color: var(--accent-pink);
+  }
+  
+  .hover\:bg-accent-pink-dark:hover {
+    background-color: var(--accent-pink-dark);
   }
   
   .mobile-container {
