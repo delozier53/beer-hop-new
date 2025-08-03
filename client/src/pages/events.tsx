@@ -10,36 +10,24 @@ import { CreateSpecialEventModal } from "@/components/CreateSpecialEventModal";
 
 // Helper function to format date from YYYY-MM-DD to "Month Day, Year"
 function formatEventDate(dateString: string): string {
-  console.log('formatEventDate called with:', dateString);
-  
-  try {
-    // If already in the correct format (contains comma and year), return as is
-    if (dateString.includes(',') && dateString.includes('20')) {
-      console.log('Date already formatted:', dateString);
-      return dateString;
-    }
-    
-    // Parse the date string as YYYY-MM-DD without timezone issues
-    if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
-      const [year, month, day] = dateString.split('-').map(Number);
-      
-      // Month names array for direct lookup (no Date object needed)
-      const monthNames = [
-        'January', 'February', 'March', 'April', 'May', 'June',
-        'July', 'August', 'September', 'October', 'November', 'December'
-      ];
-      
-      const result = `${monthNames[month - 1]} ${day}, ${year}`;
-      console.log('Date formatted from', dateString, 'to', result);
-      return result;
-    }
-    
-    console.log('Date format not recognized, returning original:', dateString);
-    return dateString; // Return original if parsing fails
-  } catch (error) {
-    console.log('Error formatting date:', error);
-    return dateString; // Return original if parsing fails
+  // If already in the correct format (contains comma and year), return as is
+  if (dateString.includes(',') && dateString.includes('20')) {
+    return dateString;
   }
+  
+  // Parse the date string as YYYY-MM-DD
+  if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
+    const [year, month, day] = dateString.split('-').map(Number);
+    
+    const monthNames = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+    
+    return `${monthNames[month - 1]} ${day}, ${year}`;
+  }
+  
+  return dateString;
 }
 import { useToast } from "@/hooks/use-toast";
 import type { Event, SpecialEvent } from "@shared/schema";
@@ -376,7 +364,7 @@ export default function Events() {
                       </div>
                       <div className="flex items-center text-sm text-gray-600 mb-3">
                         <Calendar className="w-4 h-4 mr-1" />
-                        <span className="mr-3" title={`Raw: ${event.date}`}>{formatEventDate(event.date)}</span>
+                        <span className="mr-3">{formatEventDate(event.date)}</span>
                         <Clock className="w-4 h-4 mr-1" />
                         <span>{event.time}</span>
                       </div>
@@ -436,7 +424,7 @@ export default function Events() {
                         </p>
                         <div className="flex items-center text-sm text-gray-600 mb-2">
                           <Calendar className="w-3 h-3 mr-1" />
-                          <span className="mr-3" title={`Raw: ${event.date}`}>{formatEventDate(event.date)}</span>
+                          <span className="mr-3">{formatEventDate(event.date)}</span>
                           <Clock className="w-3 h-3 mr-1" />
                           <span>{event.startTime}</span>
                         </div>
