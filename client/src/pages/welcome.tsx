@@ -158,7 +158,7 @@ export default function Welcome() {
                 Welcome
               </CardTitle>
               <CardDescription className="text-center">
-                Enter your email to get started. We'll send you a verification code.
+                Enter your email to receive a verification code.
               </CardDescription>
             </CardHeader>
             <CardContent>
