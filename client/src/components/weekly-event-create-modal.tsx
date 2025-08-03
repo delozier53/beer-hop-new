@@ -303,18 +303,27 @@ export default function WeeklyEventCreateModal({
                           const objectPath = convertUploadUrlToObjectPath(uploadedFile.uploadURL);
                           setUploadedImageUrl(objectPath);
                           toast({
-                            title: "Success",
-                            description: "Event photo uploaded successfully!",
+                            title: "Photo Uploaded",
+                            description: "Event photo uploaded successfully! You can now create the event.",
                           });
                         }
                       }
                     }}
-                    buttonClassName="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 border border-dashed border-gray-300"
+                    buttonClassName="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 border border-dashed border-gray-300 h-12"
                   >
-                    📷 Upload Event Photo
+                    📷 {uploadedImageUrl ? 'Change Event Photo' : 'Upload Event Photo'}
                   </ObjectUploader>
                   {uploadedImageUrl && (
-                    <p className="text-sm text-green-600 mt-2">✓ Photo uploaded successfully</p>
+                    <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded">
+                      <p className="text-sm text-green-700">✓ Photo uploaded successfully</p>
+                      <button 
+                        type="button"
+                        onClick={() => setUploadedImageUrl('')}
+                        className="text-xs text-red-600 hover:text-red-800 mt-1"
+                      >
+                        Remove photo
+                      </button>
+                    </div>
                   )}
                 </div>
               </div>
