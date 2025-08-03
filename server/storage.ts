@@ -10,7 +10,13 @@ import {
   type PodcastEpisode,
   type InsertPodcastEpisode,
   type Badge,
-  type InsertBadge
+  type InsertBadge,
+  users,
+  breweries,
+  checkIns,
+  events,
+  podcastEpisodes,
+  badges
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 import * as fs from 'fs';
@@ -851,4 +857,133 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+import { db } from "./db";
+import { eq } from "drizzle-orm";
+
+export class DatabaseStorage implements IStorage {
+  async getUser(id: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user || undefined;
+  }
+
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    return user || undefined;
+  }
+
+  async createUser(insertUser: InsertUser): Promise<User> {
+    const [user] = await db
+      .insert(users)
+      .values([insertUser])
+      .returning();
+    return user;
+  }
+
+  async updateUser(id: string, updates: Partial<User>): Promise<User | undefined> {
+    const [user] = await db
+      .update(users)
+      .set(updates)
+      .where(eq(users.id, id))
+      .returning();
+    return user || undefined;
+  }
+
+  async getUserCheckIns(userId: string): Promise<CheckIn[]> {
+    return await db.select().from(checkIns).where(eq(checkIns.userId, userId));
+  }
+
+  async createCheckIn(insertCheckIn: InsertCheckIn): Promise<CheckIn> {
+    const [checkIn] = await db
+      .insert(checkIns)
+      .values(insertCheckIn)
+      .returning();
+    return checkIn;
+  }
+
+  async getBreweries(): Promise<Brewery[]> {
+    const existingBreweries = await db.select().from(breweries);
+    if (existingBreweries.length === 0) {
+      // Initialize from CSV data
+      const csvBreweries = await loadBreweriesFromCSV();
+      if (csvBreweries.length > 0) {
+        await db.insert(breweries).values(csvBreweries);
+      }
+      return csvBreweries;
+    }
+    return existingBreweries;
+  }
+
+  async getBrewery(id: string): Promise<Brewery | undefined> {
+    const [brewery] = await db.select().from(breweries).where(eq(breweries.id, id));
+    return brewery || undefined;
+  }
+
+  async createBrewery(insertBrewery: InsertBrewery): Promise<Brewery> {
+    const [brewery] = await db
+      .insert(breweries)
+      .values([insertBrewery])
+      .returning();
+    return brewery;
+  }
+
+  async updateBrewery(id: string, updates: Partial<Brewery>): Promise<Brewery | undefined> {
+    const [brewery] = await db
+      .update(breweries)
+      .set(updates)
+      .where(eq(breweries.id, id))
+      .returning();
+    return brewery || undefined;
+  }
+
+  async getEvents(): Promise<Event[]> {
+    return await db.select().from(events);
+  }
+
+  async getEvent(id: string): Promise<Event | undefined> {
+    const [event] = await db.select().from(events).where(eq(events.id, id));
+    return event || undefined;
+  }
+
+  async createEvent(insertEvent: InsertEvent): Promise<Event> {
+    const [event] = await db
+      .insert(events)
+      .values([insertEvent])
+      .returning();
+    return event;
+  }
+
+  async getPodcastEpisodes(): Promise<PodcastEpisode[]> {
+    return await db.select().from(podcastEpisodes);
+  }
+
+  async getBadges(): Promise<Badge[]> {
+    const existingBadges = await db.select().from(badges);
+    if (existingBadges.length === 0) {
+      // Initialize from CSV data
+      const csvBadges = loadBadgesFromCSV();
+      if (csvBadges.length > 0) {
+        await db.insert(badges).values(csvBadges);
+      }
+      return csvBadges;
+    }
+    return existingBadges;
+  }
+
+  async getUserBadge(userId: string): Promise<Badge | undefined> {
+    const user = await this.getUser(userId);
+    if (!user) return undefined;
+
+    const badgeList = await this.getBadges();
+    return badgeList.find(badge => 
+      user.checkins >= badge.minCheckins && 
+      (!badge.maxCheckins || user.checkins <= badge.maxCheckins)
+    );
+  }
+
+  async getLeaderboard(): Promise<User[]> {
+    const allUsers = await db.select().from(users);
+    return allUsers.sort((a, b) => b.checkins - a.checkins);
+  }
+}
+
+export const storage = new DatabaseStorage();
