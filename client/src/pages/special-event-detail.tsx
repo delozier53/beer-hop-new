@@ -11,19 +11,25 @@ import type { SpecialEvent } from "@shared/schema";
 // Helper function to format date from YYYY-MM-DD to "Month Day, Year"
 function formatEventDate(dateString: string): string {
   try {
-    // If already in the correct format (contains comma), return as is
-    if (dateString.includes(',')) {
+    // If already in the correct format (contains comma and year), return as is
+    if (dateString.includes(',') && dateString.includes('20')) {
       return dateString;
     }
     
-    // Parse the date string as YYYY-MM-DD
-    const [year, month, day] = dateString.split('-').map(Number);
-    const date = new Date(year, month - 1, day); // month is 0-indexed
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
+    // Parse the date string as YYYY-MM-DD without timezone issues
+    if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      const [year, month, day] = dateString.split('-').map(Number);
+      
+      // Month names array for direct lookup (no Date object needed)
+      const monthNames = [
+        'January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'
+      ];
+      
+      return `${monthNames[month - 1]} ${day}, ${year}`;
+    }
+    
+    return dateString; // Return original if parsing fails
   } catch (error) {
     return dateString; // Return original if parsing fails
   }
