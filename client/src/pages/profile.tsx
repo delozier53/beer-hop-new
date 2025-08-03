@@ -167,7 +167,7 @@ export default function Profile() {
                 <div key={brewery.id} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                   <Link href={`/brewery/${brewery.id}`} className="flex items-center space-x-3 flex-1">
                     <img 
-                      src={brewery.image} 
+                      src={brewery.logo} 
                       alt={brewery.name}
                       className="w-12 h-12 rounded-lg object-cover"
                     />
