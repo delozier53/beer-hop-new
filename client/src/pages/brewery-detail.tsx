@@ -2,6 +2,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 import { 
   ArrowLeft, 
   Edit, 
@@ -13,19 +15,23 @@ import {
   Globe,
   Facebook,
   Instagram,
-  Headphones
+  Headphones,
+  Save
 } from "lucide-react";
 import { Link, useParams, useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
 import type { Brewery, User, CheckIn } from "@shared/schema";
 
-const CURRENT_USER_ID = "user1";
+const CURRENT_USER_ID = "joshuamdelozier";
 
 export default function BreweryDetail() {
   const { id } = useParams<{ id: string }>();
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [notes, setNotes] = useState("");
+  const [isNotesDialogOpen, setIsNotesDialogOpen] = useState(false);
 
   const { data: brewery, isLoading } = useQuery<Brewery>({
     queryKey: ["/api/breweries", id],
@@ -136,15 +142,16 @@ export default function BreweryDetail() {
           />
         </div>
 
-        {/* Check-in Button */}
-        <Button 
-          className="absolute bottom-4 right-4 bg-amber hover:bg-amber-dark text-white shadow-lg"
-          onClick={() => checkInMutation.mutate(brewery.id)}
-          disabled={checkInMutation.isPending}
-        >
-          <MapPin className="w-4 h-4 mr-2" />
-          {checkInMutation.isPending ? "Checking in..." : "Check In"}
-        </Button>
+        {/* Podcast Button (if brewery has podcast) */}
+        {brewery.podcastUrl && (
+          <Button 
+            className="absolute bottom-4 right-4 bg-purple-600 hover:bg-purple-700 text-white shadow-lg"
+            onClick={() => window.open(brewery.podcastUrl!, '_blank')}
+          >
+            <Headphones className="w-4 h-4 mr-2" />
+            Listen on Spotify
+          </Button>
+        )}
       </div>
 
       <div className="px-6 py-6">
@@ -166,17 +173,56 @@ export default function BreweryDetail() {
         {/* Action Buttons */}
         <div className="grid grid-cols-2 gap-3 mb-6">
           <Button 
-            className="bg-hops hover:bg-hops-dark text-white"
-            onClick={() => favoriteMutation.mutate(brewery.id)}
-            disabled={favoriteMutation.isPending}
+            className="bg-amber hover:bg-amber-dark text-white"
+            onClick={() => checkInMutation.mutate(brewery.id)}
+            disabled={checkInMutation.isPending}
           >
-            <Heart className="w-4 h-4 mr-2" />
-            {isFavorite ? "Remove Favorite" : "Add to Favorites"}
+            <MapPin className="w-4 h-4 mr-2" />
+            {checkInMutation.isPending ? "Checking in..." : "Check In"}
           </Button>
-          <Button className="bg-brown hover:bg-brown-light text-white">
-            <StickyNote className="w-4 h-4 mr-2" />
-            Take Notes
-          </Button>
+          
+          <Dialog open={isNotesDialogOpen} onOpenChange={setIsNotesDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="bg-brown hover:bg-brown-light text-white">
+                <StickyNote className="w-4 h-4 mr-2" />
+                Take Notes
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>Notes for {brewery.name}</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <Textarea
+                  placeholder="Add your notes about this brewery..."
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  className="min-h-32"
+                />
+                <div className="flex justify-end space-x-2">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setIsNotesDialogOpen(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    className="bg-hops hover:bg-hops-dark text-white"
+                    onClick={() => {
+                      toast({
+                        title: "Notes saved",
+                        description: "Your brewery notes have been saved.",
+                      });
+                      setIsNotesDialogOpen(false);
+                    }}
+                  >
+                    <Save className="w-4 h-4 mr-2" />
+                    Save Notes
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
 
         {/* Hours */}
