@@ -112,6 +112,29 @@ export default function Podcast() {
     },
   });
 
+  const deleteEpisodeMutation = useMutation({
+    mutationFn: async (episodeId: string) => {
+      return apiRequest("DELETE", `/api/podcast-episodes/${episodeId}`);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Episode deleted successfully!",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/podcast-episodes"] });
+      setIsEditDialogOpen(false);
+      setEditingEpisode(null);
+      form.reset();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: "Failed to delete episode. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const onSubmit = (data: EpisodeFormData) => {
     if (editingEpisode) {
       updateEpisodeMutation.mutate(data);
@@ -497,25 +520,40 @@ export default function Podcast() {
                   )}
                 />
                 
-                <div className="flex gap-2 pt-4">
+                <div className="flex flex-col gap-2 pt-4">
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        setIsEditDialogOpen(false);
+                        setEditingEpisode(null);
+                        form.reset();
+                      }}
+                      className="flex-1"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      type="submit"
+                      disabled={updateEpisodeMutation.isPending}
+                      className="flex-1 bg-[#ff55e1] hover:bg-[#ff55e1]/90"
+                    >
+                      {updateEpisodeMutation.isPending ? "Updating..." : "Update Episode"}
+                    </Button>
+                  </div>
                   <Button
                     type="button"
-                    variant="outline"
+                    variant="destructive"
                     onClick={() => {
-                      setIsEditDialogOpen(false);
-                      setEditingEpisode(null);
-                      form.reset();
+                      if (editingEpisode && confirm(`Are you sure you want to delete Episode #${editingEpisode.episodeNumber}? This action cannot be undone.`)) {
+                        deleteEpisodeMutation.mutate(editingEpisode.id);
+                      }
                     }}
-                    className="flex-1"
+                    disabled={deleteEpisodeMutation.isPending}
+                    className="w-full"
                   >
-                    Cancel
-                  </Button>
-                  <Button
-                    type="submit"
-                    disabled={updateEpisodeMutation.isPending}
-                    className="flex-1 bg-[#ff55e1] hover:bg-[#ff55e1]/90"
-                  >
-                    {updateEpisodeMutation.isPending ? "Updating..." : "Update Episode"}
+                    {deleteEpisodeMutation.isPending ? "Deleting..." : "Delete Episode"}
                   </Button>
                 </div>
               </form>

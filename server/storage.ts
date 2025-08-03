@@ -309,6 +309,7 @@ export interface IStorage {
   getPodcastEpisode(id: string): Promise<PodcastEpisode | undefined>;
   createPodcastEpisode(episode: InsertPodcastEpisode): Promise<PodcastEpisode>;
   updatePodcastEpisode(id: string, updates: Partial<PodcastEpisode>): Promise<PodcastEpisode | undefined>;
+  deletePodcastEpisode(id: string): Promise<boolean>;
 
   // Badges
   getBadges(): Promise<Badge[]>;
@@ -1190,6 +1191,11 @@ export class DatabaseStorage implements IStorage {
       .where(eq(podcastEpisodes.id, id))
       .returning();
     return episode || undefined;
+  }
+
+  async deletePodcastEpisode(id: string): Promise<boolean> {
+    const result = await db.delete(podcastEpisodes).where(eq(podcastEpisodes.id, id));
+    return result.count > 0;
   }
 }
 
