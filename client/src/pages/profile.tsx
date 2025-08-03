@@ -112,8 +112,8 @@ export default function Profile() {
               <img 
                 src={badge.icon} 
                 alt={badge.name}
-                className="w-25 h-25 object-contain"
-                style={{ width: '100px', height: '100px' }}
+                className="object-contain"
+                style={{ width: '100px', height: '100px', minWidth: '100px', minHeight: '100px' }}
                 onError={(e) => {
                   console.log('Badge image failed to load:', badge.icon);
                   // Try alternative Google Drive URL format
