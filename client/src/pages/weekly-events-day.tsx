@@ -38,6 +38,8 @@ interface Brewery {
 function getImageUrl(imagePath: string): string {
   if (!imagePath) return '';
   
+  console.log('Processing image path:', imagePath);
+  
   // If it's already a full URL (like Google Drive links), return as is
   if (imagePath.startsWith('http')) {
     // For Google Drive links, convert to direct image URLs
@@ -52,12 +54,28 @@ function getImageUrl(imagePath: string): string {
   }
   
   // Convert object storage path to accessible URL
+  if (imagePath.startsWith('/objects/uploads/')) {
+    // Already in correct format, return as-is
+    console.log('Using existing path:', imagePath);
+    return imagePath;
+  }
+  
+  // Handle malformed object paths like "/objects/uploads/view"
+  if (imagePath === '/objects/uploads/view' || imagePath.endsWith('/view')) {
+    console.log('Detected malformed path:', imagePath);
+    return ''; // Return empty to hide broken images
+  }
+  
+  // Handle other object storage paths
   if (imagePath.startsWith('/') && imagePath.includes('uploads/')) {
     const parts = imagePath.split('/');
     const objectId = parts[parts.length - 1];
-    return `/objects/uploads/${objectId}`;
+    const correctedPath = `/objects/uploads/${objectId}`;
+    console.log('Corrected path from', imagePath, 'to', correctedPath);
+    return correctedPath;
   }
   
+  console.log('Returning original path:', imagePath);
   return imagePath;
 }
 
@@ -245,6 +263,7 @@ export default function WeeklyEventsDay() {
                       alt={event.title}
                       className="w-full h-full object-cover"
                       onError={(e) => {
+                        console.log('Image failed to load:', event.eventPhoto, 'Processed URL:', getImageUrl(event.eventPhoto));
                         e.currentTarget.style.display = 'none';
                       }}
                     />
