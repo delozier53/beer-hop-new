@@ -553,7 +553,9 @@ export default function BreweryDetail() {
                   onClick={async () => {
                     try {
                       console.log("Testing upload button click");
-                      const data = await apiRequest("POST", "/api/objects/upload", {});
+                      const response = await apiRequest("POST", "/api/objects/upload", {});
+                      const data = await response.json();
+                      console.log("Full response data:", data);
                       console.log("Upload URL received:", data.uploadURL);
                       
                       toast({
@@ -591,7 +593,9 @@ export default function BreweryDetail() {
                   onClick={async () => {
                     try {
                       console.log("Testing logo upload button click");
-                      const data = await apiRequest("POST", "/api/objects/upload", {});
+                      const response = await apiRequest("POST", "/api/objects/upload", {});
+                      const data = await response.json();
+                      console.log("Full logo response data:", data);
                       console.log("Logo upload URL received:", data.uploadURL);
                       
                       toast({
