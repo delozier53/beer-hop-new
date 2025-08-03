@@ -395,6 +395,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Weekly Events routes
+  app.get("/api/weekly-events", async (req, res) => {
+    try {
+      const events = await storage.getWeeklyEvents();
+      res.json(events);
+    } catch (error) {
+      console.error("Error fetching weekly events:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/weekly-events/:day", async (req, res) => {
+    try {
+      const events = await storage.getWeeklyEventsByDay(req.params.day);
+      res.json(events);
+    } catch (error) {
+      console.error("Error fetching weekly events for day:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Object storage upload endpoint for event images
   app.post("/api/objects/upload", async (req, res) => {
     try {

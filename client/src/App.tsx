@@ -11,6 +11,7 @@ import Podcast from "@/pages/podcast";
 import Events from "@/pages/events";
 import EventDetail from "@/pages/event-detail";
 import SpecialEventDetail from "@/pages/special-event-detail";
+import WeeklyEventsDay from "@/pages/weekly-events-day";
 import Leaderboard from "@/pages/leaderboard";
 import NotFound from "@/pages/not-found";
 
@@ -25,6 +26,7 @@ function Router() {
         <Route path="/events" component={Events} />
         <Route path="/event/:id" component={EventDetail} />
         <Route path="/special-event/:id" component={SpecialEventDetail} />
+        <Route path="/weekly-events/:day" component={WeeklyEventsDay} />
         <Route path="/leaderboard" component={Leaderboard} />
         <Route component={NotFound} />
       </Switch>

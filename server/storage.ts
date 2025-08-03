@@ -13,6 +13,8 @@ import {
   type InsertBadge,
   type SpecialEvent,
   type InsertSpecialEvent,
+  type WeeklyEvent,
+  type InsertWeeklyEvent,
   users,
   breweries,
   checkIns,
@@ -20,7 +22,8 @@ import {
   podcastEpisodes,
   badges,
   settings,
-  specialEvents
+  specialEvents,
+  weeklyEvents
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 import * as fs from 'fs';
@@ -338,6 +341,11 @@ export interface IStorage {
   getSpecialEvents(): Promise<SpecialEvent[]>;
   getSpecialEvent(id: string): Promise<SpecialEvent | undefined>;
   updateSpecialEvent(id: string, updates: Partial<SpecialEvent>): Promise<SpecialEvent | undefined>;
+
+  // Weekly Events
+  getWeeklyEvents(): Promise<WeeklyEvent[]>;
+  getWeeklyEventsByDay(day: string): Promise<WeeklyEvent[]>;
+  createWeeklyEvent(event: InsertWeeklyEvent): Promise<WeeklyEvent>;
 }
 
 // CSV processing functions
@@ -1358,6 +1366,39 @@ export class DatabaseStorage implements IStorage {
         set: { value, updatedAt: new Date() },
       });
   }
+
+  // Weekly Events
+  async getWeeklyEvents(): Promise<WeeklyEvent[]> {
+    let existingEvents = await db.select().from(weeklyEvents);
+    if (existingEvents.length === 0) {
+      // Initialize from CSV data
+      const csvEvents = await loadWeeklyEventsFromCSV();
+      if (csvEvents.length > 0) {
+        await db.insert(weeklyEvents).values(csvEvents);
+        existingEvents = await db.select().from(weeklyEvents);
+      }
+    }
+    return existingEvents;
+  }
+
+  async getWeeklyEventsByDay(day: string): Promise<WeeklyEvent[]> {
+    // Ensure the database is populated first
+    await this.getWeeklyEvents();
+    
+    const results = await db
+      .select()
+      .from(weeklyEvents)
+      .where(eq(weeklyEvents.day, day.charAt(0).toUpperCase() + day.slice(1)));
+    return results;
+  }
+
+  async createWeeklyEvent(event: InsertWeeklyEvent): Promise<WeeklyEvent> {
+    const [inserted] = await db
+      .insert(weeklyEvents)
+      .values(event)
+      .returning();
+    return inserted;
+  }
 }
 
 function parseSpecialEventsCSV(csvContent: string): any[] {
@@ -1474,6 +1515,118 @@ async function loadSpecialEventsFromCSV(): Promise<SpecialEvent[]> {
     console.error('Error loading special events from CSV:', error);
     return [];
   }
+}
+
+async function loadWeeklyEventsFromCSV(): Promise<InsertWeeklyEvent[]> {
+  try {
+    const csvPath = path.join(process.cwd(), 'attached_assets/Weekly Events_1754244359224.csv');
+    if (!fs.existsSync(csvPath)) {
+      console.error('Weekly events CSV file does not exist at:', csvPath);
+      return [];
+    }
+    const csvContent = fs.readFileSync(csvPath, 'utf-8');
+    
+    // Parse CSV properly handling multi-line quoted fields
+    const records = parseWeeklyEventsCSV(csvContent);
+    console.log(`Total parsed weekly events CSV records: ${records.length}`);
+    
+    const events: InsertWeeklyEvent[] = [];
+    for (let i = 0; i < records.length; i++) {
+      const record = records[i];
+      
+      const weeklyEvent: InsertWeeklyEvent = {
+        day: record.Day || '',
+        brewery: record.Brewery || '',
+        event: record.Event || '',
+        title: record.Title || '',
+        details: record.Details || '',
+        time: record.Time || '',
+        logo: record.Logo || null,
+        eventPhoto: record['Event Photo'] || null,
+        instagram: record.Instagram || null,
+        twitter: record.Twitter || null,
+        facebook: record.Facebook || null,
+        address: record.Address || '',
+      };
+      
+      events.push(weeklyEvent);
+    }
+    
+    console.log(`Loaded ${events.length} weekly events from CSV`);
+    return events;
+  } catch (error) {
+    console.error('Error loading weekly events from CSV:', error);
+    return [];
+  }
+}
+
+function parseWeeklyEventsCSV(csvContent: string): any[] {
+  const records: any[] = [];
+  let position = 0;
+  let currentRow: string[] = [];
+  let insideQuotes = false;
+  let currentField = '';
+  let headers: string[] = [];
+  let isFirstRow = true;
+
+  while (position < csvContent.length) {
+    const char = csvContent[position];
+    
+    if (char === '"') {
+      if (insideQuotes && csvContent[position + 1] === '"') {
+        // Handle escaped quotes
+        currentField += '"';
+        position += 2;
+        continue;
+      } else {
+        insideQuotes = !insideQuotes;
+      }
+    } else if (char === ',' && !insideQuotes) {
+      currentRow.push(currentField.trim());
+      currentField = '';
+    } else if ((char === '\n' || char === '\r') && !insideQuotes) {
+      if (currentField || currentRow.length > 0) {
+        currentRow.push(currentField.trim());
+        
+        if (isFirstRow) {
+          headers = [...currentRow];
+          isFirstRow = false;
+        } else if (currentRow.length > 0 && currentRow.some(field => field.length > 0)) {
+          const record: any = {};
+          headers.forEach((header, index) => {
+            record[header] = currentRow[index] || '';
+          });
+          records.push(record);
+        }
+        
+        currentRow = [];
+        currentField = '';
+      }
+      
+      // Skip additional newline characters
+      if (char === '\r' && csvContent[position + 1] === '\n') {
+        position++;
+      }
+    } else if (char !== '\r') {
+      currentField += char;
+    }
+    
+    position++;
+  }
+  
+  // Handle the last row if it doesn't end with a newline
+  if (currentField || currentRow.length > 0) {
+    currentRow.push(currentField.trim());
+    if (!isFirstRow && currentRow.length > 0 && currentRow.some(field => field.length > 0)) {
+      const record: any = {};
+      headers.forEach((header, index) => {
+        record[header] = currentRow[index] || '';
+      });
+      records.push(record);
+    }
+  }
+  
+  return records;
 }
 
 export const storage = new DatabaseStorage();

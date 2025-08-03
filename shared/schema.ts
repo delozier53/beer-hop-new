@@ -178,10 +178,34 @@ export type SpecialEvent = typeof specialEvents.$inferSelect;
 export type InsertSpecialEvent = z.infer<typeof insertSpecialEventSchema>;
 
 // Global settings table for app-wide configuration
+export const weeklyEvents = pgTable("weekly_events", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  day: text("day").notNull(), // Monday, Tuesday, etc.
+  brewery: text("brewery").notNull(),
+  event: text("event").notNull(),
+  title: text("title").notNull(),
+  details: text("details").notNull(),
+  time: text("time").notNull(),
+  logo: text("logo"),
+  eventPhoto: text("event_photo"),
+  instagram: text("instagram"),
+  twitter: text("twitter"),
+  facebook: text("facebook"),
+  address: text("address").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 export const settings = pgTable("settings", {
   key: varchar("key").primaryKey(),
   value: text("value"),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+export const insertWeeklyEventSchema = createInsertSchema(weeklyEvents).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type WeeklyEvent = typeof weeklyEvents.$inferSelect;
+export type InsertWeeklyEvent = z.infer<typeof insertWeeklyEventSchema>;
 export type Setting = typeof settings.$inferSelect;
