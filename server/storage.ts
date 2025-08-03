@@ -21,41 +21,26 @@ function loadBreweriesFromCSV(): Brewery[] {
   try {
     const csvPath = path.join(process.cwd(), 'attached_assets/Breweries_Corrected_1754192600901.csv');
     const csvContent = fs.readFileSync(csvPath, 'utf-8');
-    const lines = csvContent.split('\n').filter(line => line.trim());
     
-    return lines.slice(1, 74).map((line, index) => { // Only load first 73 breweries
-      // Parse CSV line while handling commas inside quoted strings
-      const values: string[] = [];
-      let current = '';
-      let inQuotes = false;
+    // Parse CSV properly handling multi-line quoted fields
+    const records = parseCSVContent(csvContent);
+    
+    return records.slice(0, 73).map((record, index) => { // Only load first 73 breweries
       
-      for (let i = 0; i < line.length; i++) {
-        const char = line[i];
-        if (char === '"') {
-          inQuotes = !inQuotes;
-        } else if (char === ',' && !inQuotes) {
-          values.push(current.trim());
-          current = '';
-        } else {
-          current += char;
-        }
-      }
-      values.push(current.trim());
-      
-      // Parse brewery data
-      const name = values[0]?.replace(/"/g, '') || '';
-      const address = values[1]?.replace(/"/g, '') || '';
-      const hours = values[2]?.replace(/"/g, '') || '';
-      const about = values[3]?.replace(/"/g, '') || '';
-      const policies = values[4]?.replace(/"/g, '') || '';
-      const instagram = values[5]?.replace(/"/g, '') || '';
-      const facebook = values[6]?.replace(/"/g, '') || '';
-      const x = values[7]?.replace(/"/g, '') || '';
-      const tiktok = values[8]?.replace(/"/g, '') || '';
-      const threads = values[9]?.replace(/"/g, '') || '';
-      const website = values[10]?.replace(/"/g, '') || '';
-      const phone = values[11]?.replace(/"/g, '') || '';
-      const podcastUrl = values[12]?.replace(/"/g, '') || '';
+      // Parse brewery data from record
+      const name = record.name || '';
+      const address = record.address || '';
+      const hours = record.hours || '';
+      const about = record.about || '';
+      const policies = record.policies || '';
+      const instagram = record.instagram || '';
+      const facebook = record.facebook || '';
+      const x = record.x || '';
+      const tiktok = record.tiktok || '';
+      const threads = record.threads || '';
+      const website = record.website || '';
+      const phone = record.phone || '';
+      const podcastUrl = record.podcast || '';
       
       // Extract city and state from address
       const addressParts = address.split(',');
@@ -116,6 +101,70 @@ function loadBreweriesFromCSV(): Brewery[] {
   }
 }
 
+// Proper CSV parser that handles multi-line quoted fields
+function parseCSVContent(csvContent: string): any[] {
+  const lines = csvContent.split('\n');
+  const headers = parseCSVLine(lines[0]);
+  const records: any[] = [];
+  
+  let i = 1;
+  while (i < lines.length) {
+    let currentLine = lines[i];
+    let record = parseCSVLine(currentLine);
+    
+    // Handle multi-line quoted fields
+    while (record.length < headers.length && i + 1 < lines.length) {
+      i++;
+      currentLine += '\n' + lines[i];
+      record = parseCSVLine(currentLine);
+    }
+    
+    if (record.length === headers.length) {
+      const obj: any = {};
+      headers.forEach((header, index) => {
+        obj[header.trim()] = record[index]?.trim() || '';
+      });
+      if (obj.name && obj.name.trim()) { // Only include records with names
+        records.push(obj);
+      }
+    }
+    
+    i++;
+  }
+  
+  return records;
+}
+
+// Enhanced CSV line parser that properly handles quoted fields with commas and newlines
+function parseCSVLine(line: string): string[] {
+  const result: string[] = [];
+  let current = '';
+  let inQuotes = false;
+  
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+    const nextChar = line[i + 1];
+    
+    if (char === '"') {
+      if (inQuotes && nextChar === '"') {
+        // Handle escaped quotes
+        current += '"';
+        i++; // Skip next quote
+      } else {
+        inQuotes = !inQuotes;
+      }
+    } else if (char === ',' && !inQuotes) {
+      result.push(current);
+      current = '';
+    } else {
+      current += char;
+    }
+  }
+  
+  result.push(current);
+  return result;
+}
+
 export interface IStorage {
   // Users
   getUser(id: string): Promise<User | undefined>;
@@ -169,27 +218,7 @@ function parseCSV(csvContent: string): any[] {
   });
 }
 
-function parseCSVLine(line: string): string[] {
-  const result: string[] = [];
-  let current = '';
-  let inQuotes = false;
-  
-  for (let i = 0; i < line.length; i++) {
-    const char = line[i];
-    
-    if (char === '"') {
-      inQuotes = !inQuotes;
-    } else if (char === ',' && !inQuotes) {
-      result.push(current.trim());
-      current = '';
-    } else {
-      current += char;
-    }
-  }
-  
-  result.push(current.trim());
-  return result;
-}
+
 
 function loadUsersFromCSV(): User[] {
   try {
