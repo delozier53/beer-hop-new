@@ -11,6 +11,7 @@ import { Play, ExternalLink, Edit, Plus, Upload, Headphones } from "lucide-react
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { ObjectUploader } from "@/components/ObjectUploader";
+import { SpotifyVisualizer, useSpotifyPlayState } from "@/components/SpotifyVisualizer";
 import type { PodcastEpisode, User } from "@shared/schema";
 import type { UploadResult } from "@uppy/core";
 import podcastBanner from "@assets/BH_Podcast_Banner (5)_1754202035969.jpg";
@@ -29,7 +30,9 @@ export default function Podcast() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingEpisode, setEditingEpisode] = useState<PodcastEpisode | null>(null);
   const [isHeaderImageDialogOpen, setIsHeaderImageDialogOpen] = useState(false);
+  const [visualizerVariant, setVisualizerVariant] = useState<"circle" | "bar" | "wave">("circle");
   const { toast } = useToast();
+  const { togglePlay, isPlaying } = useSpotifyPlayState();
   
   const { data: episodes = [], isLoading } = useQuery<PodcastEpisode[]>({
     queryKey: ["/api/podcast-episodes"],
@@ -207,7 +210,7 @@ export default function Podcast() {
           form.setValue("image", data.objectPath);
         } else {
           // Fallback to using the upload URL directly
-          form.setValue("image", uploadURL);
+          form.setValue("image", uploadURL || "");
         }
         
         toast({
@@ -217,7 +220,7 @@ export default function Podcast() {
       } catch (error) {
         console.error("Error normalizing image URL:", error);
         // Fallback to using the upload URL directly
-        form.setValue("image", uploadURL);
+        form.setValue("image", uploadURL || "");
         toast({
           title: "Success",
           description: "Image uploaded successfully!",
@@ -305,8 +308,12 @@ export default function Podcast() {
     }
   };
 
-  const openSpotify = (spotifyUrl: string) => {
-    window.open(spotifyUrl, '_blank');
+  const openSpotify = (spotifyUrl: string, episodeId: string) => {
+    togglePlay(episodeId);
+    // Add a small delay to show the animation before opening Spotify
+    setTimeout(() => {
+      window.open(spotifyUrl, '_blank');
+    }, 200);
   };
   
   // Sort episodes by release date descending (most recent first)
@@ -372,17 +379,36 @@ export default function Podcast() {
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-bold">Latest Episodes</h2>
           {isMasterAdmin && (
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-              <DialogTrigger asChild>
-                <Button 
-                  size="sm"
-                  variant="outline"
-                  className="text-[#ff55e1] border-[#ff55e1] hover:bg-[#ff55e1] hover:text-white"
-                >
-                  <Plus className="w-4 h-4 mr-1" />
-                  Add Episode
-                </Button>
-              </DialogTrigger>
+            <div className="flex items-center gap-3">
+              {/* Visualizer Variant Selector */}
+              <div className="flex items-center space-x-2 bg-gray-100 rounded-lg p-1">
+                <span className="text-xs text-gray-600 px-2">Style:</span>
+                {(['circle', 'bar', 'wave'] as const).map((variant) => (
+                  <button
+                    key={variant}
+                    onClick={() => setVisualizerVariant(variant)}
+                    className={`px-2 py-1 text-xs rounded capitalize transition-colors ${
+                      visualizerVariant === variant
+                        ? 'bg-[#ff55e1] text-white'
+                        : 'text-gray-600 hover:bg-gray-200'
+                    }`}
+                  >
+                    {variant}
+                  </button>
+                ))}
+              </div>
+              
+              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button 
+                    size="sm"
+                    variant="outline"
+                    className="text-[#ff55e1] border-[#ff55e1] hover:bg-[#ff55e1] hover:text-white"
+                  >
+                    <Plus className="w-4 h-4 mr-1" />
+                    Add Episode
+                  </Button>
+                </DialogTrigger>
               <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>Add New Episode</DialogTitle>
@@ -506,6 +532,7 @@ export default function Podcast() {
                 </Form>
               </DialogContent>
             </Dialog>
+            </div>
           )}
         </div>
 
@@ -665,8 +692,7 @@ export default function Podcast() {
             {sortedEpisodes.map((episode) => (
               <Card 
                 key={episode.id} 
-                className="cursor-pointer hover:shadow-md transition-shadow"
-                onClick={() => openSpotify(episode.spotifyUrl)}
+                className="hover:shadow-md transition-shadow"
               >
                 <CardContent className="p-4">
                   <div className="flex items-start space-x-4">
@@ -708,16 +734,20 @@ export default function Podcast() {
                         })}
                       </p>
                     </div>
-                    <button 
-                      className="w-8 h-8 rounded-full bg-[#ff55e1] hover:bg-[#ff55e1]/90 flex items-center justify-center transition-colors"
+                    <div
+                      className="cursor-pointer"
                       onClick={(e) => {
                         e.stopPropagation();
-                        openSpotify(episode.spotifyUrl);
+                        openSpotify(episode.spotifyUrl, episode.id);
                       }}
                       title="Listen on Spotify"
                     >
-                      <Headphones className="w-4 h-4 text-white" />
-                    </button>
+                      <SpotifyVisualizer 
+                        isPlaying={isPlaying(episode.id)}
+                        size="md"
+                        variant={visualizerVariant}
+                      />
+                    </div>
                   </div>
 
                 </CardContent>
