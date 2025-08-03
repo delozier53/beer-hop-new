@@ -329,6 +329,10 @@ export interface IStorage {
   // Global podcast header image
   getPodcastHeaderImage(): Promise<string | null>;
   setPodcastHeaderImage(imageUrl: string): Promise<void>;
+  
+  // Global Settings
+  getGlobalSettings(): Promise<Record<string, any>>;
+  updateGlobalSetting(key: string, value: any): Promise<void>;
 
   // Special Events
   getSpecialEvents(): Promise<SpecialEvent[]>;
@@ -667,6 +671,8 @@ export class MemStorage implements IStorage {
   private events: Map<string, Event>;
   private podcastEpisodes: Map<string, PodcastEpisode>;
   private badges: Map<string, Badge>;
+  private specialEvents = new Map<string, SpecialEvent>();
+  private globalSettings = new Map<string, any>();
 
   constructor() {
     this.users = new Map();
@@ -675,6 +681,8 @@ export class MemStorage implements IStorage {
     this.events = new Map();
     this.podcastEpisodes = new Map();
     this.badges = new Map();
+    this.specialEvents = new Map();
+    this.globalSettings = new Map();
     
     this.initializeData().catch(console.error);
   }
@@ -1012,6 +1020,35 @@ export class MemStorage implements IStorage {
       .find(badge => checkins >= badge.minCheckins && 
                     (badge.maxCheckins === null || checkins <= badge.maxCheckins));
   }
+
+  // Global Settings
+  async getGlobalSettings(): Promise<Record<string, any>> {
+    return Object.fromEntries(this.globalSettings.entries());
+  }
+
+  async updateGlobalSetting(key: string, value: any): Promise<void> {
+    this.globalSettings.set(key, value);
+  }
+
+  // Special Events
+  async getSpecialEvents(): Promise<SpecialEvent[]> {
+    const events = await loadSpecialEventsFromCSV();
+    events.forEach(event => this.specialEvents.set(event.id, event));
+    return Array.from(this.specialEvents.values());
+  }
+
+  async getSpecialEvent(id: string): Promise<SpecialEvent | undefined> {
+    return this.specialEvents.get(id);
+  }
+
+  async updateSpecialEvent(id: string, updates: Partial<SpecialEvent>): Promise<SpecialEvent | undefined> {
+    const event = this.specialEvents.get(id);
+    if (!event) return undefined;
+    
+    const updatedEvent = { ...event, ...updates };
+    this.specialEvents.set(id, updatedEvent);
+    return updatedEvent;
+  }
 }
 
 import { db } from "./db";
@@ -1285,6 +1322,24 @@ export class DatabaseStorage implements IStorage {
       .where(eq(specialEvents.id, id))
       .returning();
     return event || undefined;
+  }
+
+  // Global Settings
+  async getGlobalSettings(): Promise<Record<string, any>> {
+    const settingsData = await db.select().from(settings);
+    return settingsData.reduce((acc, setting) => {
+      acc[setting.key] = setting.value;
+      return acc;
+    }, {} as Record<string, any>);
+  }
+
+  async updateGlobalSetting(key: string, value: any): Promise<void> {
+    await db.insert(settings)
+      .values({ key, value })
+      .onConflictDoUpdate({
+        target: settings.key,
+        set: { value, updatedAt: new Date() },
+      });
   }
 }
 

@@ -1,11 +1,14 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, Clock, MapPin, Users, ExternalLink } from "lucide-react";
+import { Calendar, Clock, MapPin, Users, ExternalLink, Edit } from "lucide-react";
 import { Link } from "wouter";
+import { ObjectUploader } from "@/components/ObjectUploader";
+import { useToast } from "@/hooks/use-toast";
 import type { Event, SpecialEvent } from "@shared/schema";
+import type { UploadResult } from "@uppy/core";
 
 interface EventWithBrewery extends Event {
   brewery: {
@@ -16,6 +19,9 @@ interface EventWithBrewery extends Event {
 
 export default function Events() {
   const [selectedTab, setSelectedTab] = useState<"special" | "weekly">("special");
+  const [showHeaderEdit, setShowHeaderEdit] = useState(false);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   
   const { data: events = [], isLoading } = useQuery<EventWithBrewery[]>({
     queryKey: ["/api/events"],
@@ -23,6 +29,23 @@ export default function Events() {
 
   const { data: specialEvents = [], isLoading: isLoadingSpecial } = useQuery<SpecialEvent[]>({
     queryKey: ["/api/special-events"],
+  });
+
+  // Get header image from global settings
+  const { data: globalSettings } = useQuery({
+    queryKey: ["/api/global-settings"],
+  });
+
+  // Get current user to check admin status
+  const { data: currentUser } = useQuery<any>({
+    queryKey: ['/api/users/joshuamdelozier'], // Hardcoded for demo
+  });
+
+  // Sort special events chronologically (earliest first)
+  const sortedSpecialEvents = [...specialEvents].sort((a, b) => {
+    const dateA = new Date(a.date);
+    const dateB = new Date(b.date);
+    return dateA.getTime() - dateB.getTime();
   });
 
   const formatEventDate = (date: Date) => {
@@ -33,18 +56,132 @@ export default function Events() {
     }).format(new Date(date));
   };
 
+  // Check if user is master admin
+  const isMasterAdmin = currentUser?.role === 'admin';
+
+  // Header image upload functions
+  const handleGetUploadParameters = async () => {
+    const response = await fetch('/api/objects/upload', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    const data = await response.json();
+    return {
+      method: 'PUT' as const,
+      url: data.uploadURL,
+    };
+  };
+
+  const headerUpdateMutation = useMutation({
+    mutationFn: async (headerImageUrl: string) => {
+      const response = await fetch('/api/global-settings/events-header', {
+        method: 'PUT',
+        headers: {
+          'x-user-id': 'joshuamdelozier',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ headerImageUrl }),
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to update header');
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/global-settings"] });
+      toast({
+        title: "Header updated",
+        description: "Events header image has been updated for all users.",
+      });
+      setShowHeaderEdit(false);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Update failed",
+        description: error.message || "Failed to update header image.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleUploadComplete = (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
+    if (result.successful.length > 0) {
+      const uploadedFile = result.successful[0];
+      if (uploadedFile.uploadURL) {
+        // Convert the upload URL to an object path
+        const objectPath = convertUploadUrlToObjectPath(uploadedFile.uploadURL);
+        headerUpdateMutation.mutate(objectPath);
+      }
+    }
+  };
+
+  const convertUploadUrlToObjectPath = (uploadUrl: string): string => {
+    try {
+      const url = new URL(uploadUrl);
+      const pathParts = url.pathname.split('/');
+      const objectId = pathParts[pathParts.length - 1];
+      return `/objects/uploads/${objectId}`;
+    } catch (error) {
+      return uploadUrl;
+    }
+  };
+
+  // Get the header image from global settings or use default
+  const headerImageUrl = globalSettings?.eventsHeaderImage || 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=400';
+
   if (isLoading || isLoadingSpecial) {
     return (
       <div className="mobile-container">
         {/* Header image without text overlay */}
-        <div 
-          className="w-full h-48"
-          style={{
-            backgroundImage: `url('https://images.unsplash.com/photo-1558618666-fcd25c85cd64?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=400')`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center'
-          }}
-        />
+        <div className="relative">
+          <div 
+            className="w-full h-48"
+            style={{
+              backgroundImage: `url('${headerImageUrl}')`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center'
+            }}
+          />
+          {isMasterAdmin && (
+            <Button
+              size="sm"
+              variant="secondary"
+              className="absolute top-2 right-2 bg-white/90 hover:bg-white"
+              onClick={() => setShowHeaderEdit(!showHeaderEdit)}
+            >
+              <Edit className="w-4 h-4 mr-1" />
+              Edit Header
+            </Button>
+          )}
+          
+          {showHeaderEdit && isMasterAdmin && (
+            <div className="absolute top-12 right-2 bg-white rounded-lg shadow-lg p-4 min-w-48">
+              <h3 className="font-semibold mb-2">Update Header Image</h3>
+              <ObjectUploader
+                maxNumberOfFiles={1}
+                maxFileSize={10485760}
+                onGetUploadParameters={handleGetUploadParameters}
+                onComplete={handleUploadComplete}
+                buttonClassName="w-full bg-[#ff55e1] hover:bg-[#ff55e1]/90 text-white"
+              >
+                <span>Upload New Header</span>
+              </ObjectUploader>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="w-full mt-2"
+                onClick={() => setShowHeaderEdit(false)}
+              >
+                Cancel
+              </Button>
+            </div>
+          )}
+        </div>
         
         <div className="px-6 py-6 space-y-4">
           <h2 className="text-xl font-bold mb-4">Upcoming Events</h2>
@@ -127,7 +264,7 @@ export default function Events() {
             </div>
           ) : (
             <div className="space-y-4">
-              {specialEvents.map((event) => (
+              {sortedSpecialEvents.map((event) => (
                 <Link key={event.id} href={`/special-event/${event.id}`}>
                   <Card className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer">
                     {/* Large photo display */}

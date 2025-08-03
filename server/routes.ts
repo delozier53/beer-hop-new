@@ -340,6 +340,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Global settings endpoints
+  app.get("/api/global-settings", async (req, res) => {
+    try {
+      const settings = await storage.getGlobalSettings();
+      res.json(settings);
+    } catch (error) {
+      console.error("Error fetching global settings:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.put("/api/global-settings/events-header", async (req, res) => {
+    try {
+      const userId = req.headers['x-user-id'] as string;
+      
+      if (!userId) {
+        return res.status(401).json({ message: "User ID required" });
+      }
+
+      // Get user to check admin status
+      const user = await storage.getUser(userId);
+      if (!user || user.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const { headerImageUrl } = req.body;
+      if (!headerImageUrl) {
+        return res.status(400).json({ message: "Header image URL required" });
+      }
+
+      await storage.updateGlobalSetting('eventsHeaderImage', headerImageUrl);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error updating events header:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   app.get("/api/events/:id", async (req, res) => {
     try {
       const event = await storage.getEvent(req.params.id);
