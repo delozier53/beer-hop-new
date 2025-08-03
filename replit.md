@@ -1,0 +1,68 @@
+# Beer Hop Mobile App
+
+## Overview
+
+Beer Hop is a mobile-first web application that serves as a brewery discovery and check-in platform. The app allows users to discover local breweries, check into locations, listen to brewery-focused podcast episodes, track events, and compete on leaderboards. The application features a comprehensive brewery database with detailed information, social features like favorites and check-ins, and multimedia content including podcasts and event listings.
+
+## User Preferences
+
+Preferred communication style: Simple, everyday language.
+
+## System Architecture
+
+### Frontend Architecture
+The frontend is built as a Single Page Application (SPA) using React with TypeScript. The application uses Wouter for client-side routing, providing a lightweight alternative to React Router. The UI is constructed with shadcn/ui components built on top of Radix UI primitives, ensuring accessibility and consistent design patterns. TanStack Query (React Query) handles all server state management, providing caching, background updates, and optimistic updates for a smooth user experience.
+
+The application follows a mobile-first design approach with responsive layouts using Tailwind CSS. Custom CSS variables define a beer-themed color palette with amber, hops green, and brown tones. The component structure is organized with reusable UI components in the `components/ui` directory and page-specific components in `pages`.
+
+### Backend Architecture
+The backend is implemented as a REST API using Express.js with TypeScript. The server follows a simple three-layer architecture: routes handle HTTP requests and responses, a storage abstraction layer defines data operations, and the actual data storage implementation (currently appears to be in-memory but designed to be database-backed).
+
+The API provides endpoints for users, breweries, check-ins, events, and podcast episodes. The server includes middleware for request logging, JSON parsing, and error handling. The application uses a build process that bundles the server code with esbuild for production deployment.
+
+### Data Storage Solutions
+The application is configured to use PostgreSQL as the primary database with Drizzle ORM for type-safe database operations. The schema defines six main entities: users, breweries, check-ins, events, podcast episodes, and badges. Drizzle provides type-safe SQL query building and schema migration capabilities.
+
+The database schema supports complex relationships between entities, such as users having multiple check-ins and favorite breweries, breweries having associated podcast episodes, and a badge system based on check-in counts. Geographic data is stored using decimal fields for latitude and longitude coordinates.
+
+### State Management
+Client-side state is managed through a combination of TanStack Query for server state and React's built-in state management for local UI state. The query client is configured with infinite stale time and disabled refetching to optimize for mobile usage patterns. Custom hooks handle geolocation services and responsive design breakpoints.
+
+### Mobile-First Design
+The application is specifically designed for mobile devices with a bottom navigation pattern, mobile-optimized layouts, and touch-friendly interactions. The CSS framework uses responsive design principles with mobile breakpoints and a constrained maximum width for larger screens.
+
+## External Dependencies
+
+### UI and Styling
+- **Radix UI**: Provides accessible, unstyled UI primitives for building the component system
+- **Tailwind CSS**: Utility-first CSS framework for styling with custom theming for brewery/beer aesthetics
+- **Lucide React**: Icon library providing consistent iconography throughout the app
+- **class-variance-authority**: Enables variant-based component styling patterns
+
+### State Management and Data Fetching
+- **TanStack React Query**: Handles server state management, caching, and background synchronization
+- **Wouter**: Lightweight client-side routing library for navigation
+
+### Backend Infrastructure
+- **Express.js**: Web application framework for the REST API server
+- **Drizzle ORM**: Type-safe ORM for PostgreSQL database operations
+- **Drizzle Kit**: CLI tools for database migrations and schema management
+
+### Database
+- **PostgreSQL**: Primary database system (configured for Neon Database hosting)
+- **@neondatabase/serverless**: Serverless PostgreSQL driver for Neon Database
+
+### Development and Build Tools
+- **Vite**: Build tool and development server with React plugin support
+- **TypeScript**: Type safety across the entire application stack
+- **ESBuild**: Fast JavaScript bundler for production server builds
+
+### Forms and Validation
+- **React Hook Form**: Form state management and validation
+- **Zod**: Schema validation library integrated with Drizzle for type safety
+- **@hookform/resolvers**: Connects Zod schemas with React Hook Form
+
+### Utilities
+- **date-fns**: Date manipulation and formatting utilities
+- **nanoid**: URL-safe unique ID generation
+- **clsx**: Conditional className utility for dynamic styling

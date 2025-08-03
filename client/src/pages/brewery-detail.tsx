@@ -1,0 +1,327 @@
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { 
+  ArrowLeft, 
+  Edit, 
+  MapPin, 
+  Heart, 
+  StickyNote, 
+  Clock,
+  Phone,
+  Globe,
+  Facebook,
+  Instagram,
+  Headphones
+} from "lucide-react";
+import { Link, useParams, useLocation } from "wouter";
+import { useToast } from "@/hooks/use-toast";
+import type { Brewery, User, CheckIn } from "@shared/schema";
+
+const CURRENT_USER_ID = "user1";
+
+export default function BreweryDetail() {
+  const { id } = useParams<{ id: string }>();
+  const [, navigate] = useLocation();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const { data: brewery, isLoading } = useQuery<Brewery>({
+    queryKey: ["/api/breweries", id],
+  });
+
+  const { data: user } = useQuery<User>({
+    queryKey: ["/api/users", CURRENT_USER_ID],
+  });
+
+  const checkInMutation = useMutation({
+    mutationFn: async (breweryId: string) => {
+      const response = await apiRequest("POST", "/api/checkins", {
+        userId: CURRENT_USER_ID,
+        breweryId,
+        notes: null
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/users", CURRENT_USER_ID] });
+      queryClient.invalidateQueries({ queryKey: ["/api/breweries"] });
+      toast({
+        title: "Check-in successful!",
+        description: "Your brewery visit has been recorded.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Check-in failed",
+        description: "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const favoriteMutation = useMutation({
+    mutationFn: async (breweryId: string) => {
+      const response = await apiRequest("PUT", `/api/users/${CURRENT_USER_ID}/favorites`, {
+        breweryId
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/users", CURRENT_USER_ID] });
+      toast({
+        title: "Favorites updated",
+        description: "Your favorite breweries have been updated.",
+      });
+    }
+  });
+
+  if (isLoading) {
+    return (
+      <div className="mobile-container">
+        <div className="h-56 bg-gray-300 animate-pulse relative">
+          <button 
+            className="absolute top-4 left-4 w-10 h-10 bg-black/30 rounded-full flex items-center justify-center text-white"
+            onClick={() => navigate("/breweries")}
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+        </div>
+        <div className="px-6 py-6 space-y-4">
+          <div className="animate-pulse space-y-4">
+            <div className="h-8 bg-gray-300 rounded w-3/4"></div>
+            <div className="h-4 bg-gray-300 rounded w-1/2"></div>
+            <div className="h-20 bg-gray-300 rounded"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!brewery) {
+    return (
+      <div className="mobile-container">
+        <div className="flex items-center justify-center h-full">
+          <p className="text-gray-600">Brewery not found</p>
+        </div>
+      </div>
+    );
+  }
+
+  const isFavorite = user?.favoriteBreweries?.includes(brewery.id) || false;
+
+  return (
+    <div className="mobile-container pb-20">
+      {/* Hero Banner */}
+      <div 
+        className="relative h-56 bg-cover bg-center"
+        style={{ 
+          backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url('${brewery.image}')`
+        }}
+      >
+        <button 
+          className="absolute top-4 left-4 w-10 h-10 bg-black/30 rounded-full flex items-center justify-center text-white"
+          onClick={() => navigate("/breweries")}
+        >
+          <ArrowLeft className="w-5 h-5" />
+        </button>
+        
+        {/* Check-in Button */}
+        <Button 
+          className="absolute bottom-4 right-4 bg-amber hover:bg-amber-dark text-white shadow-lg"
+          onClick={() => checkInMutation.mutate(brewery.id)}
+          disabled={checkInMutation.isPending}
+        >
+          <MapPin className="w-4 h-4 mr-2" />
+          {checkInMutation.isPending ? "Checking in..." : "Check In"}
+        </Button>
+      </div>
+
+      <div className="px-6 py-6">
+        {/* Brewery Header */}
+        <div className="flex items-start justify-between mb-6">
+          <div className="flex items-center space-x-4">
+            <img 
+              src={brewery.logo} 
+              alt={`${brewery.name} logo`}
+              className="w-16 h-16 rounded-full object-cover"
+            />
+            <div>
+              <h1 className="text-2xl font-bold">{brewery.name}</h1>
+              <p className="text-gray-600">{brewery.type}</p>
+            </div>
+          </div>
+          <button 
+            className={`p-2 ${isFavorite ? 'text-red-500' : 'text-gray-400'}`}
+            onClick={() => favoriteMutation.mutate(brewery.id)}
+            disabled={favoriteMutation.isPending}
+          >
+            <Heart className={`w-6 h-6 ${isFavorite ? 'fill-current' : ''}`} />
+          </button>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="grid grid-cols-2 gap-3 mb-6">
+          <Button 
+            className="bg-hops hover:bg-hops-dark text-white"
+            onClick={() => favoriteMutation.mutate(brewery.id)}
+            disabled={favoriteMutation.isPending}
+          >
+            <Heart className="w-4 h-4 mr-2" />
+            {isFavorite ? "Remove Favorite" : "Add to Favorites"}
+          </Button>
+          <Button className="bg-brown hover:bg-brown-light text-white">
+            <StickyNote className="w-4 h-4 mr-2" />
+            Take Notes
+          </Button>
+        </div>
+
+        {/* Hours */}
+        <Card className="mb-6">
+          <CardContent className="p-4">
+            <h3 className="font-semibold mb-3 flex items-center">
+              <Clock className="w-4 h-4 mr-2" />
+              Hours
+            </h3>
+            <div className="space-y-1 text-sm">
+              <div className="flex justify-between">
+                <span>Monday - Thursday</span>
+                <span>{brewery.hours.weekday}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Friday - Saturday</span>
+                <span>{brewery.hours.weekend}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Sunday</span>
+                <span>{brewery.hours.sunday}</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Address */}
+        <div className="mb-6">
+          <h3 className="font-semibold mb-2 flex items-center">
+            <MapPin className="w-4 h-4 mr-2" />
+            Address
+          </h3>
+          <p className="text-gray-600">
+            {brewery.address}, {brewery.city}, {brewery.state} {brewery.zipCode}
+          </p>
+          <Button variant="ghost" className="text-amber text-sm font-medium mt-1 p-0">
+            Get Directions
+          </Button>
+        </div>
+
+        {/* About */}
+        <div className="mb-6">
+          <h3 className="font-semibold mb-2">About</h3>
+          <p className="text-gray-600 text-sm leading-relaxed">
+            {brewery.about}
+          </p>
+        </div>
+
+        {/* Policies */}
+        <div className="mb-6">
+          <h3 className="font-semibold mb-2">Policies</h3>
+          <div className="space-y-2 text-sm text-gray-600">
+            <div className="flex items-center">
+              <span className="w-6 h-6 bg-hops text-white rounded-full flex items-center justify-center text-xs mr-2">🐕</span>
+              <span>{brewery.policies.dogs}</span>
+            </div>
+            <div className="flex items-center">
+              <span className="w-6 h-6 bg-brown text-white rounded-full flex items-center justify-center text-xs mr-2">🍽️</span>
+              <span>{brewery.policies.food}</span>
+            </div>
+            <div className="flex items-center">
+              <span className="w-6 h-6 bg-amber text-white rounded-full flex items-center justify-center text-xs mr-2">🚗</span>
+              <span>{brewery.policies.parking}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Social Links */}
+        <div className="mb-6">
+          <h3 className="font-semibold mb-3">Connect</h3>
+          <div className="flex space-x-4">
+            {brewery.socialLinks.facebook && (
+              <a 
+                href={brewery.socialLinks.facebook} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="bg-blue-600 text-white p-3 rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <Facebook className="w-5 h-5" />
+              </a>
+            )}
+            {brewery.socialLinks.instagram && (
+              <a 
+                href={brewery.socialLinks.instagram} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="bg-pink-600 text-white p-3 rounded-lg hover:bg-pink-700 transition-colors"
+              >
+                <Instagram className="w-5 h-5" />
+              </a>
+            )}
+            {brewery.socialLinks.website && (
+              <a 
+                href={brewery.socialLinks.website} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="bg-gray-900 text-white p-3 rounded-lg hover:bg-gray-800 transition-colors"
+              >
+                <Globe className="w-5 h-5" />
+              </a>
+            )}
+          </div>
+        </div>
+
+        {/* Photo Gallery */}
+        {brewery.photos.length > 0 && (
+          <div className="mb-6">
+            <h3 className="font-semibold mb-3">Photos</h3>
+            <div className="flex space-x-3 overflow-x-auto pb-3">
+              {brewery.photos.map((photo, index) => (
+                <img 
+                  key={index}
+                  src={photo} 
+                  alt={`${brewery.name} photo ${index + 1}`}
+                  className="w-32 h-24 object-cover rounded-lg flex-shrink-0"
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Podcast Episode */}
+        {brewery.podcastEpisode && (
+          <Card className="bg-gradient-to-r from-purple-500 to-pink-500 text-white">
+            <CardContent className="p-4">
+              <div className="flex items-center space-x-3">
+                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                  <Headphones className="w-6 h-6" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold">Beer Hop Podcast</h3>
+                  <p className="text-sm opacity-90">{brewery.podcastEpisode}</p>
+                </div>
+                <Link href="/podcast">
+                  <Button 
+                    variant="secondary" 
+                    size="sm"
+                    className="bg-white/20 hover:bg-white/30 text-white border-none"
+                  >
+                    Listen
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    </div>
+  );
+}
