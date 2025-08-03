@@ -272,13 +272,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const allEpisodes = await storage.getPodcastEpisodes();
       const nextEpisodeNumber = Math.max(...allEpisodes.map(ep => ep.episodeNumber), 0) + 1;
       
-      const episodeData = {
-        ...req.body,
+      // Validate the request body first
+      const validatedData = insertPodcastEpisodeSchema.parse(req.body);
+      
+      // Add the calculated episode number to the validated data
+      const episodeDataWithNumber = {
+        ...validatedData,
         episodeNumber: nextEpisodeNumber,
       };
       
-      const validatedData = insertPodcastEpisodeSchema.parse(episodeData);
-      const episode = await storage.createPodcastEpisode(validatedData);
+      const episode = await storage.createPodcastEpisode(episodeDataWithNumber);
       res.status(201).json(episode);
     } catch (error) {
       if (error instanceof z.ZodError) {

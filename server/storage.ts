@@ -1157,7 +1157,7 @@ export class DatabaseStorage implements IStorage {
     return episode || undefined;
   }
 
-  async createPodcastEpisode(insertEpisode: InsertPodcastEpisode): Promise<PodcastEpisode> {
+  async createPodcastEpisode(insertEpisode: InsertPodcastEpisode & { episodeNumber: number }): Promise<PodcastEpisode> {
     const [episode] = await db
       .insert(podcastEpisodes)
       .values(insertEpisode)
