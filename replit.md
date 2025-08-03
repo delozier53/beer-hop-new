@@ -21,7 +21,13 @@ The backend is implemented as a REST API using Express.js with TypeScript. The s
 The API provides endpoints for users, breweries, check-ins, events, and podcast episodes. The server includes middleware for request logging, JSON parsing, and error handling. The application uses a build process that bundles the server code with esbuild for production deployment.
 
 ### Data Storage Solutions
-The application is configured to use PostgreSQL as the primary database with Drizzle ORM for type-safe database operations. The schema defines six main entities: users, breweries, check-ins, events, podcast episodes, and badges. Drizzle provides type-safe SQL query building and schema migration capabilities.
+The application uses PostgreSQL as the primary database with Drizzle ORM for type-safe database operations. The schema defines six main entities: users, breweries, check-ins, events, podcast episodes, and badges. The application now uses DatabaseStorage for persistent data storage instead of in-memory storage.
+
+Key recent changes (August 2025):
+- Switched from MemStorage to DatabaseStorage for data persistence
+- Updated brewery schema to remove 'about' field and add 'slideshowPhotos' and 'tapListUrl' fields
+- Enhanced brewery edit functionality with 5-photo slideshow support and tap list URL integration
+- All 70 authentic Oklahoma breweries from CSV are now properly stored in the database
 
 The database schema supports complex relationships between entities, such as users having multiple check-ins and favorite breweries, breweries having associated podcast episodes, and a badge system based on check-in counts. Geographic data uses authentic latitude and longitude coordinates from the provided brewery coordinate CSV file, ensuring accurate distance calculations for Oklahoma breweries.
 
