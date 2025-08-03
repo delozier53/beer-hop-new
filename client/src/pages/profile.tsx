@@ -108,13 +108,18 @@ export default function Profile() {
         {/* Current Badge */}
         {badge && (
           <div className="bg-gradient-to-r from-hops to-hops-dark rounded-xl p-4 mb-4 text-white">
-            <div className="flex items-center space-x-3">
-              <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center overflow-hidden">
+            <div className="flex flex-col items-center text-center space-y-3">
+              <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center overflow-hidden">
                 {badge.icon.startsWith('http') ? (
                   <img 
                     src={badge.icon} 
                     alt={badge.name}
-                    className="w-10 h-10 object-contain"
+                    className="w-12 h-12 object-contain"
+                    onError={(e) => {
+                      console.log('Badge image failed to load:', badge.icon);
+                      e.currentTarget.style.display = 'none';
+                      e.currentTarget.parentElement!.innerHTML = `<span class="text-2xl">🏆</span>`;
+                    }}
                   />
                 ) : (
                   <span className="text-2xl">{badge.icon}</span>

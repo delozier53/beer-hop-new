@@ -172,8 +172,16 @@ function loadBadgesFromCSV(): Badge[] {
         if (icon && icon.includes('drive.google.com')) {
           const fileId = icon.match(/\/d\/([a-zA-Z0-9-_]+)/)?.[1];
           if (fileId) {
-            icon = `https://drive.google.com/uc?id=${fileId}`;
+            icon = `https://drive.google.com/uc?export=view&id=${fileId}`;
           }
+        }
+        
+        // Debug log for first badge
+        if (index === 0) {
+          console.log('Badge image conversion:', { 
+            original: csvBadge.badge_icon, 
+            converted: icon 
+          });
         }
         
         const minCheckins = parseInt(csvBadge.min_checkins) || 0;
