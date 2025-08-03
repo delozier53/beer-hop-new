@@ -308,6 +308,7 @@ export interface IStorage {
   getPodcastEpisodes(): Promise<PodcastEpisode[]>;
   getPodcastEpisode(id: string): Promise<PodcastEpisode | undefined>;
   createPodcastEpisode(episode: InsertPodcastEpisode): Promise<PodcastEpisode>;
+  updatePodcastEpisode(id: string, updates: Partial<PodcastEpisode>): Promise<PodcastEpisode | undefined>;
 
   // Badges
   getBadges(): Promise<Badge[]>;
@@ -961,6 +962,15 @@ export class MemStorage implements IStorage {
     return episode;
   }
 
+  async updatePodcastEpisode(id: string, updates: Partial<PodcastEpisode>): Promise<PodcastEpisode | undefined> {
+    const episode = this.podcastEpisodes.get(id);
+    if (!episode) return undefined;
+    
+    const updatedEpisode = { ...episode, ...updates };
+    this.podcastEpisodes.set(id, updatedEpisode);
+    return updatedEpisode;
+  }
+
   // Badges
   async getBadges(): Promise<Badge[]> {
     return Array.from(this.badges.values()).sort((a, b) => a.minCheckins - b.minCheckins);
@@ -1171,6 +1181,15 @@ export class DatabaseStorage implements IStorage {
   async deleteEvent(id: string): Promise<boolean> {
     const result = await db.delete(events).where(eq(events.id, id));
     return result.count > 0;
+  }
+
+  async updatePodcastEpisode(id: string, updates: Partial<PodcastEpisode>): Promise<PodcastEpisode | undefined> {
+    const [episode] = await db
+      .update(podcastEpisodes)
+      .set(updates)
+      .where(eq(podcastEpisodes.id, id))
+      .returning();
+    return episode || undefined;
   }
 }
 

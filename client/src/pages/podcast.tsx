@@ -26,6 +26,8 @@ interface EpisodeFormData {
 
 export default function Podcast() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingEpisode, setEditingEpisode] = useState<PodcastEpisode | null>(null);
   const { toast } = useToast();
   
   const { data: episodes = [], isLoading } = useQuery<PodcastEpisode[]>({
@@ -81,8 +83,57 @@ export default function Podcast() {
     },
   });
 
+  const updateEpisodeMutation = useMutation({
+    mutationFn: async (data: EpisodeFormData) => {
+      if (!editingEpisode) throw new Error("No episode selected for editing");
+      
+      const episodeData = {
+        ...data,
+        episodeNumber: editingEpisode.episodeNumber, // Keep original episode number
+        description: editingEpisode.description || "", // Keep original description
+        duration: editingEpisode.duration, // Keep original duration
+        releaseDate: data.releaseDate,
+      };
+      return apiRequest("PUT", `/api/podcast-episodes/${editingEpisode.id}`, episodeData);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Episode updated successfully!",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/podcast-episodes"] });
+      setIsEditDialogOpen(false);
+      setEditingEpisode(null);
+      form.reset();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: "Failed to update episode. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const onSubmit = (data: EpisodeFormData) => {
-    createEpisodeMutation.mutate(data);
+    if (editingEpisode) {
+      updateEpisodeMutation.mutate(data);
+    } else {
+      createEpisodeMutation.mutate(data);
+    }
+  };
+
+  const handleEditEpisode = (episode: PodcastEpisode) => {
+    setEditingEpisode(episode);
+    form.reset({
+      title: episode.title,
+      guest: episode.guest,
+      business: episode.business,
+      spotifyUrl: episode.spotifyUrl,
+      image: episode.image,
+      releaseDate: new Date(episode.releaseDate).toISOString().split('T')[0],
+    });
+    setIsEditDialogOpen(true);
   };
 
   const handleImageUpload = async () => {
@@ -345,6 +396,136 @@ export default function Podcast() {
           )}
         </div>
 
+        {/* Edit Episode Dialog */}
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Edit Episode</DialogTitle>
+            </DialogHeader>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="title"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Title</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="Episode #66" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="guest"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Guest</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="Guest Name" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="business"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Business</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="Brewery/Business Name" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="spotifyUrl"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Spotify URL</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="https://open.spotify.com/episode/..." />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="image"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Episode Image</FormLabel>
+                      <FormControl>
+                        <div className="space-y-2">
+                          <Input {...field} placeholder="Image URL will appear here after upload" disabled />
+                          <ObjectUploader
+                            maxNumberOfFiles={1}
+                            maxFileSize={5242880} // 5MB
+                            onGetUploadParameters={handleImageUpload}
+                            onComplete={handleUploadComplete}
+                            buttonClassName="w-full bg-[#ff55e1] hover:bg-[#ff55e1]/90"
+                          >
+                            <Upload className="w-4 h-4 mr-2" />
+                            Upload Episode Image
+                          </ObjectUploader>
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="releaseDate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Release Date</FormLabel>
+                      <FormControl>
+                        <Input type="date" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <div className="flex gap-2 pt-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setIsEditDialogOpen(false);
+                      setEditingEpisode(null);
+                      form.reset();
+                    }}
+                    className="flex-1"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={updateEpisodeMutation.isPending}
+                    className="flex-1 bg-[#ff55e1] hover:bg-[#ff55e1]/90"
+                  >
+                    {updateEpisodeMutation.isPending ? "Updating..." : "Update Episode"}
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
+
         {episodes.length === 0 ? (
           <div className="text-center py-8 text-gray-500">
             <Play className="w-12 h-12 mx-auto mb-2 opacity-50" />
@@ -371,6 +552,19 @@ export default function Podcast() {
                         <span className="text-sm font-medium text-[#ff55e1]">
                           Episode #{episode.episodeNumber}
                         </span>
+                        {isMasterAdmin && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="text-gray-400 hover:text-gray-600 p-1 h-6 w-6"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEditEpisode(episode);
+                            }}
+                          >
+                            <Edit className="w-3 h-3" />
+                          </Button>
+                        )}
                       </div>
                       <h3 className="font-semibold text-gray-900 mb-1">
                         {episode.guest}

@@ -280,6 +280,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.put("/api/podcast-episodes/:id", async (req, res) => {
+    try {
+      const validatedData = insertPodcastEpisodeSchema.parse(req.body);
+      const episode = await storage.updatePodcastEpisode(req.params.id, validatedData);
+      if (!episode) {
+        return res.status(404).json({ message: "Episode not found" });
+      }
+      res.json(episode);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      console.error("Error updating podcast episode:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
