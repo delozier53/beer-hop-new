@@ -126,14 +126,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/breweries/:id", async (req, res) => {
     try {
       const updates = req.body;
+      console.log("Updating brewery", req.params.id, "with data:", updates);
+      
       const updatedBrewery = await storage.updateBrewery(req.params.id, updates);
       
       if (!updatedBrewery) {
         return res.status(404).json({ message: "Brewery not found" });
       }
 
+      console.log("Updated brewery result:", updatedBrewery);
       res.json(updatedBrewery);
     } catch (error) {
+      console.error("Error updating brewery:", error);
       res.status(500).json({ message: "Internal server error" });
     }
   });
