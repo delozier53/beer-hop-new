@@ -142,16 +142,7 @@ export default function BreweryDetail() {
           />
         </div>
 
-        {/* Podcast Button (if brewery has podcast) */}
-        {brewery.podcastUrl && (
-          <Button 
-            className="absolute bottom-4 right-4 bg-purple-600 hover:bg-purple-700 text-white shadow-lg"
-            onClick={() => window.open(brewery.podcastUrl!, '_blank')}
-          >
-            <Headphones className="w-4 h-4 mr-2" />
-            Listen on Spotify
-          </Button>
-        )}
+        {/* Removed podcast button from header */}
       </div>
 
       <div className="px-6 py-6">
@@ -334,7 +325,7 @@ export default function BreweryDetail() {
                 href={brewery.socialLinks.threads} 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="w-12 h-12 rounded-full bg-purple-600 hover:bg-purple-700 text-white flex items-center justify-center transition-colors"
+                className="w-12 h-12 rounded-full bg-pink-600 hover:bg-pink-700 text-white flex items-center justify-center transition-colors"
               >
                 <span className="font-bold text-sm">@</span>
               </a>
@@ -360,8 +351,8 @@ export default function BreweryDetail() {
         )}
 
         {/* Podcast Episode */}
-        {brewery.podcastEpisode && (
-          <Card className="bg-gradient-to-r from-purple-500 to-pink-500 text-white">
+        {brewery.podcastEpisode && brewery.podcastUrl && (
+          <Card className="bg-gradient-to-r from-pink-500 to-pink-600 text-white">
             <CardContent className="p-4">
               <div className="flex items-center space-x-3">
                 <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
@@ -371,15 +362,14 @@ export default function BreweryDetail() {
                   <h3 className="font-semibold">Beer Hop Podcast</h3>
                   <p className="text-sm opacity-90">{brewery.podcastEpisode}</p>
                 </div>
-                <Link href="/podcast">
-                  <Button 
-                    variant="secondary" 
-                    size="sm"
-                    className="bg-white/20 hover:bg-white/30 text-white border-none"
-                  >
-                    Listen
-                  </Button>
-                </Link>
+                <Button 
+                  variant="secondary" 
+                  size="sm"
+                  className="bg-white/20 hover:bg-white/30 text-white border-none"
+                  onClick={() => window.open(brewery.podcastUrl!, '_blank')}
+                >
+                  Listen on Spotify
+                </Button>
               </div>
             </CardContent>
           </Card>
