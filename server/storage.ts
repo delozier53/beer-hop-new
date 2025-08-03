@@ -24,9 +24,10 @@ async function loadBreweriesFromCSV(): Promise<Brewery[]> {
     
     // Parse CSV properly handling multi-line quoted fields
     const records = parseCSVContent(csvContent);
+    console.log(`Total parsed CSV records: ${records.length}`);
     
     const breweries = [];
-    for (let i = 0; i < Math.min(records.length, 73); i++) {
+    for (let i = 0; i < records.length; i++) {
       const record = records[i];
       const index = i;
       
@@ -98,8 +99,10 @@ async function loadBreweriesFromCSV(): Promise<Brewery[]> {
         createdAt: new Date()
       };
       
-      if (brewery.name) {
+      if (brewery.name && brewery.name.trim()) {
         breweries.push(brewery);
+      } else {
+        console.log(`Skipped brewery at index ${i}: name="${name}", record:`, Object.keys(record));
       }
     }
     
@@ -110,37 +113,77 @@ async function loadBreweriesFromCSV(): Promise<Brewery[]> {
   }
 }
 
-// Proper CSV parser that handles multi-line quoted fields
+// Robust CSV parser that handles quoted multi-line fields
 function parseCSVContent(csvContent: string): any[] {
-  const lines = csvContent.split('\n');
-  const headers = parseCSVLine(lines[0]);
   const records: any[] = [];
-  
-  let i = 1;
-  while (i < lines.length) {
-    let currentLine = lines[i];
-    let record = parseCSVLine(currentLine);
+  let position = 0;
+  let currentRow: string[] = [];
+  let insideQuotes = false;
+  let currentField = '';
+  let headers: string[] = [];
+  let isFirstRow = true;
+
+  while (position < csvContent.length) {
+    const char = csvContent[position];
     
-    // Handle multi-line quoted fields
-    while (record.length < headers.length && i + 1 < lines.length) {
-      i++;
-      currentLine += '\n' + lines[i];
-      record = parseCSVLine(currentLine);
+    if (char === '"') {
+      if (insideQuotes && csvContent[position + 1] === '"') {
+        // Handle escaped quotes
+        currentField += '"';
+        position += 2;
+        continue;
+      } else {
+        insideQuotes = !insideQuotes;
+        position++;
+        continue;
+      }
+    }
+
+    if (!insideQuotes && char === ',') {
+      currentRow.push(currentField.trim());
+      currentField = '';
+    } else if (!insideQuotes && (char === '\n' || char === '\r')) {
+      if (currentField || currentRow.length > 0) {
+        currentRow.push(currentField.trim());
+        
+        if (isFirstRow) {
+          headers = currentRow;
+          isFirstRow = false;
+        } else if (currentRow.length === headers.length) {
+          const obj: any = {};
+          headers.forEach((header, index) => {
+            obj[header.trim()] = currentRow[index] || '';
+          });
+          if (obj.name && obj.name.trim()) {
+            records.push(obj);
+          }
+        }
+        
+        currentRow = [];
+        currentField = '';
+      }
+    } else {
+      currentField += char;
     }
     
-    if (record.length === headers.length) {
+    position++;
+  }
+
+  // Handle the last field if file doesn't end with newline
+  if (currentField || currentRow.length > 0) {
+    currentRow.push(currentField.trim());
+    if (!isFirstRow && currentRow.length === headers.length) {
       const obj: any = {};
       headers.forEach((header, index) => {
-        obj[header.trim()] = record[index]?.trim() || '';
+        obj[header.trim()] = currentRow[index] || '';
       });
-      if (obj.name && obj.name.trim()) { // Only include records with names
+      if (obj.name && obj.name.trim()) {
         records.push(obj);
       }
     }
-    
-    i++;
   }
-  
+
+  console.log(`Parsed ${records.length} valid brewery records from CSV`);
   return records;
 }
 
@@ -491,126 +534,12 @@ export class MemStorage implements IStorage {
     const badgesList = loadBadgesFromCSV();
     badgesList.forEach(badge => this.badges.set(badge.id, badge));
 
-    // Initialize breweries from CSV with real geocoding
+    // Initialize breweries from CSV with authentic coordinates - ALL breweries
     const breweriesList = await loadBreweriesFromCSV();
-    console.log(`Loaded ${breweriesList.length} breweries from CSV`);
+    console.log(`Loaded ${breweriesList.length} authentic Oklahoma breweries from CSV`);
     breweriesList.forEach(brewery => this.breweries.set(brewery.id, brewery));
 
-    // Initialize sample legacy breweries for compatibility
-    const legacyBreweriesList: Brewery[] = [
-      {
-        id: "1",
-        name: "Golden Gate Brewing",
-        address: "1234 Mission Street",
-        city: "San Francisco",
-        state: "CA",
-        zipCode: "94103",
-        latitude: "37.7749",
-        longitude: "-122.4194",
-        image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600",
-        logo: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=200",
-        type: "Craft Brewery",
-        about: "Golden Gate Brewing has been crafting exceptional ales and lagers since 2015. Located in the heart of San Francisco, we pride ourselves on using locally sourced ingredients and traditional brewing methods to create unique, flavorful beers that capture the spirit of the Bay Area.",
-        hours: {
-          weekday: "3:00 PM - 10:00 PM",
-          weekend: "12:00 PM - 11:00 PM", 
-          sunday: "12:00 PM - 9:00 PM"
-        },
-        policies: {
-          dogs: "Dog-friendly outdoor seating",
-          food: "Food trucks on weekends",
-          parking: "Street parking available"
-        },
-        socialLinks: {
-          facebook: "https://facebook.com/goldengatebrewing",
-          instagram: "https://instagram.com/goldengatebrewing",
-          website: "https://goldengatebrewing.com"
-        },
-        photos: [
-          "https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600",
-          "https://images.unsplash.com/photo-1582037928769-181f2644ecb7?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600",
-          "https://images.unsplash.com/photo-1598300042247-d088f8ab3a91?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600"
-        ],
-        podcastEpisode: "Episode #28 - Brewing Excellence",
-        checkins: 127,
-        rating: "4.8",
-        ownerId: null,
-        createdAt: new Date()
-      },
-      {
-        id: "2",
-        name: "Anchor Brewing Co.",
-        address: "1705 Mariposa Street", 
-        city: "San Francisco",
-        state: "CA",
-        zipCode: "94107",
-        latitude: "37.7648",
-        longitude: "-122.4020",
-        image: "https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600",
-        logo: "https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=200",
-        type: "Historic Brewery",
-        about: "America's first craft brewery, established in 1896. Anchor Brewing continues to handcraft distinctive beers using traditional methods and the finest natural ingredients.",
-        hours: {
-          weekday: "2:00 PM - 9:00 PM",
-          weekend: "12:00 PM - 10:00 PM",
-          sunday: "12:00 PM - 8:00 PM"
-        },
-        policies: {
-          dogs: "Dogs welcome in beer garden",
-          food: "Kitchen serves artisanal pub fare",
-          parking: "Valet parking available"
-        },
-        socialLinks: {
-          website: "https://anchorbrewing.com",
-          instagram: "https://instagram.com/anchorbrewing"
-        },
-        photos: [
-          "https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600"
-        ],
-        podcastEpisode: "Episode #26 - Brewing Heritage",
-        checkins: 89,
-        rating: "4.6",
-        ownerId: null,
-        createdAt: new Date()
-      },
-      {
-        id: "3",
-        name: "Hop Valley Brewing",
-        address: "980 25th Street",
-        city: "Oakland", 
-        state: "CA",
-        zipCode: "94607",
-        latitude: "37.8044",
-        longitude: "-122.2711",
-        image: "https://images.unsplash.com/photo-1598300042247-d088f8ab3a91?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600",
-        logo: "https://images.unsplash.com/photo-1598300042247-d088f8ab3a91?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=200",
-        type: "Craft Brewery",
-        about: "Hop Valley Brewing focuses on hop-forward beers with innovative brewing techniques. Our modern facility combines state-of-the-art equipment with traditional craftsmanship.",
-        hours: {
-          weekday: "4:00 PM - 10:00 PM",
-          weekend: "12:00 PM - 11:00 PM",
-          sunday: "12:00 PM - 9:00 PM"
-        },
-        policies: {
-          dogs: "Dog-friendly taproom",
-          food: "Rotating food trucks",
-          parking: "Free parking lot"
-        },
-        socialLinks: {
-          website: "https://hopvalleybrewing.com",
-          facebook: "https://facebook.com/hopvalleybrewing"
-        },
-        photos: [],
-        podcastEpisode: "Episode #27 - Innovation in Brewing",
-        checkins: 156,
-        rating: "4.9",
-        ownerId: null,
-        createdAt: new Date()
-      }
-    ];
-
-    // Add legacy breweries for compatibility (different ID range)
-    legacyBreweriesList.forEach(brewery => this.breweries.set(`legacy-${brewery.id}`, brewery));
+    // Only authentic brewery data from CSV - no mock data
 
     // Initialize sample podcast episodes
     const episodes: PodcastEpisode[] = [
