@@ -294,7 +294,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/podcast-episodes/:id", async (req, res) => {
     try {
-      const validatedData = insertPodcastEpisodeSchema.parse(req.body);
+      // For updates, we need to include episodeNumber if provided
+      const updateSchema = insertPodcastEpisodeSchema.extend({
+        episodeNumber: z.number().optional(),
+      });
+      
+      const validatedData = updateSchema.parse(req.body);
       const episode = await storage.updatePodcastEpisode(req.params.id, validatedData);
       if (!episode) {
         return res.status(404).json({ message: "Episode not found" });
