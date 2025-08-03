@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Play, ExternalLink, Edit } from "lucide-react";
 import type { PodcastEpisode, User } from "@shared/schema";
+import podcastBanner from "@assets/BH_Podcast_Banner (5)_1754202035969.jpg";
 
 export default function Podcast() {
   const { data: episodes = [], isLoading } = useQuery<PodcastEpisode[]>({
@@ -17,6 +18,38 @@ export default function Podcast() {
 
   const openSpotify = (spotifyUrl: string) => {
     window.open(spotifyUrl, '_blank');
+  };
+  
+  const handleEdit = () => {
+    // Create a simple edit interface
+    const newEpisodeData = prompt(
+      "Enter new episode data in format: episodeNumber|title|guest|business|spotifyUrl|imageUrl\n" +
+      "Example: 66|Episode #66|John Doe|Sample Brewery|https://spotify.com/episode/123|https://image.url"
+    );
+    
+    if (newEpisodeData) {
+      const [episodeNumber, title, guest, business, spotifyUrl, imageUrl] = newEpisodeData.split('|');
+      
+      if (episodeNumber && title && guest && business) {
+        // Create new episode object
+        const newEpisode = {
+          episodeNumber: parseInt(episodeNumber),
+          title: title.trim(),
+          guest: guest.trim(),
+          business: business.trim(),
+          duration: "60",
+          releaseDate: new Date().toISOString(),
+          spotifyUrl: spotifyUrl?.trim() || "",
+          image: imageUrl?.trim() || "",
+          description: ""
+        };
+        
+        // For now, just show the data that would be sent
+        alert(`New episode data:\n${JSON.stringify(newEpisode, null, 2)}\n\nNote: This would be sent to the server to create the episode.`);
+      } else {
+        alert("Please provide at least episode number, title, guest, and business name.");
+      }
+    }
   };
   
   // Sort episodes by release date descending (most recent first)
@@ -60,7 +93,7 @@ export default function Podcast() {
       <div 
         className="hero-banner"
         style={{
-          backgroundImage: `url('@assets/BH_Podcast_Banner (5)_1754202035969.jpg')`,
+          backgroundImage: `url(${podcastBanner})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat'
@@ -79,10 +112,7 @@ export default function Podcast() {
               size="sm"
               variant="outline"
               className="text-[#ff55e1] border-[#ff55e1] hover:bg-[#ff55e1] hover:text-white"
-              onClick={() => {
-                // TODO: Implement edit functionality
-                alert('Edit functionality coming soon!');
-              }}
+              onClick={handleEdit}
             >
               <Edit className="w-4 h-4 mr-1" />
               Edit
