@@ -107,23 +107,21 @@ export default function Profile() {
 
         {/* Current Badge */}
         {badge && (
-          <div className="bg-gradient-to-r from-hops to-hops-dark rounded-xl p-4 mb-4 text-white">
+          <div className="bg-gradient-to-r from-hops to-hops-dark rounded-xl py-2 px-4 mb-4 text-white">
             <div className="flex justify-center">
-              <div className="w-20 h-20 flex items-center justify-center">
-                <img 
-                  src={badge.icon} 
-                  alt={badge.name}
-                  className="w-20 h-20 object-contain"
-                  onError={(e) => {
-                    console.log('Badge image failed to load:', badge.icon);
-                    // Try alternative Google Drive URL format
-                    const fileId = badge.icon.match(/id=([a-zA-Z0-9-_]+)/)?.[1];
-                    if (fileId) {
-                      e.currentTarget.src = `https://lh3.googleusercontent.com/d/${fileId}`;
-                    }
-                  }}
-                />
-              </div>
+              <img 
+                src={badge.icon} 
+                alt={badge.name}
+                className="w-32 h-32 object-contain"
+                onError={(e) => {
+                  console.log('Badge image failed to load:', badge.icon);
+                  // Try alternative Google Drive URL format
+                  const fileId = badge.icon.match(/id=([a-zA-Z0-9-_]+)/)?.[1];
+                  if (fileId) {
+                    e.currentTarget.src = `https://lh3.googleusercontent.com/d/${fileId}`;
+                  }
+                }}
+              />
             </div>
           </div>
         )}
