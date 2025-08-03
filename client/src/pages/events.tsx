@@ -15,7 +15,7 @@ function formatEventDate(dateString: string): string {
     return dateString;
   }
   
-  // Parse the date string as YYYY-MM-DD
+  // Parse the date string as YYYY-MM-DD without timezone issues
   if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
     const [year, month, day] = dateString.split('-').map(Number);
     
@@ -28,6 +28,26 @@ function formatEventDate(dateString: string): string {
   }
   
   return dateString;
+}
+
+// Helper function to convert object storage paths to proper URLs
+function getImageUrl(imagePath: string): string {
+  if (!imagePath) return '';
+  
+  // If it's already a full URL, return as is
+  if (imagePath.startsWith('http')) {
+    return imagePath;
+  }
+  
+  // Convert object storage path to accessible URL
+  if (imagePath.startsWith('/') && imagePath.includes('uploads/')) {
+    // Extract the object ID from the path
+    const parts = imagePath.split('/');
+    const objectId = parts[parts.length - 1];
+    return `/objects/uploads/${objectId}`;
+  }
+  
+  return imagePath;
 }
 import { useToast } from "@/hooks/use-toast";
 import type { Event, SpecialEvent } from "@shared/schema";
@@ -345,9 +365,13 @@ export default function Events() {
                     {event.logo && (
                       <div className="w-full h-48 overflow-hidden">
                         <img 
-                          src={event.logo} 
+                          src={getImageUrl(event.logo)} 
                           alt={event.event}
                           className="w-full h-full object-cover"
+                          onError={(e) => {
+                            // Hide image if it fails to load
+                            e.currentTarget.style.display = 'none';
+                          }}
                         />
                       </div>
                     )}
