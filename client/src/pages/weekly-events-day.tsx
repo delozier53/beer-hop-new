@@ -178,7 +178,7 @@ export default function WeeklyEventsDay() {
 
   return (
     <div className="mobile-container">
-      <div className="px-6 py-6">
+      <div className="px-6 py-6 pb-20">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center">
@@ -249,15 +249,6 @@ export default function WeeklyEventsDay() {
                 )}
                 
                 <CardContent className="p-4">
-                  {/* Distance Badge */}
-                  {distance && (
-                    <div className="absolute top-4 right-4">
-                      <Badge variant="outline" className="bg-white text-gray-600 text-xs">
-                        {distance} mi
-                      </Badge>
-                    </div>
-                  )}
-
                   {/* Brewery Logo and Name */}
                   <div className="flex items-center mb-3">
                     {event.logo && (
