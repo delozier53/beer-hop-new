@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,6 +21,7 @@ interface SpecialEventEditModalProps {
 export function SpecialEventEditModal({ event, isOpen, onClose }: SpecialEventEditModalProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   
   const [formData, setFormData] = useState({
     company: event.company,
@@ -181,10 +183,9 @@ export function SpecialEventEditModal({ event, isOpen, onClose }: SpecialEventEd
     },
   });
 
-  const handleDelete = () => {
-    if (confirm('Confirm Delete')) {
-      deleteMutation.mutate();
-    }
+  const handleDeleteConfirm = () => {
+    deleteMutation.mutate();
+    setShowDeleteDialog(false);
   };
 
   return (
@@ -321,14 +322,26 @@ export function SpecialEventEditModal({ event, isOpen, onClose }: SpecialEventEd
           </div>
 
           <div className="flex justify-between pt-4">
-            <Button 
-              type="button" 
-              variant="destructive"
-              onClick={handleDelete}
-              disabled={deleteMutation.isPending}
-            >
-              {deleteMutation.isPending ? "Deleting..." : "Delete Event"}
-            </Button>
+            <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+              <AlertDialogTrigger asChild>
+                <Button 
+                  type="button" 
+                  variant="destructive"
+                  disabled={deleteMutation.isPending}
+                >
+                  {deleteMutation.isPending ? "Deleting..." : "Delete Event"}
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Confirm Delete</AlertDialogTitle>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleDeleteConfirm}>OK</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
             
             <div className="flex space-x-2">
               <Button type="button" variant="outline" onClick={onClose}>
@@ -345,6 +358,9 @@ export function SpecialEventEditModal({ event, isOpen, onClose }: SpecialEventEd
           </div>
         </form>
       </DialogContent>
+
+      {/* Custom Delete Confirmation Dialog */}
+      
     </Dialog>
   );
 }
