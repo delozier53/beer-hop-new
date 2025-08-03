@@ -16,7 +16,8 @@ import {
   checkIns,
   events,
   podcastEpisodes,
-  badges
+  badges,
+  settings
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 import * as fs from 'fs';
@@ -322,6 +323,10 @@ export interface IStorage {
   // Badges
   getBadges(): Promise<Badge[]>;
   getUserBadge(userId: string): Promise<Badge | undefined>;
+
+  // Global podcast header image
+  getPodcastHeaderImage(): Promise<string | null>;
+  setPodcastHeaderImage(imageUrl: string): Promise<void>;
 }
 
 // CSV processing functions
@@ -1006,6 +1011,7 @@ import { db } from "./db";
 import { eq } from "drizzle-orm";
 
 export class DatabaseStorage implements IStorage {
+  private globalPodcastHeader: string | null = null;
   async getUser(id: string): Promise<User | undefined> {
     let [user] = await db.select().from(users).where(eq(users.id, id));
     
@@ -1212,6 +1218,15 @@ export class DatabaseStorage implements IStorage {
   async deletePodcastEpisode(id: string): Promise<boolean> {
     const result = await db.delete(podcastEpisodes).where(eq(podcastEpisodes.id, id));
     return result.rowCount > 0;
+  }
+
+  // Global podcast header image
+  async getPodcastHeaderImage(): Promise<string | null> {
+    return this.globalPodcastHeader;
+  }
+
+  async setPodcastHeaderImage(imageUrl: string): Promise<void> {
+    this.globalPodcastHeader = imageUrl;
   }
 }
 

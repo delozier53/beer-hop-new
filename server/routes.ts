@@ -330,6 +330,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Global podcast header image
+  app.get("/api/podcast/header", async (req, res) => {
+    try {
+      const headerImage = await storage.getPodcastHeaderImage();
+      res.json({ headerImage });
+    } catch (error) {
+      console.error("Error fetching podcast header:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.put("/api/podcast/header", async (req, res) => {
+    try {
+      const { headerImage } = req.body;
+      await storage.setPodcastHeaderImage(headerImage);
+      res.json({ message: "Header image updated successfully", headerImage });
+    } catch (error) {
+      console.error("Error updating podcast header:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

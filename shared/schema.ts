@@ -152,3 +152,12 @@ export type InsertPodcastEpisode = z.infer<typeof insertPodcastEpisodeSchema>;
 
 export type Badge = typeof badges.$inferSelect;
 export type InsertBadge = z.infer<typeof insertBadgeSchema>;
+
+// Global settings table for app-wide configuration
+export const settings = pgTable("settings", {
+  key: varchar("key").primaryKey(),
+  value: text("value"),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export type Setting = typeof settings.$inferSelect;
