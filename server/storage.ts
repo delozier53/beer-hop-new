@@ -127,8 +127,8 @@ async function loadBreweriesFromCSV(): Promise<Brewery[]> {
     return breweries;
   } catch (error) {
     console.error('Error loading breweries from CSV:', error);
-    console.error('Error details:', error.message);
-    console.error('Stack trace:', error.stack);
+    console.error('Error details:', error instanceof Error ? error.message : String(error));
+    console.error('Stack trace:', error instanceof Error ? error.stack : 'No stack trace available');
     return [];
   }
 }
@@ -538,7 +538,7 @@ function loadPodcastEpisodesFromCSV(): PodcastEpisode[] {
         console.error(`Error parsing line ${index + 1}:`, lineError);
         return null;
       }
-    }).filter(episode => episode && episode.visible).map(episode => {
+    }).filter((episode): episode is { visible: boolean; id: string; title: string; description: string; episodeNumber: number; guest: string; business: string; duration: string; releaseDate: Date; spotifyUrl: string; image: string; createdAt: Date; } => episode !== null && episode.visible).map(episode => {
       // Remove the visible property as it's not part of the schema
       const { visible, ...episodeData } = episode;
       return episodeData;
@@ -635,6 +635,7 @@ function getFallbackUsers(): User[] {
       name: "Alex Thompson",
       email: "alex@example.com",
       profileImage: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&h=150",
+      headerImage: null,
       location: "Oklahoma City, OK",
       role: "user",
       checkins: 24,
@@ -649,6 +650,7 @@ function getFallbackUsers(): User[] {
       name: "Sarah Beer",
       email: "sarah@example.com",
       profileImage: "https://images.unsplash.com/photo-1494790108755-2616b612b5c5?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&h=150",
+      headerImage: null,
       location: "Tulsa, OK",
       role: "user",
       checkins: 18,
@@ -663,6 +665,7 @@ function getFallbackUsers(): User[] {
       name: "Mike Hops",
       email: "mike@example.com", 
       profileImage: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&h=150",
+      headerImage: null,
       location: "Norman, OK",
       role: "user",
       checkins: 31,
@@ -818,9 +821,10 @@ export class MemStorage implements IStorage {
       name: insertUser.name,
       location: insertUser.location || null,
       profileImage: insertUser.profileImage || null,
+      headerImage: insertUser.headerImage || null,
       role: insertUser.role || "user",
       checkins: insertUser.checkins || 0,
-      favoriteBreweries: insertUser.favoriteBreweries || [],
+      favoriteBreweries: (insertUser.favoriteBreweries as string[]) || [],
       latitude: insertUser.latitude || null,
       longitude: insertUser.longitude || null,
       createdAt: new Date()
@@ -880,7 +884,6 @@ export class MemStorage implements IStorage {
       podcastUrl: insertBrewery.podcastUrl || null,
       socialLinks: (insertBrewery.socialLinks as any) || {},
       photos: (insertBrewery.photos as string[]) || [],
-      slideshowPhotos: (insertBrewery.slideshowPhotos as string[]) || [],
       tapListUrl: insertBrewery.tapListUrl || null,
       podcastEpisode: insertBrewery.podcastEpisode || null,
       checkins: insertBrewery.checkins || 0,
@@ -958,7 +961,7 @@ export class MemStorage implements IStorage {
       startTime: insertEvent.startTime,
       endTime: insertEvent.endTime,
       image: insertEvent.image,
-      photos: insertEvent.photos || [],
+      photos: (insertEvent.photos as string[]) || [],
       ticketRequired: insertEvent.ticketRequired || false,
       ticketPrice: insertEvent.ticketPrice || null,
       attendees: insertEvent.attendees || 0,
@@ -994,7 +997,7 @@ export class MemStorage implements IStorage {
     const id = randomUUID();
     const episode: PodcastEpisode = { 
       id,
-      episodeNumber: insertEpisode.episodeNumber,
+      episodeNumber: insertEpisode.episodeNumber!,
       title: insertEpisode.title,
       guest: insertEpisode.guest,
       business: insertEpisode.business,
@@ -1023,12 +1026,15 @@ export class MemStorage implements IStorage {
     return Array.from(this.badges.values()).sort((a, b) => a.minCheckins - b.minCheckins);
   }
 
-  async getUserBadge(checkins: number): Promise<Badge | undefined> {
+  async getUserBadge(userId: string): Promise<Badge | undefined> {
+    const user = await this.getUser(userId);
+    if (!user) return undefined;
+    
     const badges = await this.getBadges();
     return badges
       .sort((a, b) => b.minCheckins - a.minCheckins)
-      .find(badge => checkins >= badge.minCheckins && 
-                    (badge.maxCheckins === null || checkins <= badge.maxCheckins));
+      .find(badge => user.checkins >= badge.minCheckins && 
+                    (badge.maxCheckins === null || user.checkins <= badge.maxCheckins));
   }
 
   // Global Settings
@@ -1086,7 +1092,7 @@ export class DatabaseStorage implements IStorage {
         
         if (csvUsers.length > 0) {
           console.log(`Loading ${csvUsers.length} authentic users from CSV into database`);
-          await db.insert(users).values(csvUsers);
+          await db.insert(users).values(csvUsers as any);
           console.log('Authentic users loaded successfully from CSV');
         } else {
           console.log('No users found in CSV');
@@ -1139,7 +1145,7 @@ export class DatabaseStorage implements IStorage {
       // Initialize from CSV data
       const csvBreweries = await loadBreweriesFromCSV();
       if (csvBreweries.length > 0) {
-        await db.insert(breweries).values(csvBreweries);
+        await db.insert(breweries).values(csvBreweries as any);
       }
       return csvBreweries;
     }
@@ -1191,7 +1197,7 @@ export class DatabaseStorage implements IStorage {
       // Initialize from CSV data
       const csvEpisodes = loadPodcastEpisodesFromCSV();
       if (csvEpisodes.length > 0) {
-        await db.insert(podcastEpisodes).values(csvEpisodes);
+        await db.insert(podcastEpisodes).values(csvEpisodes as any);
         return csvEpisodes;
       }
     }
@@ -1256,7 +1262,7 @@ export class DatabaseStorage implements IStorage {
 
   async deleteEvent(id: string): Promise<boolean> {
     const result = await db.delete(events).where(eq(events.id, id));
-    return result.count > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   async updatePodcastEpisode(id: string, updates: Partial<PodcastEpisode>): Promise<PodcastEpisode | undefined> {
@@ -1270,7 +1276,7 @@ export class DatabaseStorage implements IStorage {
 
   async deletePodcastEpisode(id: string): Promise<boolean> {
     const result = await db.delete(podcastEpisodes).where(eq(podcastEpisodes.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   // Global podcast header image
