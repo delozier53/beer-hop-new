@@ -92,12 +92,25 @@ export default function Events() {
     return dateA.getTime() - dateB.getTime();
   });
 
-  const formatEventDate = (date: Date) => {
-    return new Intl.DateTimeFormat('en-US', {
-      weekday: 'long',
-      month: 'long',
-      day: 'numeric'
-    }).format(new Date(date));
+  const formatEventDate = (dateString: string): string => {
+    // If already in the correct format (contains comma and year), return as is
+    if (dateString.includes(',') && dateString.includes('20')) {
+      return dateString;
+    }
+    
+    // Parse the date string as YYYY-MM-DD without timezone issues
+    if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      const [year, month, day] = dateString.split('-').map(Number);
+      
+      const monthNames = [
+        'January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'
+      ];
+      
+      return `${monthNames[month - 1]} ${day}, ${year}`;
+    }
+    
+    return dateString;
   };
 
   // Check if user is master admin or brewery owner
@@ -388,7 +401,7 @@ export default function Events() {
                       </div>
                       <div className="flex items-center text-sm text-gray-600 mb-3">
                         <Calendar className="w-4 h-4 mr-1" />
-                        <span className="mr-3">{formatEventDate(new Date(event.date))}</span>
+                        <span className="mr-3">{formatEventDate(event.date)}</span>
                         <Clock className="w-4 h-4 mr-1" />
                         <span>{event.time}</span>
                       </div>
