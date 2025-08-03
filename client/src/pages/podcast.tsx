@@ -59,7 +59,7 @@ export default function Podcast() {
         episodeNumber: nextEpisodeNumber,
         description: "", // Default empty description
         duration: "60", // Default 60 minutes
-        releaseDate: new Date(data.releaseDate),
+        releaseDate: data.releaseDate,
       };
       return apiRequest("POST", "/api/podcast-episodes", episodeData);
     },

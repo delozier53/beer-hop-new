@@ -124,6 +124,8 @@ export const insertEventSchema = createInsertSchema(events).omit({
 export const insertPodcastEpisodeSchema = createInsertSchema(podcastEpisodes).omit({
   id: true,
   createdAt: true,
+}).extend({
+  releaseDate: z.string().transform(str => new Date(str)),
 });
 
 export const insertBadgeSchema = createInsertSchema(badges).omit({
