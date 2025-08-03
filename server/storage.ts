@@ -15,6 +15,8 @@ import {
   type InsertSpecialEvent,
   type WeeklyEvent,
   type InsertWeeklyEvent,
+  type VerificationCode,
+  type InsertVerificationCode,
   users,
   breweries,
   checkIns,
@@ -23,7 +25,8 @@ import {
   badges,
   settings,
   specialEvents,
-  weeklyEvents
+  weeklyEvents,
+  verificationCodes
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 import * as fs from 'fs';
@@ -338,6 +341,12 @@ export interface IStorage {
   // Global Settings
   getGlobalSettings(): Promise<Record<string, any>>;
   updateGlobalSetting(key: string, value: any): Promise<void>;
+
+  // Verification Codes
+  createVerificationCode(email: string, code: string): Promise<VerificationCode>;
+  getValidVerificationCode(email: string, code: string): Promise<VerificationCode | null>;
+  markVerificationCodeAsUsed(id: string): Promise<void>;
+  cleanupExpiredVerificationCodes(): Promise<void>;
 
   // Special Events
   getSpecialEvents(): Promise<SpecialEvent[]>;
@@ -688,6 +697,7 @@ export class MemStorage implements IStorage {
   private badges: Map<string, Badge>;
   private specialEvents = new Map<string, SpecialEvent>();
   private globalSettings = new Map<string, any>();
+  private verificationCodes = new Map<string, VerificationCode>();
 
   constructor() {
     this.users = new Map();
@@ -698,6 +708,7 @@ export class MemStorage implements IStorage {
     this.badges = new Map();
     this.specialEvents = new Map();
     this.globalSettings = new Map();
+    this.verificationCodes = new Map();
     
     this.initializeData().catch(console.error);
   }
@@ -812,6 +823,10 @@ export class MemStorage implements IStorage {
 
   async getUserByEmail(email: string): Promise<User | undefined> {
     return Array.from(this.users.values()).find(user => user.email === email);
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    return Array.from(this.users.values()).find(user => user.username === username);
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
@@ -1102,6 +1117,49 @@ export class MemStorage implements IStorage {
     this.specialEvents.set(id, updatedEvent);
     return updatedEvent;
   }
+
+  // Verification Codes
+  async createVerificationCode(email: string, code: string): Promise<VerificationCode> {
+    const id = randomUUID();
+    const verificationCode: VerificationCode = {
+      id,
+      email,
+      code,
+      expiresAt: new Date(Date.now() + 10 * 60 * 1000), // 10 minutes
+      isUsed: false,
+      createdAt: new Date()
+    };
+    this.verificationCodes.set(id, verificationCode);
+    return verificationCode;
+  }
+
+  async getValidVerificationCode(email: string, code: string): Promise<VerificationCode | null> {
+    const codes = Array.from(this.verificationCodes.values());
+    const validCode = codes.find(c => 
+      c.email === email && 
+      c.code === code && 
+      !c.isUsed && 
+      new Date() < c.expiresAt
+    );
+    return validCode || null;
+  }
+
+  async markVerificationCodeAsUsed(id: string): Promise<void> {
+    const code = this.verificationCodes.get(id);
+    if (code) {
+      code.isUsed = true;
+      this.verificationCodes.set(id, code);
+    }
+  }
+
+  async cleanupExpiredVerificationCodes(): Promise<void> {
+    const now = new Date();
+    for (const [id, code] of this.verificationCodes.entries()) {
+      if (code.expiresAt < now) {
+        this.verificationCodes.delete(id);
+      }
+    }
+  }
 }
 
 import { db } from "./db";
@@ -1144,6 +1202,11 @@ export class DatabaseStorage implements IStorage {
 
   async getUserByEmail(email: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.email, email));
+    return user || undefined;
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.username, username));
     return user || undefined;
   }
 
@@ -1522,6 +1585,48 @@ export class DatabaseStorage implements IStorage {
     
     // PostgreSQL returns rowCount, not rowsAffected
     return (result.rowCount || 0) > 0;
+  }
+
+  // Verification Codes
+  async createVerificationCode(email: string, code: string): Promise<VerificationCode> {
+    const [verificationCode] = await db
+      .insert(verificationCodes)
+      .values({
+        email,
+        code,
+        expiresAt: new Date(Date.now() + 10 * 60 * 1000), // 10 minutes
+        isUsed: false
+      })
+      .returning();
+    return verificationCode;
+  }
+
+  async getValidVerificationCode(email: string, code: string): Promise<VerificationCode | null> {
+    const [validCode] = await db
+      .select()
+      .from(verificationCodes)
+      .where(
+        and(
+          eq(verificationCodes.email, email),
+          eq(verificationCodes.code, code),
+          eq(verificationCodes.isUsed, false),
+          gte(verificationCodes.expiresAt, new Date())
+        )
+      );
+    return validCode || null;
+  }
+
+  async markVerificationCodeAsUsed(id: string): Promise<void> {
+    await db
+      .update(verificationCodes)
+      .set({ isUsed: true })
+      .where(eq(verificationCodes.id, id));
+  }
+
+  async cleanupExpiredVerificationCodes(): Promise<void> {
+    await db
+      .delete(verificationCodes)
+      .where(gte(new Date(), verificationCodes.expiresAt));
   }
 }
 

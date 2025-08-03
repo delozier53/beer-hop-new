@@ -117,6 +117,24 @@ export const specialEvents = pgTable("special_events", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+// Verification codes for email authentication
+export const verificationCodes = pgTable("verification_codes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  email: text("email").notNull(),
+  code: text("code").notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  isUsed: boolean("is_used").notNull().default(false),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// Global settings for app configuration
+export const globalSettings = pgTable("global_settings", {
+  key: text("key").primaryKey(),
+  value: json("value").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -159,6 +177,11 @@ export const insertSpecialEventSchema = createInsertSchema(specialEvents).omit({
   createdAt: true,
 });
 
+export const insertVerificationCodeSchema = createInsertSchema(verificationCodes).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -180,6 +203,9 @@ export type InsertBadge = z.infer<typeof insertBadgeSchema>;
 
 export type SpecialEvent = typeof specialEvents.$inferSelect;
 export type InsertSpecialEvent = z.infer<typeof insertSpecialEventSchema>;
+
+export type VerificationCode = typeof verificationCodes.$inferSelect;
+export type InsertVerificationCode = z.infer<typeof insertVerificationCodeSchema>;
 
 // Global settings table for app-wide configuration
 export const weeklyEvents = pgTable("weekly_events", {

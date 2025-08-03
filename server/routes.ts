@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { insertCheckInSchema, insertUserSchema, insertPodcastEpisodeSchema, insertSpecialEventSchema, insertWeeklyEventSchema } from "@shared/schema";
 import { z } from "zod";
 import { ObjectStorageService } from "./objectStorage";
+import { sendVerificationCode, generateVerificationCode } from "./emailService";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Users
@@ -779,6 +780,114 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ message: "Header image updated successfully", headerImage });
     } catch (error) {
       console.error("Error updating podcast header:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Authentication Routes
+  app.post("/api/auth/send-code", async (req, res) => {
+    try {
+      const { email } = req.body;
+      
+      if (!email || !email.includes('@')) {
+        return res.status(400).json({ message: "Valid email is required" });
+      }
+
+      // Cleanup expired codes before creating new one
+      await storage.cleanupExpiredVerificationCodes();
+      
+      // Generate and send verification code
+      const code = generateVerificationCode();
+      const verificationCode = await storage.createVerificationCode(email, code);
+      
+      const emailSent = await sendVerificationCode(email, code);
+      
+      if (!emailSent) {
+        return res.status(500).json({ message: "Failed to send verification email" });
+      }
+
+      res.json({ message: "Verification code sent to your email" });
+    } catch (error) {
+      console.error("Error sending verification code:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post("/api/auth/verify-code", async (req, res) => {
+    try {
+      const { email, code } = req.body;
+      
+      if (!email || !code) {
+        return res.status(400).json({ message: "Email and code are required" });
+      }
+
+      // Check if verification code is valid
+      const validCode = await storage.getValidVerificationCode(email, code);
+      
+      if (!validCode) {
+        return res.status(400).json({ message: "Invalid or expired verification code" });
+      }
+
+      // Mark code as used
+      await storage.markVerificationCodeAsUsed(validCode.id);
+
+      // Check if user exists
+      const existingUser = await storage.getUserByEmail(email);
+      
+      if (existingUser) {
+        // Existing user - return user data
+        res.json({ 
+          user: existingUser,
+          isNewUser: false 
+        });
+      } else {
+        // New user - they need to complete profile
+        res.json({ 
+          email,
+          isNewUser: true 
+        });
+      }
+    } catch (error) {
+      console.error("Error verifying code:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post("/api/auth/complete-profile", async (req, res) => {
+    try {
+      const { email, username, name, location } = req.body;
+      
+      if (!email || !username || !name) {
+        return res.status(400).json({ message: "Email, username, and name are required" });
+      }
+
+      // Check if username is already taken
+      const existingUser = await storage.getUserByUsername(username);
+      if (existingUser) {
+        return res.status(400).json({ message: "Username is already taken" });
+      }
+
+      // Create new user
+      const newUser = await storage.createUser({
+        username,
+        name,
+        email,
+        location: location || null,
+        profileImage: null,
+        headerImage: null,
+        role: "user",
+        checkins: 0,
+        favoriteBreweries: [],
+        latitude: null,
+        longitude: null
+      });
+
+      res.json({ 
+        user: newUser,
+        isNewUser: false 
+      });
+    } catch (error) {
+      console.error("Error completing profile:", error);
       res.status(500).json({ message: "Internal server error" });
     }
   });

@@ -2,24 +2,28 @@ import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Medal, Trophy, Heart, MapPin, Settings } from "lucide-react";
+import { Medal, Trophy, Heart, MapPin, Settings, LogOut } from "lucide-react";
 import { Link } from "wouter";
 import { EditProfileDialog } from "@/components/edit-profile-dialog";
+import { useAuth } from "@/hooks/useAuth";
 import type { User, Badge, Brewery } from "@shared/schema";
 import defaultHeaderImage from "@assets/BH Drip_1754199454816.png";
 import { convertGoogleDriveImageUrl } from "@/lib/imageUtils";
 
-const CURRENT_USER_ID = "joshuamdelozier";
-
 export default function Profile() {
   const queryClient = useQueryClient();
+  const { user: authUser, logout } = useAuth();
+  
+  const userId = authUser?.id;
 
   const { data: user, isLoading: userLoading } = useQuery<User>({
-    queryKey: ["/api/users", CURRENT_USER_ID],
+    queryKey: ["/api/users", userId],
+    enabled: !!userId,
   });
 
   const { data: badge } = useQuery<Badge>({
-    queryKey: ["/api/users", CURRENT_USER_ID, "badge"],
+    queryKey: ["/api/users", userId, "badge"],
+    enabled: !!userId,
   });
 
   const { data: allBreweries = [] } = useQuery<Brewery[]>({
@@ -32,16 +36,20 @@ export default function Profile() {
 
   const leaderboardRank = useQuery<User[]>({
     queryKey: ["/api/leaderboard"],
-  }).data?.findIndex(u => u.id === CURRENT_USER_ID) || 0;
+  }).data?.findIndex(u => u.id === userId) || 0;
 
   const removeFavoriteMutation = useMutation({
     mutationFn: async (breweryId: string) => {
-      return apiRequest("PUT", `/api/users/${CURRENT_USER_ID}/favorites`, { breweryId });
+      return apiRequest("PUT", `/api/users/${userId}/favorites`, { breweryId });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/users", CURRENT_USER_ID] });
+      queryClient.invalidateQueries({ queryKey: ["/api/users", userId] });
     }
   });
+
+  if (!authUser) {
+    return null; // Should not happen since auth is required
+  }
 
   if (userLoading) {
     return (
@@ -82,7 +90,7 @@ export default function Profile() {
         <div className="hero-overlay" />
         {/* Settings Gear Icon */}
         <div className="absolute top-4 right-4 z-20">
-          <EditProfileDialog user={user} userId={CURRENT_USER_ID} />
+          <EditProfileDialog user={user} userId={userId || ""} />
         </div>
       </div>
 
@@ -201,6 +209,16 @@ export default function Profile() {
             </div>
           )}
         </div>
+
+        {/* Logout Button */}
+        <Button 
+          onClick={logout} 
+          variant="outline" 
+          className="w-full mt-6 text-red-600 border-red-600 hover:bg-red-50"
+        >
+          <LogOut className="w-4 h-4 mr-2" />
+          Sign Out
+        </Button>
       </div>
     </div>
   );
