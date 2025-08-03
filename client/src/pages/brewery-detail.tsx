@@ -64,6 +64,28 @@ export default function BreweryDetail() {
     queryKey: ["/api/users", CURRENT_USER_ID],
   });
 
+  // Mock slideshow photos (in production, these would come from the brewery data)
+  const slideshowPhotos = [
+    "https://images.unsplash.com/photo-1558618666-fbd6c1c64c1a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600",
+    "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600",
+    "https://images.unsplash.com/photo-1559954350-b734dd78c889?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600",
+    "https://images.unsplash.com/photo-1536578266687-db9a37a4e5e6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600",
+    "https://images.unsplash.com/photo-1566994620644-5b5b6f0c9b59?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600"
+  ];
+
+  // Auto-advance slideshow every 6 seconds
+  useEffect(() => {
+    if (slideshowPhotos.length > 1) {
+      const interval = setInterval(() => {
+        setCurrentSlideIndex((prevIndex) => 
+          (prevIndex + 1) % slideshowPhotos.length
+        );
+      }, 6000);
+
+      return () => clearInterval(interval);
+    }
+  }, [slideshowPhotos.length]);
+
   const checkInMutation = useMutation({
     mutationFn: async (breweryId: string) => {
       const response = await apiRequest("POST", "/api/checkins", {
@@ -172,28 +194,6 @@ export default function BreweryDetail() {
   }
 
   const isFavorite = user?.favoriteBreweries?.includes(brewery.id) || false;
-
-  // Mock slideshow photos (in production, these would come from the brewery data)
-  const slideshowPhotos = [
-    "https://images.unsplash.com/photo-1558618666-fbd6c1c64c1a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600",
-    "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600",
-    "https://images.unsplash.com/photo-1559954350-b734dd78c889?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600",
-    "https://images.unsplash.com/photo-1536578266687-db9a37a4e5e6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600",
-    "https://images.unsplash.com/photo-1566994620644-5b5b6f0c9b59?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600"
-  ];
-
-  // Auto-advance slideshow every 6 seconds
-  useEffect(() => {
-    if (slideshowPhotos.length > 1) {
-      const interval = setInterval(() => {
-        setCurrentSlideIndex((prevIndex) => 
-          (prevIndex + 1) % slideshowPhotos.length
-        );
-      }, 6000);
-
-      return () => clearInterval(interval);
-    }
-  }, [slideshowPhotos.length]);
 
   return (
     <div className="mobile-container pb-20">
