@@ -29,8 +29,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { insertWeeklyEventSchema } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
-import { ObjectUploader } from "./ObjectUploader";
-import type { UploadResult } from "@uppy/core";
+
 
 const formSchema = insertWeeklyEventSchema.extend({
   day: z.enum(['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']),
@@ -60,6 +59,7 @@ export default function WeeklyEventCreateModal({
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [uploadedImageUrl, setUploadedImageUrl] = useState<string>('');
+  const [isUploading, setIsUploading] = useState(false);
 
   const { data: breweries = [] } = useQuery<Brewery[]>({
     queryKey: ['/api/breweries'],
@@ -84,6 +84,82 @@ export default function WeeklyEventCreateModal({
     const selectedBrewery = breweries.find(b => b.name === breweryName);
     if (selectedBrewery) {
       form.setValue('address', selectedBrewery.address);
+    }
+  };
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Check file size (10MB limit)
+    if (file.size > 10485760) {
+      toast({
+        title: "File too large",
+        description: "Please select a file smaller than 10MB.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check file type
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Invalid file type",
+        description: "Please select an image file.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsUploading(true);
+    
+    try {
+      // Get upload URL
+      const uploadResponse = await fetch('/api/objects/upload', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (!uploadResponse.ok) {
+        throw new Error('Failed to get upload URL');
+      }
+      
+      const { uploadURL } = await uploadResponse.json();
+
+      // Upload file
+      const fileUploadResponse = await fetch(uploadURL, {
+        method: 'PUT',
+        body: file,
+        headers: {
+          'Content-Type': file.type,
+        },
+      });
+
+      if (!fileUploadResponse.ok) {
+        throw new Error('Failed to upload file');
+      }
+
+      const objectPath = convertUploadUrlToObjectPath(uploadURL);
+      setUploadedImageUrl(objectPath);
+      
+      toast({
+        title: "Photo Uploaded",
+        description: "Event photo uploaded successfully!",
+      });
+      
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast({
+        title: "Upload failed",
+        description: "Failed to upload photo. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploading(false);
+      // Reset file input
+      event.target.value = '';
     }
   };
 
@@ -280,39 +356,29 @@ export default function WeeklyEventCreateModal({
               <div>
                 <label className="text-sm font-medium">Event Photo (Optional)</label>
                 <div className="mt-2">
-                  <ObjectUploader
-                    maxNumberOfFiles={1}
-                    maxFileSize={10485760} // 10MB
-                    onGetUploadParameters={async () => {
-                      const response = await fetch('/api/objects/upload', {
-                        method: 'POST',
-                        headers: {
-                          'Content-Type': 'application/json',
-                        },
-                      });
-                      const data = await response.json();
-                      return {
-                        method: 'PUT' as const,
-                        url: data.uploadURL,
-                      };
-                    }}
-                    onComplete={(result) => {
-                      if (result.successful && result.successful.length > 0) {
-                        const uploadedFile = result.successful[0];
-                        if (uploadedFile.uploadURL) {
-                          const objectPath = convertUploadUrlToObjectPath(uploadedFile.uploadURL);
-                          setUploadedImageUrl(objectPath);
-                          toast({
-                            title: "Photo Uploaded",
-                            description: "Event photo uploaded successfully! You can now create the event.",
-                          });
-                        }
-                      }
-                    }}
-                    buttonClassName="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 border border-dashed border-gray-300 h-12"
+                  <input
+                    type="file"
+                    id="eventPhoto"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleFileUpload}
+                    disabled={isUploading}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full h-12 bg-gray-100 hover:bg-gray-200 text-gray-700 border border-dashed border-gray-300"
+                    onClick={() => document.getElementById('eventPhoto')?.click()}
+                    disabled={isUploading}
                   >
-                    📷 {uploadedImageUrl ? 'Change Event Photo' : 'Upload Event Photo'}
-                  </ObjectUploader>
+                    {isUploading ? (
+                      <>⏳ Uploading...</>
+                    ) : uploadedImageUrl ? (
+                      <>📷 Change Event Photo</>
+                    ) : (
+                      <>📷 Upload Event Photo</>
+                    )}
+                  </Button>
                   {uploadedImageUrl && (
                     <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded">
                       <p className="text-sm text-green-700">✓ Photo uploaded successfully</p>
