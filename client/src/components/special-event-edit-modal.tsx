@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -38,7 +38,8 @@ export function SpecialEventEditModal({ event, isOpen, onClose }: SpecialEventEd
     mutationFn: async (updates: Partial<SpecialEvent>) => {
       // Get current user ID - in a real app this would come from auth context
       const userId = 'joshuamdelozier'; // Hardcoded for demo - replace with actual auth
-      return apiRequest(`/api/special-events/${event.id}`, {
+      
+      const response = await fetch(`/api/special-events/${event.id}`, {
         method: 'PUT',
         headers: {
           'x-user-id': userId,
@@ -46,6 +47,13 @@ export function SpecialEventEditModal({ event, isOpen, onClose }: SpecialEventEd
         },
         body: JSON.stringify(updates),
       });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to update event');
+      }
+      
+      return response.json();
     },
     onSuccess: () => {
       toast({
@@ -87,6 +95,9 @@ export function SpecialEventEditModal({ event, isOpen, onClose }: SpecialEventEd
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Edit Special Event</DialogTitle>
+          <DialogDescription>
+            Update the information for this special event.
+          </DialogDescription>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-4">

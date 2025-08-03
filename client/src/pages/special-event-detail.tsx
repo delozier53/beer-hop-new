@@ -17,14 +17,14 @@ export default function SpecialEventDetail() {
   });
 
   // Get current user - in a real app this would come from auth context
-  const { data: currentUser } = useQuery({
+  const { data: currentUser } = useQuery<any>({
     queryKey: ['/api/users/joshuamdelozier'], // Hardcoded for demo
   });
 
   // Check if user can edit this event
-  const canEdit = currentUser && (
+  const canEdit = currentUser && event && (
     currentUser.role === 'admin' || // Master admin
-    event?.ownerId === currentUser.id // Event owner
+    event.ownerId === currentUser.id // Event owner
   );
 
   if (isLoading) {
