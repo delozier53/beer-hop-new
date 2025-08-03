@@ -261,7 +261,7 @@ export default function Podcast() {
         
         if (response.ok) {
           const data = await response.json();
-          setHeaderImage(`http://localhost:5000${data.objectPath}`);
+          setHeaderImage(data.objectPath);
         } else {
           setHeaderImage(uploadURL);
         }
@@ -298,10 +298,6 @@ export default function Podcast() {
       <div className="mobile-container">
         <div className="hero-banner from-purple-600 to-pink-600">
           <div className="hero-overlay" />
-          <div className="absolute bottom-4 left-4 text-white">
-            <h1 className="text-2xl font-bold">Beer Hop Podcast</h1>
-            <p className="text-sm opacity-90">Stories from Local Brewers</p>
-          </div>
         </div>
         <div className="px-6 py-6 space-y-4">
           {[...Array(3)].map((_, i) => (
@@ -336,10 +332,7 @@ export default function Podcast() {
         }}
       >
         <div className="hero-overlay" />
-        <div className="absolute bottom-4 left-4 text-white">
-          <h1 className="text-2xl font-bold">Beer Hop Podcast</h1>
-          <p className="text-sm opacity-90">Stories from Local Brewers</p>
-        </div>
+
         {isMasterAdmin && (
           <Button
             size="sm"
