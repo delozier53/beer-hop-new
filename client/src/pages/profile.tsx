@@ -7,6 +7,7 @@ import { Link } from "wouter";
 import { EditProfileDialog } from "@/components/edit-profile-dialog";
 import type { User, Badge, Brewery } from "@shared/schema";
 import defaultHeaderImage from "@assets/BH Drip_1754199454816.png";
+import { convertGoogleDriveImageUrl } from "@/lib/imageUtils";
 
 const CURRENT_USER_ID = "joshuamdelozier";
 
@@ -167,9 +168,12 @@ export default function Profile() {
                 <div key={brewery.id} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                   <Link href={`/brewery/${brewery.id}`} className="flex items-center space-x-3 flex-1">
                     <img 
-                      src={brewery.logo} 
+                      src={convertGoogleDriveImageUrl(brewery.logo) || `https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=200`} 
                       alt={brewery.name}
                       className="w-12 h-12 rounded-lg object-cover"
+                      onError={(e) => {
+                        e.currentTarget.src = `https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=200`;
+                      }}
                     />
                     <div className="flex-1">
                       <h4 className="font-medium">{brewery.name}</h4>
