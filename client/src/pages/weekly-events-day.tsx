@@ -220,8 +220,8 @@ export default function WeeklyEventsDay() {
             <p>Check back later for {dayName} events!</p>
           </div>
         ) : (
-          <div className="space-y-4">
-            {sortedEvents.map((event, index) => {
+          <div className="space-y-4 pb-8">
+            {sortedEvents.filter(event => event.title && event.title.trim() !== '').map((event, index) => {
               // Calculate distance for display
               const brewery = breweries.find((b) => b.name === event.brewery);
               const distance = userLocation && brewery ? 

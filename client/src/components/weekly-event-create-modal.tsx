@@ -33,6 +33,8 @@ import { useToast } from "@/hooks/use-toast";
 
 const formSchema = insertWeeklyEventSchema.extend({
   day: z.enum(['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']),
+  title: z.string().min(1, 'Event title is required'),
+  details: z.string().min(1, 'Event details are required'),
 }).transform((data) => ({
   ...data,
   day: data.day.charAt(0).toUpperCase() + data.day.slice(1), // Capitalize first letter to match existing data
