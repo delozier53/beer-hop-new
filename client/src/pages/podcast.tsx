@@ -1,17 +1,28 @@
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Play, ExternalLink } from "lucide-react";
-import type { PodcastEpisode } from "@shared/schema";
+import { Play, ExternalLink, Edit } from "lucide-react";
+import type { PodcastEpisode, User } from "@shared/schema";
 
 export default function Podcast() {
   const { data: episodes = [], isLoading } = useQuery<PodcastEpisode[]>({
     queryKey: ["/api/podcast-episodes"],
   });
+  
+  const { data: user } = useQuery<User>({
+    queryKey: ["/api/users/joshuamdelozier"],
+  });
+  
+  const isMasterAdmin = user?.role === 'admin';
 
   const openSpotify = (spotifyUrl: string) => {
     window.open(spotifyUrl, '_blank');
   };
+  
+  // Sort episodes by release date descending (most recent first)
+  const sortedEpisodes = [...episodes].sort((a, b) => 
+    new Date(b.releaseDate).getTime() - new Date(a.releaseDate).getTime()
+  );
 
   if (isLoading) {
     return (
@@ -53,24 +64,24 @@ export default function Podcast() {
         }}
       >
         <div className="hero-overlay" />
-        <div className="absolute bottom-4 left-4 text-white">
-          <h1 className="text-2xl font-bold">Beer Hop Podcast</h1>
-          <p className="text-sm opacity-90">Stories from Local Brewers</p>
-        </div>
-        <div className="absolute top-4 right-4">
-          <Button 
-            size="sm"
-            className="w-12 h-12 bg-black/30 rounded-full p-0 hover:bg-black/40"
-            onClick={() => episodes.length > 0 && openSpotify(episodes[0].spotifyUrl)}
-          >
-            <Play className="w-5 h-5 text-white" />
-          </Button>
-        </div>
+
       </div>
 
       {/* Episodes List */}
       <div className="px-6 py-6">
-        <h2 className="text-xl font-bold mb-4">Latest Episodes</h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-bold">Latest Episodes</h2>
+          {isMasterAdmin && (
+            <Button 
+              size="sm"
+              variant="outline"
+              className="text-[#ff55e1] border-[#ff55e1] hover:bg-[#ff55e1] hover:text-white"
+            >
+              <Edit className="w-4 h-4 mr-1" />
+              Edit
+            </Button>
+          )}
+        </div>
 
         {episodes.length === 0 ? (
           <div className="text-center py-8 text-gray-500">
@@ -80,7 +91,7 @@ export default function Podcast() {
           </div>
         ) : (
           <div className="space-y-4">
-            {episodes.map((episode) => (
+            {sortedEpisodes.map((episode) => (
               <Card 
                 key={episode.id} 
                 className="cursor-pointer hover:shadow-md transition-shadow"
