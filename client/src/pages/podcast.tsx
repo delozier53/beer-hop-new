@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useForm } from "react-hook-form";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Play, ExternalLink, Edit, Plus, Upload } from "lucide-react";
+import { Play, ExternalLink, Edit, Plus, Upload, Headphones } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { ObjectUploader } from "@/components/ObjectUploader";
@@ -708,17 +708,16 @@ export default function Podcast() {
                         })}
                       </p>
                     </div>
-                    <Button 
-                      size="sm" 
-                      variant="ghost"
-                      className="text-[#ff55e1] hover:text-[#ff55e1]/80 p-2"
+                    <button 
+                      className="w-8 h-8 rounded-full bg-[#ff55e1] hover:bg-[#ff55e1]/90 flex items-center justify-center transition-colors"
                       onClick={(e) => {
                         e.stopPropagation();
                         openSpotify(episode.spotifyUrl);
                       }}
+                      title="Listen on Spotify"
                     >
-                      <ExternalLink className="w-4 h-4" />
-                    </Button>
+                      <Headphones className="w-4 h-4 text-white" />
+                    </button>
                   </div>
 
                 </CardContent>
