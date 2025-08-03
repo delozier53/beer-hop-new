@@ -182,7 +182,7 @@ export function SpecialEventEditModal({ event, isOpen, onClose }: SpecialEventEd
   });
 
   const handleDelete = () => {
-    if (confirm('Are you sure you want to delete this event? This action cannot be undone.')) {
+    if (confirm('Confirm Delete')) {
       deleteMutation.mutate();
     }
   };
