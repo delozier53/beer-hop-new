@@ -156,7 +156,7 @@ export default function Events() {
   });
 
   const handleUploadComplete = (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
-    if (result.successful.length > 0) {
+    if (result.successful && result.successful.length > 0) {
       const uploadedFile = result.successful[0];
       if (uploadedFile.uploadURL) {
         // Convert the upload URL to an object path
@@ -178,7 +178,7 @@ export default function Events() {
   };
 
   // Get the header image from global settings or use default
-  const headerImageUrl = globalSettings?.eventsHeaderImage || 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=400';
+  const headerImageUrl = (globalSettings as any)?.eventsHeaderImage || 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=400';
 
   if (isLoading || isLoadingSpecial) {
     return (
@@ -388,7 +388,7 @@ export default function Events() {
                       </div>
                       <div className="flex items-center text-sm text-gray-600 mb-3">
                         <Calendar className="w-4 h-4 mr-1" />
-                        <span className="mr-3">{formatEventDate(event.date)}</span>
+                        <span className="mr-3">{formatEventDate(new Date(event.date))}</span>
                         <Clock className="w-4 h-4 mr-1" />
                         <span>{event.time}</span>
                       </div>

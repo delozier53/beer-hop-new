@@ -129,6 +129,43 @@ export class ObjectStorageService {
       }
     }
   }
+
+  // Normalizes an object entity path
+  normalizeObjectEntityPath(url: string): string {
+    try {
+      const urlObj = new URL(url);
+      const pathParts = urlObj.pathname.split('/');
+      const objectId = pathParts[pathParts.length - 1];
+      return `/objects/uploads/${objectId}`;
+    } catch (error) {
+      return url;
+    }
+  }
+
+  // Searches for a public object
+  async searchPublicObject(filePath: string): Promise<File | null> {
+    try {
+      const publicDir = process.env.PUBLIC_OBJECT_SEARCH_PATHS || "";
+      if (!publicDir) {
+        throw new Error("PUBLIC_OBJECT_SEARCH_PATHS not set");
+      }
+
+      const fullPath = `${publicDir}/${filePath}`;
+      const { bucketName, objectName } = parseObjectPath(fullPath);
+      const bucket = objectStorageClient.bucket(bucketName);
+      const objectFile = bucket.file(objectName);
+      const [exists] = await objectFile.exists();
+      
+      if (!exists) {
+        return null;
+      }
+      
+      return objectFile;
+    } catch (error) {
+      console.error("Error searching for public object:", error);
+      return null;
+    }
+  }
 }
 
 function parseObjectPath(path: string): {
