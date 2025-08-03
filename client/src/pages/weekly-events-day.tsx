@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Clock, MapPin, ExternalLink } from "lucide-react";
+import { ArrowLeft, Clock } from "lucide-react";
 import { Link, useParams } from "wouter";
 
 interface WeeklyEvent {
@@ -26,8 +26,16 @@ interface WeeklyEvent {
 function getImageUrl(imagePath: string): string {
   if (!imagePath) return '';
   
-  // If it's already a full URL, return as is
+  // If it's already a full URL (like Google Drive links), return as is
   if (imagePath.startsWith('http')) {
+    // For Google Drive links, convert to direct image URLs
+    if (imagePath.includes('drive.google.com')) {
+      // Extract file ID from Google Drive share link
+      const match = imagePath.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+      if (match) {
+        return `https://drive.google.com/uc?export=view&id=${match[1]}`;
+      }
+    }
     return imagePath;
   }
   
@@ -143,59 +151,18 @@ export default function WeeklyEventsDay() {
                     </Badge>
                   </div>
 
-                  {/* Time and Location */}
-                  <div className="space-y-2 mb-3">
+                  {/* Time */}
+                  <div className="mb-3">
                     <div className="flex items-center text-sm text-gray-600">
                       <Clock className="w-4 h-4 mr-2" />
                       <span>{event.time}</span>
                     </div>
-                    <div className="flex items-center text-sm text-gray-600">
-                      <MapPin className="w-4 h-4 mr-2" />
-                      <span>{event.address}</span>
-                    </div>
                   </div>
 
                   {/* Event Details */}
-                  <p className="text-sm text-gray-700 mb-4 leading-relaxed">
+                  <p className="text-sm text-gray-700 leading-relaxed">
                     {event.details}
                   </p>
-
-                  {/* Social Links */}
-                  <div className="flex space-x-2">
-                    {event.instagram && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => window.open(event.instagram, '_blank')}
-                        className="text-xs"
-                      >
-                        <ExternalLink className="w-3 h-3 mr-1" />
-                        Instagram
-                      </Button>
-                    )}
-                    {event.facebook && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => window.open(event.facebook, '_blank')}
-                        className="text-xs"
-                      >
-                        <ExternalLink className="w-3 h-3 mr-1" />
-                        Facebook
-                      </Button>
-                    )}
-                    {event.twitter && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => window.open(event.twitter, '_blank')}
-                        className="text-xs"
-                      >
-                        <ExternalLink className="w-3 h-3 mr-1" />
-                        Twitter
-                      </Button>
-                    )}
-                  </div>
                 </CardContent>
               </Card>
             ))}
