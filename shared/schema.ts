@@ -10,6 +10,7 @@ export const users = pgTable("users", {
   name: text("name").notNull(),
   location: text("location"),
   profileImage: text("profile_image"),
+  headerImage: text("header_image"),
   role: text("role").notNull().default("user"), // 'user', 'admin', 'brewery_owner'
   checkins: integer("checkins").notNull().default(0),
   favoriteBreweries: json("favorite_breweries").$type<string[]>().notNull().default([]),
