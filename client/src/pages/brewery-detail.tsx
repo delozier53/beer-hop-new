@@ -29,6 +29,35 @@ import type { Brewery, User, CheckIn } from "@shared/schema";
 
 const CURRENT_USER_ID = "joshuamdelozier";
 
+// Calculate distance between two coordinates using Haversine formula
+function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 3959; // Earth's radius in miles
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = 
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c; // Distance in miles
+}
+
+// Get user's current location
+function getCurrentPosition(): Promise<GeolocationPosition> {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) {
+      reject(new Error('Geolocation is not supported by this browser.'));
+      return;
+    }
+    
+    navigator.geolocation.getCurrentPosition(resolve, reject, {
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 60000 // 1 minute cache
+    });
+  });
+}
+
 export default function BreweryDetail() {
   const { id } = useParams<{ id: string }>();
   const [, navigate] = useLocation();
@@ -37,6 +66,8 @@ export default function BreweryDetail() {
   const [notes, setNotes] = useState("");
   const [isNotesDialogOpen, setIsNotesDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [locationError, setLocationError] = useState<string | null>(null);
   const [editFormData, setEditFormData] = useState({
     name: "",
     address: "",
@@ -160,6 +191,25 @@ export default function BreweryDetail() {
       });
     }
   });
+
+  // Get user location on component mount
+  useEffect(() => {
+    const getUserLocation = async () => {
+      try {
+        const position = await getCurrentPosition();
+        setUserLocation({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude
+        });
+        setLocationError(null);
+      } catch (error) {
+        console.error('Error getting location:', error);
+        setLocationError(error instanceof Error ? error.message : 'Unable to get location');
+      }
+    };
+
+    getUserLocation();
+  }, []);
 
   if (isLoading) {
     return (
@@ -301,6 +351,35 @@ export default function BreweryDetail() {
                 });
                 return;
               }
+
+              // Check geolocation before allowing check-in
+              if (!userLocation) {
+                toast({
+                  description: "Unable to determine your location. Please enable location services and try again.",
+                  variant: "destructive",
+                });
+                return;
+              }
+
+              // Calculate distance between user and brewery
+              const breweryLat = parseFloat(brewery.latitude || '0');
+              const breweryLng = parseFloat(brewery.longitude || '0');
+              const distance = calculateDistance(
+                userLocation.lat, 
+                userLocation.lng, 
+                breweryLat, 
+                breweryLng
+              );
+
+              // Check if user is within 0.1 miles (geofence)
+              if (distance > 0.1) {
+                toast({
+                  description: "Check in when you arrive",
+                  variant: "destructive",
+                });
+                return;
+              }
+
               checkInMutation.mutate(brewery.id);
             }}
             disabled={checkInMutation.isPending}
@@ -320,7 +399,7 @@ export default function BreweryDetail() {
             {brewery.tapListUrl ? (
               <Button 
                 className="bg-pink-600 hover:bg-pink-700 text-white"
-                onClick={() => window.open(brewery.tapListUrl, '_blank')}
+                onClick={() => brewery.tapListUrl && window.open(brewery.tapListUrl, '_blank')}
               >
                 View Taplist
               </Button>
