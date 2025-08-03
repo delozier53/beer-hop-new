@@ -127,6 +127,15 @@ export default function BreweryDetail() {
           <ArrowLeft className="w-5 h-5" />
         </button>
         
+        {/* Logo in banner */}
+        <div className="absolute bottom-4 left-4">
+          <img 
+            src={brewery.logo || `https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=200`} 
+            alt={`${brewery.name} logo`}
+            className="w-16 h-16 rounded-lg object-cover border-2 border-white shadow-lg"
+          />
+        </div>
+
         {/* Check-in Button */}
         <Button 
           className="absolute bottom-4 right-4 bg-amber hover:bg-amber-dark text-white shadow-lg"
@@ -141,16 +150,9 @@ export default function BreweryDetail() {
       <div className="px-6 py-6">
         {/* Brewery Header */}
         <div className="flex items-start justify-between mb-6">
-          <div className="flex items-center space-x-4">
-            <img 
-              src={brewery.logo || `https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=200`} 
-              alt={`${brewery.name} logo`}
-              className="w-16 h-16 rounded-full object-cover"
-            />
-            <div>
-              <h1 className="text-2xl font-bold">{brewery.name}</h1>
-              <p className="text-gray-600">{brewery.type}</p>
-            </div>
+          <div>
+            <h1 className="text-2xl font-bold">{brewery.name}</h1>
+            {/* Logo displayed in banner, removed circle image and craft brewery label */}
           </div>
           <button 
             className={`p-2 ${isFavorite ? 'text-red-500' : 'text-gray-400'}`}
@@ -199,25 +201,23 @@ export default function BreweryDetail() {
           <p className="text-gray-600">
             {brewery.address}, {brewery.city}, {brewery.state} {brewery.zipCode}
           </p>
-          {brewery.phone && (
-            <p className="text-gray-600 text-sm mt-1">
-              📞 {brewery.phone}
-            </p>
-          )}
           <Button variant="ghost" className="text-amber text-sm font-medium mt-1 p-0">
             Get Directions
           </Button>
         </div>
 
-        {/* About */}
-        {brewery.about && (
+        {/* Phone Number */}
+        {brewery.phone && (
           <div className="mb-6">
-            <h3 className="font-semibold mb-2">About</h3>
-            <p className="text-gray-600 text-sm leading-relaxed">
-              {brewery.about}
-            </p>
+            <h3 className="font-semibold mb-2 flex items-center">
+              <Phone className="w-4 h-4 mr-2" />
+              Phone
+            </h3>
+            <p className="text-gray-600">{brewery.phone}</p>
           </div>
         )}
+
+        {/* Removed About section as requested */}
 
         {/* Policies */}
         {brewery.policies && (
@@ -229,19 +229,18 @@ export default function BreweryDetail() {
           </div>
         )}
 
-        {/* Social Links */}
+        {/* Social Links - Circular Buttons */}
         <div className="mb-6">
           <h3 className="font-semibold mb-3">Connect</h3>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="flex space-x-4">
             {brewery.socialLinks.website && (
               <a 
                 href={brewery.socialLinks.website} 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="flex items-center space-x-2 text-hops hover:text-hops-dark p-2 border rounded-lg"
+                className="w-12 h-12 rounded-full bg-hops hover:bg-hops-dark text-white flex items-center justify-center transition-colors"
               >
-                <Globe className="w-5 h-5" />
-                <span>Website</span>
+                <Globe className="w-6 h-6" />
               </a>
             )}
             {brewery.socialLinks.facebook && (
@@ -249,10 +248,9 @@ export default function BreweryDetail() {
                 href={brewery.socialLinks.facebook} 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="flex items-center space-x-2 text-blue-600 hover:text-blue-700 p-2 border rounded-lg"
+                className="w-12 h-12 rounded-full bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center transition-colors"
               >
-                <Facebook className="w-5 h-5" />
-                <span>Facebook</span>
+                <Facebook className="w-6 h-6" />
               </a>
             )}
             {brewery.socialLinks.instagram && (
@@ -260,10 +258,9 @@ export default function BreweryDetail() {
                 href={brewery.socialLinks.instagram} 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="flex items-center space-x-2 text-pink-600 hover:text-pink-700 p-2 border rounded-lg"
+                className="w-12 h-12 rounded-full bg-pink-600 hover:bg-pink-700 text-white flex items-center justify-center transition-colors"
               >
-                <Instagram className="w-5 h-5" />
-                <span>Instagram</span>
+                <Instagram className="w-6 h-6" />
               </a>
             )}
             {brewery.socialLinks.x && (
@@ -271,21 +268,29 @@ export default function BreweryDetail() {
                 href={brewery.socialLinks.x} 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="flex items-center space-x-2 text-gray-600 hover:text-gray-700 p-2 border rounded-lg"
+                className="w-12 h-12 rounded-full bg-gray-600 hover:bg-gray-700 text-white flex items-center justify-center transition-colors"
               >
-                <span className="w-5 h-5 font-bold">𝕏</span>
-                <span>Twitter</span>
+                <span className="font-bold text-lg">𝕏</span>
               </a>
             )}
-            {brewery.podcastUrl && (
+            {brewery.socialLinks.tiktok && (
               <a 
-                href={brewery.podcastUrl} 
+                href={brewery.socialLinks.tiktok} 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="flex items-center space-x-2 text-purple-600 hover:text-purple-700 p-2 border rounded-lg"
+                className="w-12 h-12 rounded-full bg-black hover:bg-gray-800 text-white flex items-center justify-center transition-colors"
               >
-                <Headphones className="w-5 h-5" />
-                <span>Podcast</span>
+                <span className="font-bold text-sm">TT</span>
+              </a>
+            )}
+            {brewery.socialLinks.threads && (
+              <a 
+                href={brewery.socialLinks.threads} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="w-12 h-12 rounded-full bg-purple-600 hover:bg-purple-700 text-white flex items-center justify-center transition-colors"
+              >
+                <span className="font-bold text-sm">@</span>
               </a>
             )}
           </div>
