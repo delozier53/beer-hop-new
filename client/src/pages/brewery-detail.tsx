@@ -346,7 +346,7 @@ export default function BreweryDetail() {
                 const minutes = Math.floor(((canCheckInData.timeRemaining || 0) % 3600) / 60);
                 const timeRemaining = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
                 toast({
-                  description: `Please wait ${timeRemaining} before checking in again at this brewery.`,
+                  description: `Please wait ${timeRemaining} before checking in again.`,
                   variant: "destructive",
                 });
                 return;

@@ -45,6 +45,9 @@ Key recent changes (August 2025):
 - Added server-side methods canUserCheckIn and getUserLatestCheckInAtBrewery for cooldown tracking
 - Enhanced client-side brewery detail page with smart button states and cooldown status display
 - Updated check-in button text to "Check In Again Tomorrow" during cooldown periods with simplified error messaging
+- Implemented geolocation-based check-in validation requiring users to be within 0.1 miles of brewery location (August 3, 2025)
+- Added Haversine formula for accurate distance calculation and "Check in when you arrive" popup for geofence violations
+- Enhanced location permission handling with proper error messages for denied or unavailable location services
 
 The database schema supports complex relationships between entities, such as users having multiple check-ins and favorite breweries, breweries having associated podcast episodes, and a badge system based on check-in counts. Geographic data uses authentic latitude and longitude coordinates from the provided brewery coordinate CSV file, ensuring accurate distance calculations for Oklahoma breweries.
 
