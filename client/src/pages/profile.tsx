@@ -110,30 +110,33 @@ export default function Profile() {
 
         {/* Current Badge */}
         {badge && (
-          <div className="mb-1 flex justify-center">
-            <img 
-              src={badge.icon} 
-              alt={badge.name}
-              className="object-contain rounded-xl"
-              style={{ 
-                width: '400px', 
-                height: '400px', 
-                minWidth: '400px', 
-                minHeight: '400px', 
-                display: 'block',
-                margin: '0px',
-                padding: '0px'
-              }}
-              onError={(e) => {
-                console.log('Badge image failed to load:', badge.icon);
-                // Try alternative Google Drive URL format
-                const fileId = badge.icon.match(/id=([a-zA-Z0-9-_]+)/)?.[1];
-                if (fileId) {
-                  e.currentTarget.src = `https://lh3.googleusercontent.com/d/${fileId}`;
-                }
-              }}
-            />
-          </div>
+          <Card className="mb-4">
+            <CardContent className="p-4 text-center">
+              <h3 className="text-lg font-semibold mb-3">Current Badge</h3>
+              <div className="flex flex-col items-center">
+                <img 
+                  src={badge.icon} 
+                  alt={badge.name}
+                  className="w-24 h-24 object-contain rounded-lg mb-2"
+                  onError={(e) => {
+                    console.log('Badge image failed to load:', badge.icon);
+                    // Try alternative Google Drive URL format
+                    const fileId = badge.icon.match(/id=([a-zA-Z0-9-_]+)/)?.[1];
+                    if (fileId) {
+                      e.currentTarget.src = `https://lh3.googleusercontent.com/d/${fileId}`;
+                    }
+                  }}
+                />
+                <h4 className="font-semibold text-hops">{badge.name}</h4>
+                <p className="text-sm text-gray-600">{badge.description}</p>
+                {badge.nextBadgeAt && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    Next badge at {badge.nextBadgeAt} check-ins
+                  </p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
         )}
 
         {/* Leaderboard Button */}

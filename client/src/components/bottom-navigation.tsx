@@ -11,7 +11,7 @@ export function BottomNavigation() {
       <div className="flex justify-around">
         <Link href="/">
           <button className={`flex flex-col items-center space-y-1 p-2 ${
-            isActive('/') ? 'text-amber' : 'text-gray-600'
+            isActive('/') ? 'text-hops' : 'text-gray-600'
           }`}>
             <User className="w-5 h-5" />
             <span className="text-xs">Profile</span>
@@ -20,7 +20,7 @@ export function BottomNavigation() {
         
         <Link href="/breweries">
           <button className={`flex flex-col items-center space-y-1 p-2 ${
-            isActive('/breweries') ? 'text-amber' : 'text-gray-600'
+            isActive('/breweries') ? 'text-hops' : 'text-gray-600'
           }`}>
             <Beer className="w-5 h-5" />
             <span className="text-xs">Breweries</span>
@@ -29,7 +29,7 @@ export function BottomNavigation() {
         
         <Link href="/podcast">
           <button className={`flex flex-col items-center space-y-1 p-2 ${
-            isActive('/podcast') ? 'text-amber' : 'text-gray-600'
+            isActive('/podcast') ? 'text-hops' : 'text-gray-600'
           }`}>
             <Headphones className="w-5 h-5" />
             <span className="text-xs">Podcast</span>
@@ -38,7 +38,7 @@ export function BottomNavigation() {
         
         <Link href="/events">
           <button className={`flex flex-col items-center space-y-1 p-2 ${
-            isActive('/events') ? 'text-amber' : 'text-gray-600'
+            isActive('/events') ? 'text-hops' : 'text-gray-600'
           }`}>
             <Calendar className="w-5 h-5" />
             <span className="text-xs">Events</span>
