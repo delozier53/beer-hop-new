@@ -121,10 +121,15 @@ export function SpecialEventEditModal({ event, isOpen, onClose }: SpecialEventEd
 
   const convertUploadUrlToObjectPath = (uploadUrl: string): string => {
     // Extract object path from the upload URL and convert to /objects/ format
-    const url = new URL(uploadUrl);
-    const pathParts = url.pathname.split('/');
-    const objectId = pathParts[pathParts.length - 1];
-    return `/objects/uploads/${objectId}`;
+    try {
+      const url = new URL(uploadUrl);
+      const pathParts = url.pathname.split('/');
+      const objectId = pathParts[pathParts.length - 1];
+      return `/objects/uploads/${objectId}`;
+    } catch (error) {
+      // If URL parsing fails, return the original URL
+      return uploadUrl;
+    }
   };
 
   return (
@@ -217,11 +222,8 @@ export function SpecialEventEditModal({ event, isOpen, onClose }: SpecialEventEd
             <Label htmlFor="logo">Event Image</Label>
             <div className="space-y-2">
               {formData.logo && (
-                <div className="flex items-center space-x-2">
-                  <span className="text-sm text-gray-600">Current image:</span>
-                  <span className="text-sm font-mono bg-gray-100 px-2 py-1 rounded">
-                    {formData.logo}
-                  </span>
+                <div className="text-sm text-gray-600">
+                  Current image: {formData.logo.split('/').pop()}
                 </div>
               )}
               <ObjectUploader
