@@ -435,6 +435,84 @@ function loadUsersFromCSV(): User[] {
   }
 }
 
+function loadPodcastEpisodesFromCSV(): PodcastEpisode[] {
+  try {
+    const csvPath = path.join(process.cwd(), 'attached_assets', 'Podcast_1754201259440.csv');
+    
+    if (!fs.existsSync(csvPath)) {
+      console.log('Podcast CSV file not found');
+      return [];
+    }
+    
+    const csvContent = fs.readFileSync(csvPath, 'utf-8');
+    const lines = csvContent.trim().split('\n');
+    
+    console.log('Loading podcast episodes from CSV, found', lines.length - 1, 'episodes');
+    
+    return lines.slice(1).map((line, index) => {
+      try {
+        const values = parseCSVLine(line);
+        
+        // Map CSV columns to our schema
+        const [rowId, episodeNumberRaw, visible, episode, date, guest, brewery, breweryShort, description, listenLink, photo] = values;
+        
+        // Convert Google Drive photo URL to direct image URL if needed
+        let imageUrl = photo || '';
+        if (photo && photo.includes('drive.google.com')) {
+          const fileId = photo.match(/\/d\/([a-zA-Z0-9-_]+)/)?.[1];
+          if (fileId) {
+            imageUrl = `https://lh3.googleusercontent.com/d/${fileId}`;
+          }
+        }
+        
+        // Parse episode number
+        const episodeNum = parseInt(episode) || (index + 1);
+        
+        // Parse date safely
+        let releaseDate: Date;
+        try {
+          releaseDate = new Date(date || '2023-01-01');
+          if (isNaN(releaseDate.getTime())) {
+            releaseDate = new Date('2023-01-01');
+          }
+        } catch {
+          releaseDate = new Date('2023-01-01');
+        }
+        
+        const isVisible = visible === 'true';
+        
+        const episode_data = {
+          id: `episode-${episodeNum}`,
+          title: `Episode #${episodeNum}`,
+          description: description || '',
+          episodeNumber: episodeNum,
+          guest: guest || '',
+          business: brewery || '',
+          duration: '60', // Default duration
+          releaseDate: releaseDate,
+          spotifyUrl: listenLink || '',
+          image: imageUrl,
+          createdAt: new Date()
+        };
+        
+        console.log(`Parsed episode ${episodeNum}:`, episode_data.title, 'visible:', isVisible);
+        
+        return { ...episode_data, visible: isVisible };
+      } catch (lineError) {
+        console.error(`Error parsing line ${index + 1}:`, lineError);
+        return null;
+      }
+    }).filter(episode => episode && episode.visible).map(episode => {
+      // Remove the visible property as it's not part of the schema
+      const { visible, ...episodeData } = episode;
+      return episodeData;
+    });
+  } catch (error) {
+    console.error('Error loading podcast episodes from CSV:', error);
+    return [];
+  }
+}
+
 function loadBadgesFromCSV(): Badge[] {
   try {
     const csvPath = path.join(process.cwd(), 'attached_assets', 'Badges1_1754190437299.csv');
@@ -1022,7 +1100,16 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getPodcastEpisodes(): Promise<PodcastEpisode[]> {
-    return await db.select().from(podcastEpisodes);
+    const existingEpisodes = await db.select().from(podcastEpisodes);
+    if (existingEpisodes.length === 0) {
+      // Initialize from CSV data
+      const csvEpisodes = loadPodcastEpisodesFromCSV();
+      if (csvEpisodes.length > 0) {
+        await db.insert(podcastEpisodes).values(csvEpisodes);
+        return csvEpisodes;
+      }
+    }
+    return existingEpisodes;
   }
 
   async getBadges(): Promise<Badge[]> {

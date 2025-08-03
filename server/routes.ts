@@ -261,7 +261,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const episodes = await storage.getPodcastEpisodes();
       res.json(episodes);
     } catch (error) {
-      res.status(500).json({ message: "Internal server error" });
+      console.error("Error fetching podcast episodes:", error);
+      res.status(500).json({ message: "Internal server error", error: error.message });
     }
   });
 
