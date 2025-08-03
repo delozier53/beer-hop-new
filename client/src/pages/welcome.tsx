@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { Beer, Mail, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
+import beerHopLogo from "@assets/Beer Hop Logo_1754263599088.png";
 
 export default function Welcome() {
   const [, setLocation] = useLocation();
@@ -135,26 +136,28 @@ export default function Welcome() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-100 flex items-center justify-center p-4">
+    <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: '#80bc04' }}>
       <div className="w-full max-w-md">
         {/* Logo and Header */}
         <div className="text-center mb-8">
-          <div className="flex items-center justify-center mb-4">
-            <Beer className="h-12 w-12 text-amber-600 mr-2" />
-            <h1 className="text-3xl font-bold text-amber-900">Beer Hop</h1>
+          <div className="flex justify-center mb-4">
+            <img 
+              src={beerHopLogo} 
+              alt="Beer Hop" 
+              className="h-24 w-auto"
+            />
           </div>
-          <p className="text-amber-700">Discover breweries, check in, compete with friends</p>
+          <p className="text-white">Discover breweries, check in, compete with friends</p>
         </div>
 
         {/* Email Step */}
         {step === "email" && (
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <Mail className="h-5 w-5 mr-2 text-amber-600" />
-                Welcome to Beer Hop
+            <CardHeader className="text-center">
+              <CardTitle>
+                Welcome
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-center">
                 Enter your email to get started. We'll send you a verification code.
               </CardDescription>
             </CardHeader>
@@ -169,7 +172,8 @@ export default function Welcome() {
                 />
                 <Button 
                   type="submit" 
-                  className="w-full bg-amber-600 hover:bg-amber-700"
+                  className="w-full text-white hover:opacity-90"
+                  style={{ backgroundColor: '#80bc04' }}
                   disabled={sendCodeMutation.isPending}
                 >
                   {sendCodeMutation.isPending ? "Sending..." : "Send Verification Code"}
@@ -202,7 +206,8 @@ export default function Welcome() {
                 />
                 <Button 
                   type="submit" 
-                  className="w-full bg-amber-600 hover:bg-amber-700"
+                  className="w-full text-white hover:opacity-90"
+                  style={{ backgroundColor: '#80bc04' }}
                   disabled={verifyCodeMutation.isPending}
                 >
                   {verifyCodeMutation.isPending ? "Verifying..." : "Verify Code"}
@@ -256,7 +261,8 @@ export default function Welcome() {
                 />
                 <Button 
                   type="submit" 
-                  className="w-full bg-amber-600 hover:bg-amber-700"
+                  className="w-full text-white hover:opacity-90"
+                  style={{ backgroundColor: '#80bc04' }}
                   disabled={completeProfileMutation.isPending}
                 >
                   {completeProfileMutation.isPending ? "Creating Account..." : "Complete Profile"}
@@ -267,7 +273,7 @@ export default function Welcome() {
         )}
 
         {/* Footer */}
-        <div className="text-center mt-6 text-sm text-amber-600">
+        <div className="text-center mt-6 text-sm text-white opacity-80">
           <p>By continuing, you agree to our Terms of Service and Privacy Policy</p>
         </div>
       </div>
