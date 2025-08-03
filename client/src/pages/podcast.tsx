@@ -5,24 +5,22 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { useForm } from "react-hook-form";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Play, ExternalLink, Edit, Plus } from "lucide-react";
+import { Play, ExternalLink, Edit, Plus, Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { ObjectUploader } from "@/components/ObjectUploader";
 import type { PodcastEpisode, User } from "@shared/schema";
+import type { UploadResult } from "@uppy/core";
 import podcastBanner from "@assets/BH_Podcast_Banner (5)_1754202035969.jpg";
 
 interface EpisodeFormData {
-  episodeNumber: number;
   title: string;
   guest: string;
   business: string;
   spotifyUrl: string;
   image: string;
-  description: string;
-  duration: string;
   releaseDate: string;
 }
 
@@ -42,22 +40,25 @@ export default function Podcast() {
 
   const form = useForm<EpisodeFormData>({
     defaultValues: {
-      episodeNumber: episodes.length + 1,
       title: "",
       guest: "",
       business: "",
       spotifyUrl: "",
       image: "",
-      description: "",
-      duration: "60",
       releaseDate: new Date().toISOString().split('T')[0],
     },
   });
 
   const createEpisodeMutation = useMutation({
     mutationFn: async (data: EpisodeFormData) => {
+      // Calculate next episode number based on existing episodes
+      const nextEpisodeNumber = Math.max(...episodes.map(ep => ep.episodeNumber), 0) + 1;
+      
       const episodeData = {
         ...data,
+        episodeNumber: nextEpisodeNumber,
+        description: "", // Default empty description
+        duration: "60", // Default 60 minutes
         releaseDate: new Date(data.releaseDate),
       };
       return apiRequest("/api/podcast-episodes", {
@@ -85,6 +86,33 @@ export default function Podcast() {
 
   const onSubmit = (data: EpisodeFormData) => {
     createEpisodeMutation.mutate(data);
+  };
+
+  const handleImageUpload = async () => {
+    try {
+      const response = await apiRequest("/api/objects/upload", {
+        method: "POST",
+      });
+      return {
+        method: "PUT" as const,
+        url: response.uploadURL,
+      };
+    } catch (error) {
+      console.error("Error getting upload URL:", error);
+      throw error;
+    }
+  };
+
+  const handleUploadComplete = (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
+    if (result.successful && result.successful.length > 0) {
+      const uploadedFile = result.successful[0];
+      const imageUrl = uploadedFile.uploadURL;
+      form.setValue("image", imageUrl);
+      toast({
+        title: "Success",
+        description: "Image uploaded successfully!",
+      });
+    }
   };
 
   const openSpotify = (spotifyUrl: string) => {
@@ -166,24 +194,6 @@ export default function Podcast() {
                   <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                     <FormField
                       control={form.control}
-                      name="episodeNumber"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Episode Number</FormLabel>
-                          <FormControl>
-                            <Input 
-                              type="number" 
-                              {...field} 
-                              onChange={(e) => field.onChange(parseInt(e.target.value))}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
                       name="title"
                       render={({ field }) => (
                         <FormItem>
@@ -243,37 +253,21 @@ export default function Podcast() {
                       name="image"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Image URL</FormLabel>
+                          <FormLabel>Episode Image</FormLabel>
                           <FormControl>
-                            <Input {...field} placeholder="https://..." />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="description"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Description</FormLabel>
-                          <FormControl>
-                            <Textarea {...field} placeholder="Episode description..." rows={3} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="duration"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Duration (minutes)</FormLabel>
-                          <FormControl>
-                            <Input {...field} placeholder="60" />
+                            <div className="space-y-2">
+                              <Input {...field} placeholder="Image URL will appear here after upload" disabled />
+                              <ObjectUploader
+                                maxNumberOfFiles={1}
+                                maxFileSize={5242880} // 5MB
+                                onGetUploadParameters={handleImageUpload}
+                                onComplete={handleUploadComplete}
+                                buttonClassName="w-full bg-[#ff55e1] hover:bg-[#ff55e1]/90"
+                              >
+                                <Upload className="w-4 h-4 mr-2" />
+                                Upload Episode Image
+                              </ObjectUploader>
+                            </div>
                           </FormControl>
                           <FormMessage />
                         </FormItem>
