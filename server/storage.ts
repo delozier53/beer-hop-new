@@ -13,6 +13,9 @@ import {
   type InsertBadge
 } from "@shared/schema";
 import { randomUUID } from "crypto";
+import * as fs from 'fs';
+import * as path from 'path';
+import { nanoid } from 'nanoid';
 
 export interface IStorage {
   // Users
@@ -48,6 +51,150 @@ export interface IStorage {
   // Badges
   getBadges(): Promise<Badge[]>;
   getUserBadge(checkins: number): Promise<Badge | undefined>;
+}
+
+// CSV processing functions
+function parseCSV(csvContent: string): any[] {
+  const lines = csvContent.trim().split('\n');
+  const headers = lines[0].split(',');
+  
+  return lines.slice(1).map(line => {
+    const values = parseCSVLine(line);
+    const user: any = {};
+    
+    headers.forEach((header, index) => {
+      user[header] = values[index] || '';
+    });
+    
+    return user;
+  });
+}
+
+function parseCSVLine(line: string): string[] {
+  const result: string[] = [];
+  let current = '';
+  let inQuotes = false;
+  
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+    
+    if (char === '"') {
+      inQuotes = !inQuotes;
+    } else if (char === ',' && !inQuotes) {
+      result.push(current.trim());
+      current = '';
+    } else {
+      current += char;
+    }
+  }
+  
+  result.push(current.trim());
+  return result;
+}
+
+function loadUsersFromCSV(): User[] {
+  try {
+    const csvPath = path.join(process.cwd(), 'attached_assets', 'Users_1754189261860.csv');
+    
+    if (!fs.existsSync(csvPath)) {
+      console.log('CSV file not found, using fallback users');
+      return getFallbackUsers();
+    }
+    
+    const csvContent = fs.readFileSync(csvPath, 'utf-8');
+    const csvUsers = parseCSV(csvContent);
+    
+    const users = csvUsers
+      .filter(user => user.email && user.username)
+      .slice(0, 100) // Limit to first 100 users for performance
+      .map((csvUser, index) => {
+        const id = csvUser.email ? 
+          csvUser.email.split('@')[0].replace(/[^a-zA-Z0-9]/g, '') + nanoid(4) : 
+          `user${index + 1}`;
+        
+        let profileImage = csvUser.photo;
+        if (profileImage && profileImage.includes('drive.google.com')) {
+          const fileId = profileImage.match(/\/d\/([a-zA-Z0-9-_]+)/)?.[1];
+          if (fileId) {
+            profileImage = `https://drive.google.com/uc?id=${fileId}`;
+          }
+        }
+        
+        const checkins = parseInt(csvUser.checkins) || 0;
+        const breweryIds = ['1', '2', '3', '4', '5', '6', '7', '8'];
+        let favoriteBreweries: string[] = [];
+        
+        if (checkins > 0) {
+          const numFavorites = Math.min(Math.floor(checkins / 20) + 1, 3);
+          const shuffled = [...breweryIds].sort(() => Math.random() - 0.5);
+          favoriteBreweries = shuffled.slice(0, numFavorites);
+        }
+        
+        return {
+          id,
+          email: csvUser.email,
+          username: csvUser.username || `User${index + 1}`,
+          name: csvUser.username || `User${index + 1}`,
+          profileImage: profileImage || null,
+          location: 'Oklahoma City, OK',
+          checkins,
+          favoriteBreweries,
+          latitude: "35.4676",
+          longitude: "-97.5164", 
+          createdAt: new Date()
+        };
+      });
+    
+    console.log(`Loaded ${users.length} users from CSV`);
+    return users;
+  } catch (error) {
+    console.error('Error loading CSV:', error);
+    return getFallbackUsers();
+  }
+}
+
+function getFallbackUsers(): User[] {
+  return [
+    {
+      id: "user1",
+      username: "alexthompson",
+      name: "Alex Thompson",
+      email: "alex@example.com",
+      profileImage: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&h=150",
+      location: "Oklahoma City, OK",
+      checkins: 24,
+      favoriteBreweries: ["1", "3", "5"],
+      latitude: "35.4676",
+      longitude: "-97.5164",
+      createdAt: new Date()
+    },
+    {
+      id: "user2", 
+      username: "sarahbeer",
+      name: "Sarah Beer",
+      email: "sarah@example.com",
+      profileImage: "https://images.unsplash.com/photo-1494790108755-2616b612b5c5?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&h=150",
+      location: "Tulsa, OK",
+      checkins: 18,
+      favoriteBreweries: ["2", "4"],
+      latitude: "36.1540",
+      longitude: "-95.9928",
+      createdAt: new Date()
+    },
+    {
+      id: "user3",
+      username: "mikehops",
+      name: "Mike Hops",
+      email: "mike@example.com", 
+      profileImage: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&h=150",
+      location: "Norman, OK",
+      checkins: 31,
+      favoriteBreweries: ["1", "6"],
+      latitude: "35.2226",
+      longitude: "-97.4395",
+      createdAt: new Date()
+    }
+  ];
 }
 
 export class MemStorage implements IStorage {
@@ -303,22 +450,11 @@ export class MemStorage implements IStorage {
 
     eventsList.forEach(event => this.events.set(event.id, event));
 
-    // Initialize sample user
-    const sampleUser: User = {
-      id: "user1",
-      username: "alexthompson",
-      email: "alex@example.com",
-      name: "Alex Thompson",
-      location: "San Francisco, CA",
-      profileImage: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&h=150",
-      checkins: 47,
-      favoriteBreweries: ["1", "2"],
-      latitude: "37.7749",
-      longitude: "-122.4194",
-      createdAt: new Date()
-    };
-
-    this.users.set(sampleUser.id, sampleUser);
+    // Initialize users from CSV
+    const csvUsers = loadUsersFromCSV();
+    csvUsers.forEach(user => {
+      this.users.set(user.id, user);
+    });
   }
 
   // Users
