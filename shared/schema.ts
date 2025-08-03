@@ -143,7 +143,7 @@ export const insertPodcastEpisodeSchema = createInsertSchema(podcastEpisodes).om
   createdAt: true,
 }).extend({
   releaseDate: z.string().transform(str => new Date(str)),
-  episodeNumber: z.number().optional(), // Make optional for creation, backend will provide
+  episodeNumber: z.number(), // Required field - user should provide episode number
 });
 
 export const insertBadgeSchema = createInsertSchema(badges).omit({

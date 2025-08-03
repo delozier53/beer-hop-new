@@ -23,6 +23,7 @@ interface EpisodeFormData {
   spotifyUrl: string;
   image: string;
   releaseDate: string;
+  episodeNumber: number;
 }
 
 export default function Podcast() {
@@ -56,17 +57,19 @@ export default function Podcast() {
       spotifyUrl: "",
       image: "",
       releaseDate: new Date().toISOString().split('T')[0],
+      episodeNumber: (Math.max(...episodes.map(ep => ep.episodeNumber), 0) + 1),
     },
   });
 
   const createEpisodeMutation = useMutation({
     mutationFn: async (data: EpisodeFormData) => {
-      // Backend will calculate the episode number automatically
+      // Use the episode number provided by the user
       const episodeData = {
         ...data,
         description: "", // Default empty description
         duration: "60", // Default 60 minutes
         releaseDate: data.releaseDate,
+        episodeNumber: data.episodeNumber,
       };
       return apiRequest("POST", "/api/podcast-episodes", episodeData);
     },
@@ -94,7 +97,7 @@ export default function Podcast() {
       
       const episodeData = {
         ...data,
-        episodeNumber: editingEpisode.episodeNumber, // Keep original episode number
+        episodeNumber: data.episodeNumber, // Use user-provided episode number
         description: editingEpisode.description || "", // Keep original description
         duration: editingEpisode.duration, // Keep original duration
         releaseDate: data.releaseDate,
@@ -160,6 +163,7 @@ export default function Podcast() {
       spotifyUrl: episode.spotifyUrl,
       image: episode.image,
       releaseDate: new Date(episode.releaseDate).toISOString().split('T')[0],
+      episodeNumber: episode.episodeNumber,
     });
     setIsEditDialogOpen(true);
   };
@@ -392,6 +396,20 @@ export default function Podcast() {
                   <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                     <FormField
                       control={form.control}
+                      name="episodeNumber"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Episode Number</FormLabel>
+                          <FormControl>
+                            <Input type="number" {...field} onChange={(e) => field.onChange(parseInt(e.target.value) || 0)} placeholder="66" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
                       name="title"
                       render={({ field }) => (
                         <FormItem>
@@ -518,6 +536,20 @@ export default function Podcast() {
             </DialogHeader>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="episodeNumber"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Episode Number</FormLabel>
+                      <FormControl>
+                        <Input type="number" {...field} onChange={(e) => field.onChange(parseInt(e.target.value) || 0)} placeholder="66" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
                 <FormField
                   control={form.control}
                   name="title"

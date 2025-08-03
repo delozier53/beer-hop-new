@@ -642,17 +642,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/podcast-episodes", async (req, res) => {
     try {
-      // Calculate next episode number on the backend
-      const allEpisodes = await storage.getPodcastEpisodes();
-      const nextEpisodeNumber = Math.max(...allEpisodes.map(ep => ep.episodeNumber), 0) + 1;
+      // Use episode number from request, or calculate if not provided
+      let episodeNumber = req.body.episodeNumber;
+      if (!episodeNumber) {
+        const allEpisodes = await storage.getPodcastEpisodes();
+        episodeNumber = Math.max(...allEpisodes.map(ep => ep.episodeNumber), 0) + 1;
+      }
       
       // Validate the request body first
       const validatedData = insertPodcastEpisodeSchema.parse(req.body);
       
-      // Add the calculated episode number to the validated data
+      // Add the episode number to the validated data
       const episodeDataWithNumber = {
         ...validatedData,
-        episodeNumber: nextEpisodeNumber,
+        episodeNumber: episodeNumber,
       };
       
       const episode = await storage.createPodcastEpisode(episodeDataWithNumber);
