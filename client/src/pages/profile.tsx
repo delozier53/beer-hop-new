@@ -7,7 +7,7 @@ import { Link } from "wouter";
 import { EditProfileDialog } from "@/components/edit-profile-dialog";
 import type { User, Badge, Brewery } from "@shared/schema";
 
-const CURRENT_USER_ID = "joshuamdelozierlWWW";
+const CURRENT_USER_ID = "joshuamdelozier";
 
 export default function Profile() {
   const queryClient = useQueryClient();

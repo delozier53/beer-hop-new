@@ -56,7 +56,7 @@ export interface IStorage {
 // CSV processing functions
 function parseCSV(csvContent: string): any[] {
   const lines = csvContent.trim().split('\n');
-  const headers = lines[0].split(',');
+  const headers = lines[0].split(',').map(h => h.trim());
   
   return lines.slice(1).map(line => {
     const values = parseCSVLine(line);
@@ -108,8 +108,9 @@ function loadUsersFromCSV(): User[] {
       .filter(user => user.email && user.username)
       .slice(0, 100) // Limit to first 100 users for performance
       .map((csvUser, index) => {
+        // Create deterministic ID from email to ensure consistency across restarts
         const id = csvUser.email ? 
-          csvUser.email.split('@')[0].replace(/[^a-zA-Z0-9]/g, '') + nanoid(4) : 
+          csvUser.email.split('@')[0].replace(/[^a-zA-Z0-9]/g, '') : 
           `user${index + 1}`;
         
         let profileImage = csvUser.photo;
