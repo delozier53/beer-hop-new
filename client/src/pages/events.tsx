@@ -7,6 +7,20 @@ import { Calendar, Clock, MapPin, Users, ExternalLink, Edit, Plus } from "lucide
 import { Link } from "wouter";
 import { ObjectUploader } from "@/components/ObjectUploader";
 import { CreateSpecialEventModal } from "@/components/CreateSpecialEventModal";
+
+// Helper function to format date from YYYY-MM-DD to "Month Day, Year"
+function formatEventDate(dateString: string): string {
+  try {
+    const date = new Date(dateString + 'T00:00:00'); // Add time to avoid timezone issues
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  } catch (error) {
+    return dateString; // Return original if parsing fails
+  }
+}
 import { useToast } from "@/hooks/use-toast";
 import type { Event, SpecialEvent } from "@shared/schema";
 import type { UploadResult } from "@uppy/core";
@@ -342,7 +356,7 @@ export default function Events() {
                       </div>
                       <div className="flex items-center text-sm text-gray-600 mb-3">
                         <Calendar className="w-4 h-4 mr-1" />
-                        <span className="mr-3">{event.date}</span>
+                        <span className="mr-3">{formatEventDate(event.date)}</span>
                         <Clock className="w-4 h-4 mr-1" />
                         <span>{event.time}</span>
                       </div>
@@ -361,6 +375,7 @@ export default function Events() {
                               e.preventDefault();
                               window.open(event.ticketLink!, '_blank');
                             }}
+                            className={event.rsvpRequired ? "bg-[#ff55e1] hover:bg-[#ff55e1]/90 text-white border-[#ff55e1]" : ""}
                           >
                             <ExternalLink className="w-3 h-3 mr-1" />
                             Tickets
