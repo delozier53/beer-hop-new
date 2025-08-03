@@ -6,7 +6,7 @@ import { Medal, Trophy, Heart, MapPin, Settings } from "lucide-react";
 import { Link } from "wouter";
 import { EditProfileDialog } from "@/components/edit-profile-dialog";
 import type { User, Badge, Brewery } from "@shared/schema";
-import defaultHeaderImage from "@assets/BH Card Teal_1754198861134.png";
+import defaultHeaderImage from "@assets/BH Drip_1754199454816.png";
 
 const CURRENT_USER_ID = "joshuamdelozier";
 
