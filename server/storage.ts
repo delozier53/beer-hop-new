@@ -26,6 +26,11 @@ import { nanoid } from 'nanoid';
 async function loadBreweriesFromCSV(): Promise<Brewery[]> {
   try {
     const csvPath = path.join(process.cwd(), 'attached_assets/breweries_rows_1754194005930.csv');
+    console.log('Loading CSV from:', csvPath);
+    if (!fs.existsSync(csvPath)) {
+      console.error('CSV file does not exist at:', csvPath);
+      return [];
+    }
     const csvContent = fs.readFileSync(csvPath, 'utf-8');
     
     // Parse CSV properly handling multi-line quoted fields
@@ -116,6 +121,8 @@ async function loadBreweriesFromCSV(): Promise<Brewery[]> {
     return breweries;
   } catch (error) {
     console.error('Error loading breweries from CSV:', error);
+    console.error('Error details:', error.message);
+    console.error('Stack trace:', error.stack);
     return [];
   }
 }
@@ -809,6 +816,13 @@ export class MemStorage implements IStorage {
 
   // Breweries
   async getBreweries(): Promise<Brewery[]> {
+    // Ensure breweries are loaded from CSV if empty
+    if (this.breweries.size === 0) {
+      console.log('Loading breweries from CSV as they are not initialized yet...');
+      const breweriesList = await loadBreweriesFromCSV();
+      breweriesList.forEach(brewery => this.breweries.set(brewery.id, brewery));
+      console.log(`Loaded ${breweriesList.length} breweries from CSV`);
+    }
     return Array.from(this.breweries.values());
   }
 
@@ -1201,4 +1215,4 @@ export class DatabaseStorage implements IStorage {
   }
 }
 
-export const storage = new DatabaseStorage();
+export const storage = new MemStorage();

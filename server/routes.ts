@@ -87,7 +87,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/breweries", async (req, res) => {
     try {
       const { lat, lng } = req.query;
+      console.log('Getting breweries...');
       let breweries = await storage.getBreweries();
+      console.log(`Retrieved ${breweries.length} breweries`);
       
       // Sort by distance if location provided
       if (lat && lng) {
@@ -107,6 +109,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json(breweries);
     } catch (error) {
+      console.error('Error in /api/breweries:', error);
       res.status(500).json({ message: "Internal server error" });
     }
   });
