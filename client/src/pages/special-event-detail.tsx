@@ -1,17 +1,31 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, Clock, MapPin, ExternalLink, ArrowLeft } from "lucide-react";
+import { Calendar, Clock, MapPin, ExternalLink, ArrowLeft, Edit } from "lucide-react";
 import { Link, useParams } from "wouter";
+import { SpecialEventEditModal } from "@/components/special-event-edit-modal";
 import type { SpecialEvent } from "@shared/schema";
 
 export default function SpecialEventDetail() {
   const { id } = useParams();
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   
   const { data: event, isLoading } = useQuery<SpecialEvent>({
     queryKey: [`/api/special-events/${id}`],
   });
+
+  // Get current user - in a real app this would come from auth context
+  const { data: currentUser } = useQuery({
+    queryKey: ['/api/users/joshuamdelozier'], // Hardcoded for demo
+  });
+
+  // Check if user can edit this event
+  const canEdit = currentUser && (
+    currentUser.role === 'admin' || // Master admin
+    event?.ownerId === currentUser.id // Event owner
+  );
 
   if (isLoading) {
     return (
@@ -52,13 +66,26 @@ export default function SpecialEventDetail() {
   return (
     <div className="mobile-container pb-20">
       <div className="px-6 py-6">
-        {/* Back Button */}
-        <Link href="/events">
-          <Button variant="outline" className="mb-4">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Events
-          </Button>
-        </Link>
+        {/* Header with Back Button and Edit Button */}
+        <div className="flex justify-between items-center mb-4">
+          <Link href="/events">
+            <Button variant="outline">
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Events
+            </Button>
+          </Link>
+          
+          {canEdit && (
+            <Button
+              variant="outline"
+              onClick={() => setIsEditModalOpen(true)}
+              className="border-[#80bc04] text-[#80bc04] hover:bg-[#80bc04] hover:text-white"
+            >
+              <Edit className="w-4 h-4 mr-2" />
+              Edit Event
+            </Button>
+          )}
+        </div>
 
         <Card className="overflow-hidden">
           {/* Full Event Photo - shows complete image regardless of dimensions */}
@@ -145,6 +172,15 @@ export default function SpecialEventDetail() {
             )}
           </CardContent>
         </Card>
+
+        {/* Edit Modal */}
+        {event && (
+          <SpecialEventEditModal
+            event={event}
+            isOpen={isEditModalOpen}
+            onClose={() => setIsEditModalOpen(false)}
+          />
+        )}
       </div>
     </div>
   );

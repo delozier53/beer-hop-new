@@ -269,6 +269,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.put("/api/special-events/:id", async (req, res) => {
+    try {
+      const eventId = req.params.id;
+      const userId = req.headers['x-user-id'] as string; // Simple user identification
+      
+      if (!userId) {
+        return res.status(401).json({ message: "User ID required" });
+      }
+
+      // Get the event to check ownership
+      const event = await storage.getSpecialEvent(eventId);
+      if (!event) {
+        return res.status(404).json({ message: "Special event not found" });
+      }
+
+      // Get user to check admin status
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(401).json({ message: "User not found" });
+      }
+
+      // Check permissions: master admin or event owner
+      const isMasterAdmin = user.role === 'admin';
+      const isEventOwner = event.ownerId === userId;
+      
+      if (!isMasterAdmin && !isEventOwner) {
+        return res.status(403).json({ message: "Not authorized to edit this event" });
+      }
+
+      // Update the event
+      const updatedEvent = await storage.updateSpecialEvent(eventId, req.body);
+      if (!updatedEvent) {
+        return res.status(404).json({ message: "Event not found" });
+      }
+
+      res.json(updatedEvent);
+    } catch (error) {
+      console.error("Error updating special event:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   app.get("/api/events/:id", async (req, res) => {
     try {
       const event = await storage.getEvent(req.params.id);

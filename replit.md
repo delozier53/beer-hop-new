@@ -34,6 +34,11 @@ Key recent changes (August 2025):
 - Redesigned brewery page button layout: full-width Check In, side-by-side View Taplist (pink) and Take Notes (#004121)
 - Updated breweries list to show only city/state instead of full addresses with compact spacing
 - Added global settings table in database for storing app-wide configuration like podcast header
+- Implemented Special Events functionality with toggle between Special/Weekly Events (August 3, 2025)
+- Added Special Events CSV data loading with multi-line field parsing support
+- Created special event detail pages with full image display and ticket links
+- Implemented admin/owner edit functionality for special events with permission-based access control
+- Added ownerId field to special events schema for ownership tracking
 
 The database schema supports complex relationships between entities, such as users having multiple check-ins and favorite breweries, breweries having associated podcast episodes, and a badge system based on check-in counts. Geographic data uses authentic latitude and longitude coordinates from the provided brewery coordinate CSV file, ensuring accurate distance calculations for Oklahoma breweries.
 

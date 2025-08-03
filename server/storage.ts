@@ -333,6 +333,7 @@ export interface IStorage {
   // Special Events
   getSpecialEvents(): Promise<SpecialEvent[]>;
   getSpecialEvent(id: string): Promise<SpecialEvent | undefined>;
+  updateSpecialEvent(id: string, updates: Partial<SpecialEvent>): Promise<SpecialEvent | undefined>;
 }
 
 // CSV processing functions
@@ -1274,6 +1275,15 @@ export class DatabaseStorage implements IStorage {
 
   async getSpecialEvent(id: string): Promise<SpecialEvent | undefined> {
     const [event] = await db.select().from(specialEvents).where(eq(specialEvents.id, id));
+    return event || undefined;
+  }
+
+  async updateSpecialEvent(id: string, updates: Partial<SpecialEvent>): Promise<SpecialEvent | undefined> {
+    const [event] = await db
+      .update(specialEvents)
+      .set(updates)
+      .where(eq(specialEvents.id, id))
+      .returning();
     return event || undefined;
   }
 }

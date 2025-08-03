@@ -113,6 +113,7 @@ export const specialEvents = pgTable("special_events", {
   location: text("location"),
   rsvpRequired: boolean("rsvp_required").notNull().default(false),
   ticketLink: text("ticket_link"),
+  ownerId: varchar("owner_id"), // User ID of event owner
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
