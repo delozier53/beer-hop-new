@@ -17,7 +17,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { nanoid } from 'nanoid';
 
-function loadBreweriesFromCSV(): Brewery[] {
+async function loadBreweriesFromCSV(): Promise<Brewery[]> {
   try {
     const csvPath = path.join(process.cwd(), 'attached_assets/Breweries_Corrected_1754192600901.csv');
     const csvContent = fs.readFileSync(csvPath, 'utf-8');
@@ -25,7 +25,10 @@ function loadBreweriesFromCSV(): Brewery[] {
     // Parse CSV properly handling multi-line quoted fields
     const records = parseCSVContent(csvContent);
     
-    return records.slice(0, 73).map((record, index) => { // Only load first 73 breweries
+    const breweries = [];
+    for (let i = 0; i < Math.min(records.length, 73); i++) {
+      const record = records[i];
+      const index = i;
       
       // Parse brewery data from record
       const name = record.name || '';
@@ -58,11 +61,12 @@ function loadBreweriesFromCSV(): Brewery[] {
         }
       }
       
-      // Generate random coordinates in Oklahoma area for breweries without specific coords
-      const latitude = (35.0 + Math.random() * 1.5).toFixed(6);
-      const longitude = (-99.0 + Math.random() * 2.0).toFixed(6);
+      // Use actual coordinates based on brewery address
+      const coordinates = await geocodeAddress(address);
+      const latitude = coordinates.lat;
+      const longitude = coordinates.lng;
       
-      return {
+      const brewery = {
         id: (index + 1).toString(),
         name,
         address: addressParts[0]?.trim() || address,
@@ -94,7 +98,13 @@ function loadBreweriesFromCSV(): Brewery[] {
         ownerId: null,
         createdAt: new Date()
       };
-    }).filter(brewery => brewery.name); // Filter out empty entries
+      
+      if (brewery.name) {
+        breweries.push(brewery);
+      }
+    }
+    
+    return breweries;
   } catch (error) {
     console.error('Error loading breweries from CSV:', error);
     return [];
@@ -163,6 +173,61 @@ function parseCSVLine(line: string): string[] {
   
   result.push(current);
   return result;
+}
+
+// Get coordinates for Oklahoma cities/locations
+async function geocodeAddress(address: string): Promise<{lat: string, lng: string}> {
+  // Extract city from address for major Oklahoma cities
+  const cityMap: Record<string, {lat: string, lng: string}> = {
+    'tulsa': { lat: "36.1540", lng: "-95.9928" },
+    'oklahoma city': { lat: "35.4676", lng: "-97.5164" },
+    'okc': { lat: "35.4676", lng: "-97.5164" },
+    'norman': { lat: "35.2226", lng: "-97.4395" },
+    'broken arrow': { lat: "36.0526", lng: "-95.7969" },
+    'lawton': { lat: "34.6036", lng: "-98.3959" },
+    'edmond': { lat: "35.6528", lng: "-97.4781" },
+    'moore': { lat: "35.3395", lng: "-97.4867" },
+    'midwest city': { lat: "35.4495", lng: "-97.3967" },
+    'enid': { lat: "36.3956", lng: "-97.8784" },
+    'stillwater': { lat: "36.1156", lng: "-97.0594" },
+    'muskogee': { lat: "35.7479", lng: "-95.3697" },
+    'bartlesville': { lat: "36.7473", lng: "-95.9808" },
+    'owasso': { lat: "36.2695", lng: "-95.8547" },
+    'shawnee': { lat: "35.3273", lng: "-96.9253" },
+    'ardmore': { lat: "34.1742", lng: "-97.1436" },
+    'ponca city': { lat: "36.7063", lng: "-97.0859" },
+    'duncan': { lat: "34.5023", lng: "-97.9578" },
+    'del city': { lat: "35.4418", lng: "-97.4408" },
+    'mcalester': { lat: "34.9332", lng: "-95.7697" },
+    'tahlequah': { lat: "35.9151", lng: "-94.9700" },
+    'durant': { lat: "33.9937", lng: "-96.3711" },
+    'bethany': { lat: "35.5151", lng: "-97.6311" },
+    'ada': { lat: "34.7745", lng: "-96.6783" },
+    'el reno': { lat: "35.5323", lng: "-97.9551" },
+    'weatherford': { lat: "35.5262", lng: "-98.7062" },
+    'yukon': { lat: "35.5067", lng: "-97.7625" },
+    'claremore': { lat: "36.3126", lng: "-95.6160" },
+    'chickasha': { lat: "35.0526", lng: "-97.9364" },
+    'miami': { lat: "36.8773", lng: "-94.8775" },
+    'altus': { lat: "34.6381", lng: "-99.3340" },
+    'guymon': { lat: "36.6828", lng: "-101.4816" },
+    'sand springs': { lat: "36.1398", lng: "-96.1089" },
+    'poteau': { lat: "35.0540", lng: "-94.6238" }
+  };
+
+  // Extract city name from address
+  const addressLower = address.toLowerCase();
+  for (const [city, coords] of Object.entries(cityMap)) {
+    if (addressLower.includes(city)) {
+      return coords;
+    }
+  }
+  
+  // Default to Oklahoma City center for unmatched addresses
+  return {
+    lat: "35.4676",
+    lng: "-97.5164"
+  };
 }
 
 export interface IStorage {
@@ -419,16 +484,16 @@ export class MemStorage implements IStorage {
     this.podcastEpisodes = new Map();
     this.badges = new Map();
     
-    this.initializeData();
+    this.initializeData().catch(console.error);
   }
 
-  private initializeData() {
+  private async initializeData() {
     // Initialize badges from CSV
     const badgesList = loadBadgesFromCSV();
     badgesList.forEach(badge => this.badges.set(badge.id, badge));
 
-    // Initialize breweries from CSV
-    const breweriesList = loadBreweriesFromCSV();
+    // Initialize breweries from CSV with real geocoding
+    const breweriesList = await loadBreweriesFromCSV();
     console.log(`Loaded ${breweriesList.length} breweries from CSV`);
     breweriesList.forEach(brewery => this.breweries.set(brewery.id, brewery));
 
