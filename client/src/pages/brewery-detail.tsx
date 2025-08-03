@@ -259,9 +259,10 @@ export default function BreweryDetail() {
         </div>
 
         {/* Action Buttons */}
-        <div className="grid grid-cols-2 gap-3 mb-6">
+        <div className="mb-6 space-y-3">
+          {/* Check In Button - Full Width */}
           <Button 
-            className="bg-green-600 hover:bg-green-700 text-white"
+            className="w-full bg-green-600 hover:bg-green-700 text-white"
             onClick={() => checkInMutation.mutate(brewery.id)}
             disabled={checkInMutation.isPending}
           >
@@ -269,48 +270,67 @@ export default function BreweryDetail() {
             {checkInMutation.isPending ? "Checking in..." : "Check In"}
           </Button>
           
-          <Dialog open={isNotesDialogOpen} onOpenChange={setIsNotesDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="bg-pink-600 hover:bg-pink-700 text-white">
-                <StickyNote className="w-4 h-4 mr-2" />
-                Take Notes
+          {/* Second Row - View Taplist and Take Notes */}
+          <div className="grid grid-cols-2 gap-3">
+            {/* View Taplist Button - Only show if URL exists */}
+            {brewery.tapListUrl ? (
+              <Button 
+                className="bg-pink-600 hover:bg-pink-700 text-white"
+                onClick={() => window.open(brewery.tapListUrl, '_blank')}
+              >
+                View Taplist
               </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-md">
-              <DialogHeader>
-                <DialogTitle>Notes for {brewery.name}</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4">
-                <Textarea
-                  placeholder="Add your notes about this brewery..."
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  className="min-h-32"
-                />
-                <div className="flex justify-end space-x-2">
-                  <Button 
-                    variant="outline" 
-                    onClick={() => setIsNotesDialogOpen(false)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button 
-                    className="bg-hops hover:bg-hops-dark text-white"
-                    onClick={() => {
-                      toast({
-                        title: "Notes saved",
-                        description: "Your brewery notes have been saved.",
-                      });
-                      setIsNotesDialogOpen(false);
-                    }}
-                  >
-                    <Save className="w-4 h-4 mr-2" />
-                    Save Notes
-                  </Button>
+            ) : (
+              <div></div>
+            )}
+            
+            {/* Take Notes Button */}
+            <Dialog open={isNotesDialogOpen} onOpenChange={setIsNotesDialogOpen}>
+              <DialogTrigger asChild>
+                <Button 
+                  className="text-white hover:opacity-90"
+                  style={{ backgroundColor: '#004121' }}
+                >
+                  <StickyNote className="w-4 h-4 mr-2" />
+                  Take Notes
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Notes for {brewery.name}</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <Textarea
+                    placeholder="Add your notes about this brewery..."
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    className="min-h-32"
+                  />
+                  <div className="flex justify-end space-x-2">
+                    <Button 
+                      variant="outline" 
+                      onClick={() => setIsNotesDialogOpen(false)}
+                    >
+                      Cancel
+                    </Button>
+                    <Button 
+                      className="bg-hops hover:bg-hops-dark text-white"
+                      onClick={() => {
+                        toast({
+                          title: "Notes saved",
+                          description: "Your brewery notes have been saved.",
+                        });
+                        setIsNotesDialogOpen(false);
+                      }}
+                    >
+                      <Save className="w-4 h-4 mr-2" />
+                      Save Notes
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            </DialogContent>
-          </Dialog>
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
 
         {/* Hours */}
@@ -440,39 +460,7 @@ export default function BreweryDetail() {
 
 
 
-        {/* Tap List - Only show if URL is provided */}
-        {brewery.tapListUrl && (
-          <div className="mb-6">
-            <h3 className="font-semibold mb-3">On Tap Now</h3>
-            <div className="bg-white rounded-lg border shadow-sm overflow-hidden">
-              {brewery.tapListUrl.includes('untappd.com') ? (
-                <div className="h-96">
-                  <iframe
-                    src={brewery.tapListUrl}
-                    className="w-full h-full border-0"
-                    title={`${brewery.name} Tap List on Untappd`}
-                    loading="lazy"
-                  />
-                </div>
-              ) : (
-                <div className="p-4">
-                  <div className="text-center text-gray-600 mb-4">
-                    <p className="text-sm mb-2">View Current Tap List</p>
-                    <Button 
-                      className="bg-hops hover:bg-hops-dark text-white"
-                      onClick={() => window.open(brewery.tapListUrl, '_blank')}
-                    >
-                      Open Tap List
-                    </Button>
-                  </div>
-                  <div className="text-xs text-gray-500 text-center">
-                    External tap list: {brewery.tapListUrl}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
+
 
         {/* Photo Gallery */}
         {brewery.photos.length > 0 && (
