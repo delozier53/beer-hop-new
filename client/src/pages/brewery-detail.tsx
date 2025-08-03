@@ -143,13 +143,33 @@ export default function BreweryDetail() {
             <h1 className="text-2xl font-bold">{brewery.name}</h1>
             {/* Logo displayed in banner, removed circle image and craft brewery label */}
           </div>
-          <button 
-            className={`p-2 ${isFavorite ? 'text-red-500' : 'text-gray-400'}`}
-            onClick={() => favoriteMutation.mutate(brewery.id)}
-            disabled={favoriteMutation.isPending}
-          >
-            <Heart className={`w-6 h-6 ${isFavorite ? 'fill-current' : ''}`} />
-          </button>
+          <div className="flex items-center space-x-2">
+            {/* Edit Button - Only visible for master admins and brewery owners */}
+            {(user?.role === 'admin' || user?.id === brewery.ownerId) && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-gray-600 hover:text-gray-800"
+                onClick={() => {
+                  // TODO: Navigate to edit brewery page
+                  toast({
+                    title: "Edit Mode",
+                    description: "Brewery editing functionality coming soon.",
+                  });
+                }}
+              >
+                <Edit className="w-4 h-4 mr-1" />
+                Edit
+              </Button>
+            )}
+            <button 
+              className={`p-2 ${isFavorite ? 'text-red-500' : 'text-gray-400'}`}
+              onClick={() => favoriteMutation.mutate(brewery.id)}
+              disabled={favoriteMutation.isPending}
+            >
+              <Heart className={`w-6 h-6 ${isFavorite ? 'fill-current' : ''}`} />
+            </button>
+          </div>
         </div>
 
         {/* Action Buttons */}
