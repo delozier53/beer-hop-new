@@ -107,7 +107,7 @@ export default function Profile() {
 
         {/* Current Badge */}
         {badge && (
-          <div className="bg-gradient-to-r from-hops to-hops-dark rounded-xl px-2 mb-1 text-white" style={{ paddingTop: '2px', paddingBottom: '2px' }}>
+          <div className="bg-gradient-to-r from-hops to-hops-dark rounded-xl px-2 mb-1 text-white" style={{ paddingTop: '0px', paddingBottom: '0px' }}>
             <div className="flex justify-center">
               <img 
                 src={badge.icon} 
