@@ -12,7 +12,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Camera, Edit } from "lucide-react";
+import { Camera, Settings } from "lucide-react";
 import type { User } from "@shared/schema";
 
 interface EditProfileDialogProps {
@@ -94,9 +94,8 @@ export function EditProfileDialog({ user, userId }: EditProfileDialogProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="ghost" className="text-hops text-sm font-medium">
-          <Edit className="w-4 h-4 mr-1" />
-          Edit Profile
+        <Button variant="ghost" size="icon" className="text-white hover:bg-white/20 rounded-full">
+          <Settings className="w-5 h-5" />
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">

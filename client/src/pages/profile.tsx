@@ -2,7 +2,7 @@ import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Medal, Trophy, Heart, MapPin } from "lucide-react";
+import { Medal, Trophy, Heart, MapPin, Settings } from "lucide-react";
 import { Link } from "wouter";
 import { EditProfileDialog } from "@/components/edit-profile-dialog";
 import type { User, Badge, Brewery } from "@shared/schema";
@@ -63,12 +63,16 @@ export default function Profile() {
     <div className="mobile-container">
       {/* Hero Banner */}
       <div 
-        className="hero-banner from-amber to-hops"
+        className="hero-banner from-amber to-hops relative"
         style={{
           backgroundImage: `linear-gradient(rgba(245, 158, 11, 0.8), rgba(128, 188, 4, 0.8)), url('https://images.unsplash.com/photo-1516594915697-87eb3b1c14ea?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=400')`
         }}
       >
         <div className="hero-overlay" />
+        {/* Settings Gear Icon */}
+        <div className="absolute top-4 right-4 z-20">
+          <EditProfileDialog user={user} userId={CURRENT_USER_ID} />
+        </div>
       </div>
 
       {/* Profile Content */}
@@ -80,10 +84,7 @@ export default function Profile() {
             alt="Profile" 
             className="w-20 h-20 rounded-full border-4 border-white shadow-lg object-cover mb-2"
           />
-          <h2 className="text-xl font-bold text-black bg-white px-3 py-1 rounded-lg shadow-md">{user.username || user.name}</h2>
-          <div className="mt-2">
-            <EditProfileDialog user={user} userId={CURRENT_USER_ID} />
-          </div>
+          <h2 className="text-xl font-bold text-black bg-white px-3 py-1 rounded-lg">{user.username || user.name}</h2>
         </div>
 
         {/* Stats Cards */}
