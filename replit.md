@@ -23,7 +23,7 @@ The API provides endpoints for users, breweries, check-ins, events, and podcast 
 ### Data Storage Solutions
 The application is configured to use PostgreSQL as the primary database with Drizzle ORM for type-safe database operations. The schema defines six main entities: users, breweries, check-ins, events, podcast episodes, and badges. Drizzle provides type-safe SQL query building and schema migration capabilities.
 
-The database schema supports complex relationships between entities, such as users having multiple check-ins and favorite breweries, breweries having associated podcast episodes, and a badge system based on check-in counts. Geographic data is stored using decimal fields for latitude and longitude coordinates.
+The database schema supports complex relationships between entities, such as users having multiple check-ins and favorite breweries, breweries having associated podcast episodes, and a badge system based on check-in counts. Geographic data uses authentic latitude and longitude coordinates from the provided brewery coordinate CSV file, ensuring accurate distance calculations for Oklahoma breweries.
 
 ### State Management
 Client-side state is managed through a combination of TanStack Query for server state and React's built-in state management for local UI state. The query client is configured with infinite stale time and disabled refetching to optimize for mobile usage patterns. Custom hooks handle geolocation services and responsive design breakpoints.

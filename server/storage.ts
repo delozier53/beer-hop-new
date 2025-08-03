@@ -19,7 +19,7 @@ import { nanoid } from 'nanoid';
 
 async function loadBreweriesFromCSV(): Promise<Brewery[]> {
   try {
-    const csvPath = path.join(process.cwd(), 'attached_assets/Breweries_Corrected_1754192600901.csv');
+    const csvPath = path.join(process.cwd(), 'attached_assets/breweries_rows_1754194005930.csv');
     const csvContent = fs.readFileSync(csvPath, 'utf-8');
     
     // Parse CSV properly handling multi-line quoted fields
@@ -30,7 +30,7 @@ async function loadBreweriesFromCSV(): Promise<Brewery[]> {
       const record = records[i];
       const index = i;
       
-      // Parse brewery data from record
+      // Parse brewery data from record with authentic coordinates
       const name = record.name || '';
       const address = record.address || '';
       const hours = record.hours || '';
@@ -44,6 +44,10 @@ async function loadBreweriesFromCSV(): Promise<Brewery[]> {
       const website = record.website || '';
       const phone = record.phone || '';
       const podcastUrl = record.podcast || '';
+      
+      // Use authentic latitude and longitude from CSV
+      const latitude = record.latitude || "35.4676"; // Fallback to OKC center
+      const longitude = record.longitude || "-97.5164";
       
       // Extract city and state from address
       const addressParts = address.split(',');
@@ -61,11 +65,6 @@ async function loadBreweriesFromCSV(): Promise<Brewery[]> {
         }
       }
       
-      // Use actual coordinates based on brewery address
-      const coordinates = await geocodeAddress(address);
-      const latitude = coordinates.lat;
-      const longitude = coordinates.lng;
-      
       const brewery = {
         id: (index + 1).toString(),
         name,
@@ -75,8 +74,8 @@ async function loadBreweriesFromCSV(): Promise<Brewery[]> {
         zipCode,
         latitude,
         longitude,
-        image: `https://images.unsplash.com/photo-${1570000000000 + index}?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600`,
-        logo: `https://images.unsplash.com/photo-${1570000000000 + index}?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=200`,
+        image: record.banner_image_url || `https://images.unsplash.com/photo-${1570000000000 + index}?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600`,
+        logo: record.image_url || `https://images.unsplash.com/photo-${1570000000000 + index}?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=200`,
         type: "Craft Brewery",
         about: about || `${name} is a craft brewery dedicated to creating exceptional beers in the heart of Oklahoma.`,
         hours,
