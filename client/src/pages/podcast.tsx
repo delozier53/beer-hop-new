@@ -388,6 +388,19 @@ export default function Podcast() {
                     size="sm"
                     variant="outline"
                     className="text-[#ff55e1] border-[#ff55e1] hover:bg-[#ff55e1] hover:text-white"
+                    onClick={() => {
+                      // Reset form to clean state when opening create dialog
+                      form.reset({
+                        title: "",
+                        guest: "",
+                        business: "",
+                        spotifyUrl: "",
+                        image: "",
+                        releaseDate: new Date().toISOString().split('T')[0],
+                        episodeNumber: (Math.max(...episodes.map(ep => ep.episodeNumber), 0) + 1),
+                      });
+                      setEditingEpisode(null);
+                    }}
                   >
                     <Plus className="w-4 h-4 mr-1" />
                     Add Episode
@@ -513,7 +526,10 @@ export default function Podcast() {
                       <Button
                         type="button"
                         variant="outline"
-                        onClick={() => setIsDialogOpen(false)}
+                        onClick={() => {
+                          setIsDialogOpen(false);
+                          form.reset();
+                        }}
                         className="flex-1"
                       >
                         Cancel
