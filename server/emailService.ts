@@ -9,7 +9,7 @@ mailService.setApiKey(process.env.SENDGRID_API_KEY);
 
 interface EmailParams {
   to: string;
-  from: string;
+  from?: string;
   subject: string;
   text?: string;
   html?: string;
@@ -17,16 +17,23 @@ interface EmailParams {
 
 export async function sendEmail(params: EmailParams): Promise<boolean> {
   try {
+    console.log('Attempting to send email to:', params.to);
     await mailService.send({
       to: params.to,
-      from: params.from,
+      from: params.from || 'your-verified-email@yourdomain.com',
       subject: params.subject,
       text: params.text,
       html: params.html,
     });
+    console.log('Email sent successfully to:', params.to);
     return true;
   } catch (error) {
     console.error('SendGrid email error:', error);
+    if (error && typeof error === 'object' && 'response' in error) {
+      console.error('SendGrid response:', (error as any).response?.body);
+      console.error('This is likely because the sender email domain is not verified in SendGrid.');
+      console.error('Please verify a sender email address or domain in your SendGrid account.');
+    }
     return false;
   }
 }
@@ -80,7 +87,7 @@ export async function sendVerificationCode(email: string, code: string): Promise
 
   return await sendEmail({
     to: email,
-    from: 'noreply@beerhop.app', // You should verify this sender email in SendGrid
+    from: 'your-verified-email@yourdomain.com', // CHANGE THIS: Must be verified in SendGrid
     subject: 'Beer Hop - Verification Code',
     text,
     html
