@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { convertGoogleDriveImageUrl } from "@/lib/imageUtils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -198,7 +199,7 @@ export default function BreweryDetail() {
       {brewery.logo && (
         <div className="relative -mt-12 mb-6 flex justify-center">
           <img 
-            src={brewery.logo} 
+            src={convertGoogleDriveImageUrl(brewery.logo)} 
             alt={`${brewery.name} logo`}
             className="w-24 h-24 rounded-lg object-cover border-4 border-white shadow-lg bg-white"
           />

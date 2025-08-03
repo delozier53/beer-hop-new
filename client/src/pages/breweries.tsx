@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Search, Star, MapPin } from "lucide-react";
 import { Link } from "wouter";
 import { useLocation } from "@/hooks/use-location";
+import { convertGoogleDriveImageUrl } from "@/lib/imageUtils";
 import type { Brewery } from "@shared/schema";
 
 interface BreweryWithDistance extends Brewery {
@@ -126,7 +127,7 @@ export default function Breweries() {
               <Card className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer">
                 <div className="flex">
                   <img 
-                    src={brewery.logo || `https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=200`} 
+                    src={convertGoogleDriveImageUrl(brewery.logo) || `https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=200`} 
                     alt={brewery.name} 
                     className="w-24 h-24 object-cover"
                   />
