@@ -311,7 +311,7 @@ export interface IStorage {
 
   // Badges
   getBadges(): Promise<Badge[]>;
-  getUserBadge(checkins: number): Promise<Badge | undefined>;
+  getUserBadge(userId: string): Promise<Badge | undefined>;
 }
 
 // CSV processing functions
