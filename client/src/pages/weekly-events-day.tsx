@@ -276,16 +276,6 @@ export default function WeeklyEventsDay() {
                     </div>
                   </div>
 
-                  {/* Event Type Badge */}
-                  <div className="mb-3">
-                    <Badge 
-                      variant="secondary"
-                      className="bg-[#1a5632] text-white"
-                    >
-                      {event.event}
-                    </Badge>
-                  </div>
-
                   {/* Time */}
                   <div className="mb-3">
                     <div className="flex items-center text-sm text-gray-600">

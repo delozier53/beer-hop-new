@@ -29,16 +29,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { insertWeeklyEventSchema } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
+import { ObjectUploader } from "./ObjectUploader";
+import type { UploadResult } from "@uppy/core";
 
 const formSchema = insertWeeklyEventSchema.extend({
   day: z.enum(['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']),
 }).transform((data) => ({
   ...data,
-  logo: data.logo || undefined,
+  event: data.title, // Use title as the event type
   eventPhoto: data.eventPhoto || undefined,
-  instagram: data.instagram || undefined,
-  twitter: data.twitter || undefined,
-  facebook: data.facebook || undefined,
 }));
 
 interface WeeklyEventCreateModalProps {
@@ -50,6 +49,7 @@ interface WeeklyEventCreateModalProps {
 interface Brewery {
   id: string;
   name: string;
+  address: string;
 }
 
 export default function WeeklyEventCreateModal({
@@ -59,6 +59,7 @@ export default function WeeklyEventCreateModal({
 }: WeeklyEventCreateModalProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [uploadedImageUrl, setUploadedImageUrl] = useState<string>('');
 
   const { data: breweries = [] } = useQuery<Brewery[]>({
     queryKey: ['/api/breweries'],
@@ -73,24 +74,34 @@ export default function WeeklyEventCreateModal({
       title: '',
       details: '',
       time: '',
-      logo: undefined,
       eventPhoto: undefined,
-      instagram: undefined,
-      twitter: undefined,
-      facebook: undefined,
       address: '',
     },
   });
 
+  // Auto-populate address when brewery changes
+  const handleBreweryChange = (breweryName: string) => {
+    const selectedBrewery = breweries.find(b => b.name === breweryName);
+    if (selectedBrewery) {
+      form.setValue('address', selectedBrewery.address);
+    }
+  };
+
   const createWeeklyEventMutation = useMutation({
     mutationFn: async (data: z.infer<typeof formSchema>) => {
+      // Use uploaded image URL if available
+      const finalData = {
+        ...data,
+        eventPhoto: uploadedImageUrl || data.eventPhoto,
+      };
+
       const response = await fetch('/api/weekly-events', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'x-user-id': 'joshuamdelozier', // TODO: Make this dynamic based on actual user
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify(finalData),
       });
 
       if (!response.ok) {
@@ -108,6 +119,7 @@ export default function WeeklyEventCreateModal({
       queryClient.invalidateQueries({ queryKey: [`/api/weekly-events/${defaultDay}`] });
       onClose();
       form.reset();
+      setUploadedImageUrl('');
     },
     onError: (error) => {
       toast({
@@ -121,6 +133,17 @@ export default function WeeklyEventCreateModal({
 
   const onSubmit = (data: z.infer<typeof formSchema>) => {
     createWeeklyEventMutation.mutate(data);
+  };
+
+  const convertUploadUrlToObjectPath = (uploadUrl: string): string => {
+    try {
+      const url = new URL(uploadUrl);
+      const pathParts = url.pathname.split('/');
+      const objectId = pathParts[pathParts.length - 1];
+      return `/objects/uploads/${objectId}`;
+    } catch (error) {
+      return uploadUrl;
+    }
   };
 
   return (
@@ -166,7 +189,10 @@ export default function WeeklyEventCreateModal({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Brewery</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={(value) => {
+                      field.onChange(value);
+                      handleBreweryChange(value);
+                    }} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select brewery" />
@@ -200,19 +226,7 @@ export default function WeeklyEventCreateModal({
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="event"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Event Type</FormLabel>
-                  <FormControl>
-                    <Input placeholder="e.g., Trivia Night, Live Music" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+
 
             <FormField
               control={form.control}
@@ -254,7 +268,7 @@ export default function WeeklyEventCreateModal({
                   <FormItem>
                     <FormLabel>Address</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter address" {...field} />
+                      <Input placeholder="Auto-populated from brewery" {...field} disabled />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -262,76 +276,48 @@ export default function WeeklyEventCreateModal({
               />
             </div>
 
-            <FormField
-              control={form.control}
-              name="logo"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Logo URL (Optional)</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter logo image URL" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="eventPhoto"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Event Photo URL (Optional)</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter event photo URL" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="grid grid-cols-3 gap-4">
-              <FormField
-                control={form.control}
-                name="instagram"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Instagram (Optional)</FormLabel>
-                    <FormControl>
-                      <Input placeholder="@username" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="twitter"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Twitter (Optional)</FormLabel>
-                    <FormControl>
-                      <Input placeholder="@username" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="facebook"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Facebook (Optional)</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Page name" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium">Event Photo (Optional)</label>
+                <div className="mt-2">
+                  <ObjectUploader
+                    maxNumberOfFiles={1}
+                    maxFileSize={10485760} // 10MB
+                    onGetUploadParameters={async () => {
+                      const response = await fetch('/api/objects/upload', {
+                        method: 'POST',
+                        headers: {
+                          'Content-Type': 'application/json',
+                        },
+                      });
+                      const data = await response.json();
+                      return {
+                        method: 'PUT' as const,
+                        url: data.uploadURL,
+                      };
+                    }}
+                    onComplete={(result) => {
+                      if (result.successful && result.successful.length > 0) {
+                        const uploadedFile = result.successful[0];
+                        if (uploadedFile.uploadURL) {
+                          const objectPath = convertUploadUrlToObjectPath(uploadedFile.uploadURL);
+                          setUploadedImageUrl(objectPath);
+                          toast({
+                            title: "Success",
+                            description: "Event photo uploaded successfully!",
+                          });
+                        }
+                      }
+                    }}
+                    buttonClassName="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 border border-dashed border-gray-300"
+                  >
+                    📷 Upload Event Photo
+                  </ObjectUploader>
+                  {uploadedImageUrl && (
+                    <p className="text-sm text-green-600 mt-2">✓ Photo uploaded successfully</p>
+                  )}
+                </div>
+              </div>
             </div>
 
             <div className="flex justify-end space-x-4 pt-4">
