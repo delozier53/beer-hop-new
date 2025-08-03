@@ -444,34 +444,32 @@ export default function BreweryDetail() {
         {brewery.tapListUrl && (
           <div className="mb-6">
             <h3 className="font-semibold mb-3">On Tap Now</h3>
-            <div className="bg-gray-100 rounded-lg p-4 min-h-[300px] border-2 border-dashed border-gray-300">
-              <div className="text-center text-gray-600">
-                <p className="text-sm mb-2">Tap offerings embed will appear here</p>
-                <p className="text-xs text-gray-500">
-                  URL: {brewery.tapListUrl}
-                </p>
-                {/* Placeholder for embed - in production this would be an iframe or integrated widget */}
-                <div className="mt-4 p-4 bg-white rounded border">
-                  <h4 className="font-medium text-gray-800 mb-2">Current Tap List</h4>
-                  <div className="text-left space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span>Hoppy IPA</span>
-                      <span className="text-gray-500">6.5% ABV</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Wheat Beer</span>
-                      <span className="text-gray-500">4.8% ABV</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Porter</span>
-                      <span className="text-gray-500">5.2% ABV</span>
-                    </div>
-                  </div>
-                  <p className="text-xs text-gray-400 mt-3 italic">
-                    * Tap list updates in real-time when connected to brewery system
-                  </p>
+            <div className="bg-white rounded-lg border shadow-sm overflow-hidden">
+              {brewery.tapListUrl.includes('untappd.com') ? (
+                <div className="h-96">
+                  <iframe
+                    src={brewery.tapListUrl}
+                    className="w-full h-full border-0"
+                    title={`${brewery.name} Tap List on Untappd`}
+                    loading="lazy"
+                  />
                 </div>
-              </div>
+              ) : (
+                <div className="p-4">
+                  <div className="text-center text-gray-600 mb-4">
+                    <p className="text-sm mb-2">View Current Tap List</p>
+                    <Button 
+                      className="bg-hops hover:bg-hops-dark text-white"
+                      onClick={() => window.open(brewery.tapListUrl, '_blank')}
+                    >
+                      Open Tap List
+                    </Button>
+                  </div>
+                  <div className="text-xs text-gray-500 text-center">
+                    External tap list: {brewery.tapListUrl}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
