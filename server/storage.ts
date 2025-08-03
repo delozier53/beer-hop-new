@@ -876,27 +876,54 @@ export class DatabaseStorage implements IStorage {
   private async initializeUsersIfEmpty(): Promise<void> {
     const existingUsers = await db.select().from(users);
     if (existingUsers.length === 0) {
-      // Create the test user directly to avoid CSV parsing issues for now
-      const testUser = {
-        id: 'joshuamdelozier',
-        username: 'joshuamdelozier',
-        email: 'josh@example.com',
-        name: 'Joshua M. DeLozier',
-        location: 'Oklahoma City, OK',
-        profileImage: null,
-        headerImage: null,
-        role: 'admin',
-        checkins: 0,
-        favoriteBreweries: [],
-        latitude: "35.4676",
-        longitude: "-97.5164"
-      };
-      
       try {
-        await db.insert(users).values([testUser]);
-        console.log('Created test user successfully');
+        // Load users from CSV first
+        const csvUsers = loadUsersFromCSV();
+        
+        if (csvUsers.length > 0) {
+          // Filter to valid users with proper typing
+          const validUsers = csvUsers
+            .filter(user => user.id && user.username && user.email)
+            .map(user => ({
+              id: user.id,
+              username: user.username,
+              email: user.email,
+              name: user.name,
+              location: user.location || null,
+              profileImage: user.profileImage || null,
+              headerImage: null,
+              role: user.role || 'user',
+              checkins: user.checkins || 0,
+              favoriteBreweries: Array.isArray(user.favoriteBreweries) ? user.favoriteBreweries : [],
+              latitude: user.latitude || null,
+              longitude: user.longitude || null
+            }));
+          
+          console.log(`Inserting ${validUsers.length} users into database`);
+          await db.insert(users).values(validUsers);
+          console.log('Users loaded successfully from CSV');
+        } else {
+          // Fallback - create test user with realistic data
+          const testUser = {
+            id: 'joshuamdelozier',
+            username: 'joshuamdelozier',
+            email: 'josh@example.com',
+            name: 'Joshua M. DeLozier',
+            location: 'Oklahoma City, OK',
+            profileImage: null,
+            headerImage: null,
+            role: 'admin',
+            checkins: 15,
+            favoriteBreweries: ['1', '2', '5'],
+            latitude: "35.4676",
+            longitude: "-97.5164"
+          };
+          
+          await db.insert(users).values([testUser]);
+          console.log('Created test user with sample data');
+        }
       } catch (error) {
-        console.error('Error creating test user:', error);
+        console.error('Error initializing users:', error);
       }
     }
   }
