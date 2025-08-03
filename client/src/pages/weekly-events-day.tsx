@@ -106,14 +106,28 @@ export default function WeeklyEventsDay() {
   }, []);
 
   // Sort events by brewery distance from user's location
-  const sortedEvents = weeklyEvents.sort((a, b) => {
-    if (!userLocation) return 0; // No sorting if no location
-    
+  const sortedEvents = userLocation ? [...weeklyEvents].sort((a, b) => {
     // Find brewery coordinates for each event
-    const breweryA = breweries.find((brewery) => brewery.name === a.brewery);
-    const breweryB = breweries.find((brewery) => brewery.name === b.brewery);
+    const breweryA = breweries.find((brewery) => 
+      brewery.name.toUpperCase() === a.brewery.toUpperCase()
+    );
+    const breweryB = breweries.find((brewery) => 
+      brewery.name.toUpperCase() === b.brewery.toUpperCase()
+    );
     
-    if (!breweryA || !breweryB) return 0;
+    if (!breweryA || !breweryB) {
+      console.log('Missing brewery data:', { 
+        eventA: a.brewery, 
+        eventB: b.brewery, 
+        foundA: !!breweryA, 
+        foundB: !!breweryB 
+      });
+      // If we can't find brewery data, put events without brewery data at the end
+      if (!breweryA && !breweryB) return 0;
+      if (!breweryA) return 1;
+      if (!breweryB) return -1;
+      return 0;
+    }
     
     const distanceA = calculateDistance(
       userLocation.lat, 
@@ -129,8 +143,17 @@ export default function WeeklyEventsDay() {
       parseFloat(breweryB.longitude)
     );
     
+    console.log('Distance comparison:', {
+      breweryA: a.brewery,
+      breweryB: b.brewery,
+      distanceA: distanceA.toFixed(2),
+      distanceB: distanceB.toFixed(2),
+      result: distanceA - distanceB
+    });
+    
+    // Sort ascending (closest first)
     return distanceA - distanceB;
-  });
+  }) : weeklyEvents;
 
   if (isLoading) {
     return (
