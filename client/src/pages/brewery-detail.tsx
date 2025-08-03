@@ -546,34 +546,31 @@ export default function BreweryDetail() {
                   onChange={(e) => setEditFormData({...editFormData, image: e.target.value})}
                   placeholder="Current image URL or upload new..."
                 />
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  className="w-full"
-                  onClick={async () => {
-                    try {
-                      console.log("Testing upload button click");
-                      const response = await apiRequest("POST", "/api/objects/upload", {});
-                      const data = await response.json();
-                      console.log("Full response data:", data);
-                      console.log("Upload URL received:", data.uploadURL);
-                      
+                <ObjectUploader
+                  maxNumberOfFiles={1}
+                  maxFileSize={10485760}
+                  onGetUploadParameters={async () => {
+                    const response = await apiRequest("POST", "/api/objects/upload", {});
+                    const data = await response.json();
+                    return {
+                      method: "PUT" as const,
+                      url: data.uploadURL,
+                    };
+                  }}
+                  onComplete={(result) => {
+                    if (result.successful && result.successful[0]) {
+                      const uploadURL = result.successful[0].uploadURL;
+                      setEditFormData({...editFormData, image: uploadURL});
                       toast({
-                        title: "Upload Test",
-                        description: "Upload button is working! Upload URL received.",
-                      });
-                    } catch (error) {
-                      console.error("Upload button error:", error);
-                      toast({
-                        title: "Upload Error", 
-                        description: "Upload button failed: " + error.message,
-                        variant: "destructive",
+                        title: "Header image uploaded!",
+                        description: "Your brewery header image has been uploaded successfully.",
                       });
                     }
                   }}
+                  buttonClassName="w-full border-gray-300"
                 >
-                  Test Upload (Header)
-                </Button>
+                  Upload Header Image
+                </ObjectUploader>
               </div>
             </div>
             
@@ -586,34 +583,31 @@ export default function BreweryDetail() {
                   onChange={(e) => setEditFormData({...editFormData, logo: e.target.value})}
                   placeholder="Current logo URL or upload new..."
                 />
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  className="w-full"
-                  onClick={async () => {
-                    try {
-                      console.log("Testing logo upload button click");
-                      const response = await apiRequest("POST", "/api/objects/upload", {});
-                      const data = await response.json();
-                      console.log("Full logo response data:", data);
-                      console.log("Logo upload URL received:", data.uploadURL);
-                      
+                <ObjectUploader
+                  maxNumberOfFiles={1}
+                  maxFileSize={10485760}
+                  onGetUploadParameters={async () => {
+                    const response = await apiRequest("POST", "/api/objects/upload", {});
+                    const data = await response.json();
+                    return {
+                      method: "PUT" as const,
+                      url: data.uploadURL,
+                    };
+                  }}
+                  onComplete={(result) => {
+                    if (result.successful && result.successful[0]) {
+                      const uploadURL = result.successful[0].uploadURL;
+                      setEditFormData({...editFormData, logo: uploadURL});
                       toast({
-                        title: "Upload Test",
-                        description: "Logo upload button is working! Upload URL received.",
-                      });
-                    } catch (error) {
-                      console.error("Logo upload button error:", error);
-                      toast({
-                        title: "Upload Error", 
-                        description: "Logo upload button failed: " + error.message,
-                        variant: "destructive",
+                        title: "Logo uploaded!",
+                        description: "Your brewery logo has been uploaded successfully.",
                       });
                     }
                   }}
+                  buttonClassName="w-full border-gray-300"
                 >
-                  Test Upload (Logo)
-                </Button>
+                  Upload Logo
+                </ObjectUploader>
               </div>
             </div>
             
