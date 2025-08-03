@@ -53,12 +53,9 @@ export default function Podcast() {
 
   const createEpisodeMutation = useMutation({
     mutationFn: async (data: EpisodeFormData) => {
-      // Calculate next episode number based on existing episodes
-      const nextEpisodeNumber = Math.max(...episodes.map(ep => ep.episodeNumber), 0) + 1;
-      
+      // Backend will calculate the episode number automatically
       const episodeData = {
         ...data,
-        episodeNumber: nextEpisodeNumber,
         description: "", // Default empty description
         duration: "60", // Default 60 minutes
         releaseDate: data.releaseDate,

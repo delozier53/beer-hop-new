@@ -268,7 +268,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/podcast-episodes", async (req, res) => {
     try {
-      const validatedData = insertPodcastEpisodeSchema.parse(req.body);
+      // Calculate next episode number on the backend
+      const allEpisodes = await storage.getPodcastEpisodes();
+      const nextEpisodeNumber = Math.max(...allEpisodes.map(ep => ep.episodeNumber), 0) + 1;
+      
+      const episodeData = {
+        ...req.body,
+        episodeNumber: nextEpisodeNumber,
+      };
+      
+      const validatedData = insertPodcastEpisodeSchema.parse(episodeData);
       const episode = await storage.createPodcastEpisode(validatedData);
       res.status(201).json(episode);
     } catch (error) {
