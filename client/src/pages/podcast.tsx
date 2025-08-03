@@ -95,11 +95,8 @@ export default function Podcast() {
                     />
                     <div className="flex-1">
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-sm font-medium text-purple-600">
+                        <span className="text-sm font-medium text-[#ff55e1]">
                           Episode #{episode.episodeNumber}
-                        </span>
-                        <span className="text-xs text-gray-500">
-                          {episode.duration}
                         </span>
                       </div>
                       <h3 className="font-semibold text-gray-900 mb-1">
@@ -119,7 +116,7 @@ export default function Podcast() {
                     <Button 
                       size="sm" 
                       variant="ghost"
-                      className="text-purple-600 hover:text-purple-700 p-2"
+                      className="text-[#ff55e1] hover:text-[#ff55e1]/80 p-2"
                       onClick={(e) => {
                         e.stopPropagation();
                         openSpotify(episode.spotifyUrl);
@@ -128,14 +125,7 @@ export default function Podcast() {
                       <ExternalLink className="w-4 h-4" />
                     </Button>
                   </div>
-                  
-                  {episode.description && (
-                    <div className="mt-3 pt-3 border-t border-gray-100">
-                      <p className="text-sm text-gray-600 line-clamp-2">
-                        {episode.description}
-                      </p>
-                    </div>
-                  )}
+
                 </CardContent>
               </Card>
             ))}
