@@ -45,7 +45,7 @@ export default function BreweryDetail() {
     zipCode: "",
     phone: "",
     hours: "",
-    about: "",
+    policies: "",
     image: "",
     logo: "",
     website: "",
@@ -53,7 +53,13 @@ export default function BreweryDetail() {
     instagram: "",
     x: "",
     threads: "",
-    tiktok: ""
+    tiktok: "",
+    slideshowPhoto1: "",
+    slideshowPhoto2: "",
+    slideshowPhoto3: "",
+    slideshowPhoto4: "",
+    slideshowPhoto5: "",
+    tapListUrl: ""
   });
 
   const { data: brewery, isLoading } = useQuery<Brewery>({
@@ -64,14 +70,8 @@ export default function BreweryDetail() {
     queryKey: ["/api/users", CURRENT_USER_ID],
   });
 
-  // Mock slideshow photos (in production, these would come from the brewery data)
-  const slideshowPhotos = [
-    "https://images.unsplash.com/photo-1558618666-fbd6c1c64c1a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600",
-    "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600",
-    "https://images.unsplash.com/photo-1559954350-b734dd78c889?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600",
-    "https://images.unsplash.com/photo-1536578266687-db9a37a4e5e6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600",
-    "https://images.unsplash.com/photo-1566994620644-5b5b6f0c9b59?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600"
-  ];
+  // Get slideshow photos from brewery data, fallback to mock for demo purposes
+  const slideshowPhotos = brewery?.slideshowPhotos?.filter(photo => photo && photo.trim()) || [];
 
   // Auto-advance slideshow every 6 seconds
   useEffect(() => {
@@ -130,8 +130,18 @@ export default function BreweryDetail() {
 
   const updateBreweryMutation = useMutation({
     mutationFn: async (updates: any) => {
+      // Prepare slideshow photos array
+      const slideshowPhotos = [
+        updates.slideshowPhoto1,
+        updates.slideshowPhoto2, 
+        updates.slideshowPhoto3,
+        updates.slideshowPhoto4,
+        updates.slideshowPhoto5
+      ].filter(photo => photo && photo.trim());
+
       const response = await apiRequest("PUT", `/api/breweries/${id}`, {
         ...updates,
+        slideshowPhotos,
         socialLinks: {
           website: updates.website || null,
           facebook: updates.facebook || null,
@@ -139,7 +149,13 @@ export default function BreweryDetail() {
           x: updates.x || null,
           threads: updates.threads || null,
           tiktok: updates.tiktok || null
-        }
+        },
+        // Remove individual photo fields from the main update object
+        slideshowPhoto1: undefined,
+        slideshowPhoto2: undefined,
+        slideshowPhoto3: undefined,
+        slideshowPhoto4: undefined,
+        slideshowPhoto5: undefined
       });
       return response.json();
     },
@@ -249,7 +265,7 @@ export default function BreweryDetail() {
                       zipCode: brewery.zipCode,
                       phone: brewery.phone || "",
                       hours: brewery.hours || "",
-                      about: brewery.about || "",
+                      policies: brewery.policies || "",
                       image: brewery.image || "",
                       logo: brewery.logo || "",
                       website: brewery.socialLinks?.website || "",
@@ -257,7 +273,13 @@ export default function BreweryDetail() {
                       instagram: brewery.socialLinks?.instagram || "",
                       x: brewery.socialLinks?.x || "",
                       threads: brewery.socialLinks?.threads || "",
-                      tiktok: brewery.socialLinks?.tiktok || ""
+                      tiktok: brewery.socialLinks?.tiktok || "",
+                      slideshowPhoto1: brewery.slideshowPhotos?.[0] || "",
+                      slideshowPhoto2: brewery.slideshowPhotos?.[1] || "",
+                      slideshowPhoto3: brewery.slideshowPhotos?.[2] || "",
+                      slideshowPhoto4: brewery.slideshowPhotos?.[3] || "",
+                      slideshowPhoto5: brewery.slideshowPhotos?.[4] || "",
+                      tapListUrl: brewery.tapListUrl || ""
                     });
                     setIsEditDialogOpen(true);
                   }
@@ -621,12 +643,75 @@ export default function BreweryDetail() {
             </div>
             
             <div>
-              <Label htmlFor="about">About</Label>
+              <Label htmlFor="policies">Policies</Label>
               <Textarea
-                id="about"
-                value={editFormData.about}
-                onChange={(e) => setEditFormData({...editFormData, about: e.target.value})}
+                id="policies"
+                value={editFormData.policies}
+                onChange={(e) => setEditFormData({...editFormData, policies: e.target.value})}
                 rows={4}
+                placeholder="Enter brewery policies, hours, rules, etc."
+              />
+            </div>
+            
+            {/* Slideshow Photos */}
+            <div className="space-y-4">
+              <Label>Slideshow Photos</Label>
+              <div className="grid gap-3">
+                <div>
+                  <Label htmlFor="slideshowPhoto1" className="text-sm text-gray-600">Photo 1 URL</Label>
+                  <Input
+                    id="slideshowPhoto1"
+                    value={editFormData.slideshowPhoto1}
+                    onChange={(e) => setEditFormData({...editFormData, slideshowPhoto1: e.target.value})}
+                    placeholder="https://example.com/photo1.jpg"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="slideshowPhoto2" className="text-sm text-gray-600">Photo 2 URL</Label>
+                  <Input
+                    id="slideshowPhoto2"
+                    value={editFormData.slideshowPhoto2}
+                    onChange={(e) => setEditFormData({...editFormData, slideshowPhoto2: e.target.value})}
+                    placeholder="https://example.com/photo2.jpg"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="slideshowPhoto3" className="text-sm text-gray-600">Photo 3 URL</Label>
+                  <Input
+                    id="slideshowPhoto3"
+                    value={editFormData.slideshowPhoto3}
+                    onChange={(e) => setEditFormData({...editFormData, slideshowPhoto3: e.target.value})}
+                    placeholder="https://example.com/photo3.jpg"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="slideshowPhoto4" className="text-sm text-gray-600">Photo 4 URL</Label>
+                  <Input
+                    id="slideshowPhoto4"
+                    value={editFormData.slideshowPhoto4}
+                    onChange={(e) => setEditFormData({...editFormData, slideshowPhoto4: e.target.value})}
+                    placeholder="https://example.com/photo4.jpg"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="slideshowPhoto5" className="text-sm text-gray-600">Photo 5 URL</Label>
+                  <Input
+                    id="slideshowPhoto5"
+                    value={editFormData.slideshowPhoto5}
+                    onChange={(e) => setEditFormData({...editFormData, slideshowPhoto5: e.target.value})}
+                    placeholder="https://example.com/photo5.jpg"
+                  />
+                </div>
+              </div>
+            </div>
+            
+            <div>
+              <Label htmlFor="tapListUrl">Tap List URL</Label>
+              <Input
+                id="tapListUrl"
+                value={editFormData.tapListUrl}
+                onChange={(e) => setEditFormData({...editFormData, tapListUrl: e.target.value})}
+                placeholder="https://example.com/taplist or embed URL"
               />
             </div>
             
