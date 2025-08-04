@@ -57,19 +57,19 @@ export async function sendVerificationCode(email: string, code: string): Promise
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
       <div style="text-align: center; margin-bottom: 30px;">
-        <h1 style="color: #D97706; font-size: 28px; margin: 0;">Beer Hop</h1>
+        <h1 style="color: #80bc04; font-size: 28px; margin: 0;">Beer Hop</h1>
         <p style="color: #6B7280; font-size: 16px; margin: 10px 0 0 0;">Brewery Discovery & Check-ins</p>
       </div>
       
       <div style="background: #F9FAFB; border-radius: 8px; padding: 30px; margin: 20px 0;">
         <h2 style="color: #111827; font-size: 24px; margin: 0 0 20px 0; text-align: center;">Verification Code</h2>
-        <p style="color: #374151; font-size: 16px; line-height: 1.5; margin: 0 0 20px 0;">
+        <p style="color: #374151; font-size: 16px; line-height: 1.5; margin: 0 0 20px 0; text-align: center;">
           Please use the following 6-digit code to verify your account:
         </p>
         
         <div style="text-align: center; margin: 30px 0;">
-          <div style="background: #FFFFFF; border: 2px solid #D97706; border-radius: 8px; display: inline-block; padding: 20px 30px;">
-            <span style="font-size: 32px; font-weight: bold; color: #D97706; letter-spacing: 8px;">${code}</span>
+          <div style="background: #FFFFFF; border: 2px solid #80bc04; border-radius: 8px; display: inline-block; padding: 20px 30px;">
+            <span style="font-size: 32px; font-weight: bold; color: #80bc04; letter-spacing: 8px;">${code}</span>
           </div>
         </div>
         
