@@ -156,10 +156,18 @@ export default function Welcome() {
       });
       return;
     }
+    if (!profileImageUrl) {
+      toast({
+        title: "Missing information",
+        description: "Profile photo is required",
+        variant: "destructive",
+      });
+      return;
+    }
     completeProfileMutation.mutate({
       email: userEmail,
       username,
-      profileImageUrl: profileImageUrl || null,
+      profileImageUrl,
     });
   };
 
@@ -275,7 +283,7 @@ export default function Welcome() {
 
                 {/* Profile Photo Upload */}
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">Profile Photo (Optional)</label>
+                  <label className="text-sm font-medium text-gray-700">Profile Photo</label>
                   <div className="flex items-center space-x-3">
                     {profileImageUrl ? (
                       <div className="flex items-center space-x-2">
@@ -314,7 +322,7 @@ export default function Welcome() {
                           });
                         }
                       }}
-                      buttonClassName="text-sm"
+                      buttonClassName="text-sm bg-pink-500 hover:bg-pink-600 text-white"
                     >
                       <Upload className="w-4 h-4 mr-2" />
                       {profileImageUrl ? "Change Photo" : "Upload Photo"}
