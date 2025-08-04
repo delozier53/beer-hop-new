@@ -24,15 +24,17 @@ export default function Leaderboard() {
     return { name: "White Hop", color: "bg-gray-300" };
   };
 
-  // Group users by badge category
-  const groupedUsers = leaderboard.reduce((groups, user) => {
-    const badge = getBadgeCategory(user.checkins);
-    if (!groups[badge.name]) {
-      groups[badge.name] = { badge, users: [] };
-    }
-    groups[badge.name].users.push(user);
-    return groups;
-  }, {} as Record<string, { badge: { name: string; color: string }; users: User[] }>);
+  // Filter users with at least 10 check-ins and group by badge category
+  const groupedUsers = leaderboard
+    .filter(user => user.checkins >= 10)
+    .reduce((groups, user) => {
+      const badge = getBadgeCategory(user.checkins);
+      if (!groups[badge.name]) {
+        groups[badge.name] = { badge, users: [] };
+      }
+      groups[badge.name].users.push(user);
+      return groups;
+    }, {} as Record<string, { badge: { name: string; color: string }; users: User[] }>);
 
   // Order of badges (highest to lowest)
   const badgeOrder = ["Black Hop", "Purple Hop", "Blue Hop", "Green Hop", "Red Hop", "Teal Hop", "Orange Hop", "Yellow Hop", "White Hop"];
@@ -79,7 +81,7 @@ export default function Leaderboard() {
       {/* Screen Title */}
       <div className="px-6 py-4 bg-white border-b">
         <h2 className="text-2xl font-bold text-gray-900 text-center">Badge Rankings</h2>
-        <p className="text-center text-gray-600 text-sm mt-1">Users grouped by achievement level</p>
+        <p className="text-center text-gray-600 text-sm mt-1">Users with at least 10 check-ins</p>
       </div>
 
       {/* All Users */}
