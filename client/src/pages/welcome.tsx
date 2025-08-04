@@ -24,7 +24,8 @@ export default function Welcome() {
 
   const sendCodeMutation = useMutation({
     mutationFn: async (email: string) => {
-      return await apiRequest("/api/auth/send-code", "POST", { email });
+      const response = await apiRequest("/api/auth/send-code", "POST", { email });
+      return await response.json();
     },
     onSuccess: () => {
       setUserEmail(email);
@@ -45,7 +46,8 @@ export default function Welcome() {
 
   const verifyCodeMutation = useMutation({
     mutationFn: async ({ email, code }: { email: string; code: string }) => {
-      return await apiRequest("/api/auth/verify-code", "POST", { email, code });
+      const response = await apiRequest("/api/auth/verify-code", "POST", { email, code });
+      return await response.json();
     },
     onSuccess: (data: any) => {
       if (data.isNewUser) {
@@ -71,7 +73,8 @@ export default function Welcome() {
 
   const completeProfileMutation = useMutation({
     mutationFn: async (profileData: any) => {
-      return await apiRequest("/api/auth/complete-profile", "POST", profileData);
+      const response = await apiRequest("/api/auth/complete-profile", "POST", profileData);
+      return await response.json();
     },
     onSuccess: (data: any) => {
       // Store user data in localStorage for session management
