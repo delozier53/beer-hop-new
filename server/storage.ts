@@ -1163,7 +1163,7 @@ export class MemStorage implements IStorage {
 }
 
 import { db } from "./db";
-import { eq, and, gte, desc, sql } from "drizzle-orm";
+import { eq, and, gte, lt, desc, sql } from "drizzle-orm";
 
 export class DatabaseStorage implements IStorage {
   async getUser(id: string): Promise<User | undefined> {
@@ -1602,6 +1602,8 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getValidVerificationCode(email: string, code: string): Promise<VerificationCode | null> {
+    console.log(`Looking for verification code: email=${email}, code=${code}`);
+    
     const [validCode] = await db
       .select()
       .from(verificationCodes)
@@ -1613,6 +1615,8 @@ export class DatabaseStorage implements IStorage {
           gte(verificationCodes.expiresAt, new Date())
         )
       );
+    
+    console.log(`Found verification code:`, validCode ? `id=${validCode.id}, expires=${validCode.expiresAt}` : 'none');
     return validCode || null;
   }
 
@@ -1626,7 +1630,7 @@ export class DatabaseStorage implements IStorage {
   async cleanupExpiredVerificationCodes(): Promise<void> {
     await db
       .delete(verificationCodes)
-      .where(gte(new Date(), verificationCodes.expiresAt));
+      .where(lt(verificationCodes.expiresAt, new Date()));
   }
 }
 

@@ -821,8 +821,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Email and code are required" });
       }
 
+      console.log(`Verifying code for email: ${email}, received code: "${code}" (length: ${code.length})`);
+
       // Check if verification code is valid
-      const validCode = await storage.getValidVerificationCode(email, code);
+      const validCode = await storage.getValidVerificationCode(email, code.trim());
       
       if (!validCode) {
         return res.status(400).json({ message: "Invalid or expired verification code" });
