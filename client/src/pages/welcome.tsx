@@ -139,12 +139,12 @@ export default function Welcome() {
         variant: "destructive",
       });
       return;
-    }
+    }  
     completeProfileMutation.mutate({
       email: userEmail,
       username,
       name,
-      location: location || null,
+      location: null,
     });
   };
 
@@ -241,7 +241,7 @@ export default function Welcome() {
         {/* Profile Completion Step */}
         {step === "profile" && (
           <Card>
-            <CardHeader>
+            <CardHeader className="text-center">
               <CardTitle>Complete Your Profile</CardTitle>
               <CardDescription>
                 Just a few more details to get you started on Beer Hop.
@@ -259,18 +259,11 @@ export default function Welcome() {
                 />
                 <Input
                   type="text"
-                  placeholder="Your Name"
+                  placeholder="First and Last Name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   disabled={completeProfileMutation.isPending}
                   required
-                />
-                <Input
-                  type="text"
-                  placeholder="City, State (Optional)"
-                  value={location}
-                  onChange={(e) => setUserLocation(e.target.value)}
-                  disabled={completeProfileMutation.isPending}
                 />
                 <Button 
                   type="submit" 
