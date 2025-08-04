@@ -1,11 +1,14 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Trophy, Medal, Award } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { ArrowLeft, Trophy, Medal, Award, Info } from "lucide-react";
 import { useLocation } from "wouter";
 import type { User } from "@shared/schema";
 
 export default function Leaderboard() {
   const [, navigate] = useLocation();
+  const [showAllBadges, setShowAllBadges] = useState(false);
 
   const { data: leaderboard = [], isLoading } = useQuery<User[]>({
     queryKey: ["/api/leaderboard"],
@@ -38,6 +41,19 @@ export default function Leaderboard() {
 
   // Order of badges (highest to lowest)
   const badgeOrder = ["Black Hop", "Purple Hop", "Blue Hop", "Green Hop", "Red Hop", "Teal Hop", "Orange Hop", "Yellow Hop", "White Hop"];
+
+  // All badge information for the popup
+  const allBadges = [
+    { name: "Black Hop", color: "bg-black", minCheckins: 1000 },
+    { name: "Purple Hop", color: "bg-purple-600", minCheckins: 500 },
+    { name: "Blue Hop", color: "bg-blue-600", minCheckins: 250 },
+    { name: "Green Hop", color: "bg-green-600", minCheckins: 100 },
+    { name: "Red Hop", color: "bg-red-600", minCheckins: 50 },
+    { name: "Teal Hop", color: "bg-teal-600", minCheckins: 25 },
+    { name: "Orange Hop", color: "bg-orange-600", minCheckins: 10 },
+    { name: "Yellow Hop", color: "bg-yellow-600", minCheckins: 5 },
+    { name: "White Hop", color: "bg-gray-300", minCheckins: 0 }
+  ];
 
   if (isLoading) {
     return (
@@ -94,6 +110,36 @@ export default function Leaderboard() {
           </div>
         ) : (
           <div className="space-y-6">
+            {/* See All Badges Button */}
+            <div className="flex justify-center mb-6">
+              <Dialog open={showAllBadges} onOpenChange={setShowAllBadges}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" className="flex items-center gap-2">
+                    <Info className="w-4 h-4" />
+                    See All Badges
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>All Badge Levels</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-3 max-h-96 overflow-y-auto">
+                    {allBadges.map((badge) => (
+                      <div key={badge.name} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-4 h-4 rounded-full ${badge.color}`}></div>
+                          <span className="font-medium">{badge.name}</span>
+                        </div>
+                        <span className="text-sm text-gray-600">
+                          {badge.minCheckins === 0 ? "0+" : `${badge.minCheckins}+`} check-ins
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
+
             {badgeOrder.map((badgeName) => {
               const group = groupedUsers[badgeName];
               if (!group || group.users.length === 0) return null;
