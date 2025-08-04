@@ -67,7 +67,7 @@ export default function Breweries() {
           <div className="px-6 py-4">
             <h1 className="text-2xl font-bold text-gray-900 mb-4">Nearby Breweries</h1>
             <div className="relative">
-              <Input placeholder="Search breweries..." className="pl-10" />
+              <Input placeholder="Search breweries..." className="pl-10" value="" readOnly />
               <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
             </div>
           </div>

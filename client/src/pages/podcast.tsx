@@ -15,7 +15,7 @@ import { ObjectUploader } from "@/components/ObjectUploader";
 import type { PodcastEpisode, User } from "@shared/schema";
 import type { UploadResult } from "@uppy/core";
 import podcastBanner from "@assets/BH_Podcast_Banner (5)_1754202035969.jpg";
-import podcastBannerDemo from "@assets/podcast-banner-demo.svg";
+import podcastBannerDemo from "@assets/BH_Podcast_Banner (5)_1754234194793.jpg";
 import { useAuth } from "@/hooks/useAuth";
 
 interface EpisodeFormData {
