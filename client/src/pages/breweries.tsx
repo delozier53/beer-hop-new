@@ -240,6 +240,61 @@ export default function Breweries() {
       {/* Header */}
       <div className="bg-white border-b border-gray-200 sticky top-0 z-20">
         <div className="px-6 py-4">
+          {/* Breweries Banner Section - Clickable Banner Image (5:1 ratio) - positioned ABOVE the heading */}
+          {(globalSettings as any)?.breweriesBannerImage && (globalSettings as any)?.breweriesBannerLink ? (
+            <div className="mb-4 relative">
+              <div 
+                className="w-full cursor-pointer rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow"
+                style={{ aspectRatio: '5/1' }}
+                onClick={() => {
+                  if ((globalSettings as any)?.breweriesBannerLink) {
+                    window.open((globalSettings as any).breweriesBannerLink, '_blank');
+                  }
+                }}
+              >
+                <img 
+                  src={getImageUrl((globalSettings as any).breweriesBannerImage)} 
+                  alt="Breweries Banner"
+                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                />
+              </div>
+              {isMasterAdmin && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="absolute top-2 right-2 bg-black/50 text-white border-white/50 hover:bg-white hover:text-black"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    // Pre-populate with current values
+                    setBannerImageUrl((globalSettings as any)?.breweriesBannerImage || "");
+                    setBannerLinkUrl((globalSettings as any)?.breweriesBannerLink || "");
+                    setIsBannerDialogOpen(true);
+                  }}
+                >
+                  <Edit className="w-4 h-4 mr-1" />
+                  Edit Banner
+                </Button>
+              )}
+            </div>
+          ) : isMasterAdmin ? (
+            <div className="mb-4">
+              <div 
+                className="w-full border-2 border-dashed border-gray-300 rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow flex items-center justify-center cursor-pointer"
+                style={{ aspectRatio: '5/1' }}
+                onClick={() => {
+                  setBannerImageUrl("");
+                  setBannerLinkUrl("");
+                  setIsBannerDialogOpen(true);
+                }}
+              >
+                <div className="text-center text-gray-500">
+                  <Plus className="w-8 h-8 mx-auto mb-2" />
+                  <p className="text-sm">Add Banner Image</p>
+                </div>
+              </div>
+            </div>
+          ) : null}
+
           <h1 className="text-2xl font-bold text-gray-900 mb-4">Nearby Breweries</h1>
           
           {/* Search Box */}
@@ -255,61 +310,6 @@ export default function Breweries() {
           </div>
         </div>
       </div>
-
-      {/* Breweries Banner Section - Clickable Banner Image (5:1 ratio) - positioned between header and breweries */}
-      {(globalSettings as any)?.breweriesBannerImage && (globalSettings as any)?.breweriesBannerLink ? (
-        <div className="px-6 pt-4 pb-2 relative">
-          <div 
-            className="w-full cursor-pointer rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow"
-            style={{ aspectRatio: '5/1' }}
-            onClick={() => {
-              if ((globalSettings as any)?.breweriesBannerLink) {
-                window.open((globalSettings as any).breweriesBannerLink, '_blank');
-              }
-            }}
-          >
-            <img 
-              src={getImageUrl((globalSettings as any).breweriesBannerImage)} 
-              alt="Breweries Banner"
-              className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-            />
-          </div>
-          {isMasterAdmin && (
-            <Button
-              size="sm"
-              variant="outline"
-              className="absolute top-6 right-8 bg-black/50 text-white border-white/50 hover:bg-white hover:text-black"
-              onClick={(e) => {
-                e.stopPropagation();
-                // Pre-populate with current values
-                setBannerImageUrl((globalSettings as any)?.breweriesBannerImage || "");
-                setBannerLinkUrl((globalSettings as any)?.breweriesBannerLink || "");
-                setIsBannerDialogOpen(true);
-              }}
-            >
-              <Edit className="w-4 h-4 mr-1" />
-              Edit Banner
-            </Button>
-          )}
-        </div>
-      ) : isMasterAdmin ? (
-        <div className="px-6 pt-4 pb-2">
-          <div 
-            className="w-full border-2 border-dashed border-gray-300 rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow flex items-center justify-center cursor-pointer"
-            style={{ aspectRatio: '5/1' }}
-            onClick={() => {
-              setBannerImageUrl("");
-              setBannerLinkUrl("");
-              setIsBannerDialogOpen(true);
-            }}
-          >
-            <div className="text-center text-gray-500">
-              <Plus className="w-8 h-8 mx-auto mb-2" />
-              <p className="text-sm">Add Banner Image</p>
-            </div>
-          </div>
-        </div>
-      ) : null}
 
       {/* Banner Editor Dialog */}
       <Dialog open={isBannerDialogOpen} onOpenChange={setIsBannerDialogOpen}>
