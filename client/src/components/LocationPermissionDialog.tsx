@@ -21,8 +21,13 @@ export function LocationPermissionDialog({
   onOpenChange, 
   onPermissionGranted 
 }: LocationPermissionDialogProps) {
-  const { permission, requestPermission, error } = useLocationPermission();
+  const { permission, requestPermission, error, hasUserPermanentlyDenied } = useLocationPermission();
   const [isRequesting, setIsRequesting] = useState(false);
+
+  // Don't show dialog if user has permanently denied
+  if (hasUserPermanentlyDenied()) {
+    return null;
+  }
 
   const handleRequestPermission = async () => {
     setIsRequesting(true);

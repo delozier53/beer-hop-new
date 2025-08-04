@@ -13,6 +13,11 @@ export function useLocationPermission() {
     error: null
   });
 
+  // Check if user has previously denied permission permanently
+  const hasUserPermanentlyDenied = () => {
+    return localStorage.getItem('location-permission-denied') === 'true';
+  };
+
   const checkPermission = async () => {
     try {
       if (!navigator.geolocation) {
@@ -77,6 +82,8 @@ export function useLocationPermission() {
             permission: 'granted',
             error: null
           }));
+          // Clear any previous denial since user has now granted permission
+          localStorage.removeItem('location-permission-denied');
           resolve(true);
         },
         (error) => {
@@ -87,6 +94,8 @@ export function useLocationPermission() {
             case error.PERMISSION_DENIED:
               errorMessage = 'Location access denied by user';
               permission = 'denied';
+              // Store permanent denial in localStorage
+              localStorage.setItem('location-permission-denied', 'true');
               break;
             case error.POSITION_UNAVAILABLE:
               errorMessage = 'Location information unavailable';
@@ -120,6 +129,7 @@ export function useLocationPermission() {
   return {
     ...state,
     requestPermission,
-    checkPermission
+    checkPermission,
+    hasUserPermanentlyDenied
   };
 }

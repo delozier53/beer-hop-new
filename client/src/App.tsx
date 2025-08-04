@@ -28,13 +28,12 @@ function Router() {
   // Show location permission dialog after user authenticates
   useEffect(() => {
     if (isAuthenticated && !isLoading) {
-      // Check if we've already asked for permission in this session
-      const hasAskedForLocation = sessionStorage.getItem('location-permission-asked');
+      // Check if we've already asked for permission (stored permanently)
+      const hasAskedForLocation = localStorage.getItem('location-permission-asked');
       if (!hasAskedForLocation) {
         // Delay showing the dialog slightly to let the user see they've logged in
         const timer = setTimeout(() => {
           setShowLocationDialog(true);
-          sessionStorage.setItem('location-permission-asked', 'true');
         }, 1000);
         return () => clearTimeout(timer);
       }
@@ -80,9 +79,16 @@ function Router() {
       {/* Location Permission Dialog */}
       <LocationPermissionDialog 
         open={showLocationDialog}
-        onOpenChange={setShowLocationDialog}
+        onOpenChange={(open) => {
+          setShowLocationDialog(open);
+          // Mark that we've asked for permission when dialog is closed
+          if (!open) {
+            localStorage.setItem('location-permission-asked', 'true');
+          }
+        }}
         onPermissionGranted={() => {
           console.log('Location permission granted');
+          localStorage.setItem('location-permission-asked', 'true');
         }}
       />
     </div>
