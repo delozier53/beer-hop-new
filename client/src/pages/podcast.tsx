@@ -45,7 +45,14 @@ export default function Podcast() {
     queryKey: ["/api/podcast/header"],
   });
 
+  // Get banner data from global settings
+  const { data: globalSettings } = useQuery({
+    queryKey: ["/api/global-settings"],
+  });
+
   const headerImage = podcastHeader?.headerImage || podcastBanner;
+  const bannerImage = (globalSettings as any)?.podcastBannerImage;
+  const bannerLink = (globalSettings as any)?.podcastBannerLink;
   
   const isMasterAdmin = user?.email === 'joshuamdelozier@gmail.com';
 
@@ -376,6 +383,27 @@ export default function Podcast() {
           </Button>
         )}
       </div>
+
+      {/* Clickable Banner Image (5:1 ratio) */}
+      {bannerImage && (
+        <div className="px-6 pt-4">
+          <div 
+            className="w-full cursor-pointer rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow"
+            style={{ aspectRatio: '5/1' }}
+            onClick={() => {
+              if (bannerLink) {
+                window.open(bannerLink, '_blank');
+              }
+            }}
+          >
+            <img 
+              src={bannerImage}
+              alt="Podcast Banner"
+              className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+            />
+          </div>
+        </div>
+      )}
 
       {/* Episodes List */}
       <div className="px-6 py-6">

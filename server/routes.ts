@@ -666,6 +666,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.put("/api/global-settings/podcast-banner", async (req, res) => {
+    try {
+      const userId = req.headers['x-user-id'] as string;
+      
+      if (!userId) {
+        return res.status(401).json({ message: "User ID required" });
+      }
+
+      // Get user to check admin status - only joshuamdelozier@gmail.com should be able to do this
+      const user = await storage.getUser(userId);
+      if (!user || user.email !== 'joshuamdelozier@gmail.com') {
+        return res.status(403).json({ message: "Master admin access required" });
+      }
+
+      const { bannerImageUrl, bannerLinkUrl } = req.body;
+      if (!bannerImageUrl || !bannerLinkUrl) {
+        return res.status(400).json({ message: "Banner image URL and link URL required" });
+      }
+
+      await storage.updateGlobalSetting('podcastBannerImage', bannerImageUrl);
+      await storage.updateGlobalSetting('podcastBannerLink', bannerLinkUrl);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error updating podcast banner:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   app.get("/api/events/:id", async (req, res) => {
     try {
       const event = await storage.getEvent(req.params.id);

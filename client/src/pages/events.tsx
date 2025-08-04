@@ -65,6 +65,8 @@ export default function Events() {
   const [selectedTab, setSelectedTab] = useState<"special" | "weekly">("special");
   const [showHeaderEdit, setShowHeaderEdit] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [bannerImageUrl, setBannerImageUrl] = useState("");
+  const [bannerLinkUrl, setBannerLinkUrl] = useState("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { user: currentUser } = useAuth();
@@ -168,6 +170,42 @@ export default function Events() {
     },
   });
 
+  const bannerUpdateMutation = useMutation({
+    mutationFn: async ({ bannerImageUrl, bannerLinkUrl }: { bannerImageUrl: string; bannerLinkUrl: string }) => {
+      const response = await fetch('/api/global-settings/podcast-banner', {
+        method: 'PUT',
+        headers: {
+          'x-user-id': 'joshuamdelozier',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ bannerImageUrl, bannerLinkUrl }),
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to update banner');
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/global-settings"] });
+      toast({
+        title: "Banner updated",
+        description: "Podcast banner has been updated for all users.",
+      });
+      setBannerImageUrl("");
+      setBannerLinkUrl("");
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Update failed",
+        description: error.message || "Failed to update banner.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleUploadComplete = (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
     if (result.successful && result.successful.length > 0) {
       const uploadedFile = result.successful[0];
@@ -176,6 +214,29 @@ export default function Events() {
         const objectPath = convertUploadUrlToObjectPath(uploadedFile.uploadURL);
         headerUpdateMutation.mutate(objectPath);
       }
+    }
+  };
+
+  const handleBannerUploadComplete = (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
+    if (result.successful && result.successful.length > 0) {
+      const uploadedFile = result.successful[0];
+      if (uploadedFile.uploadURL) {
+        // Convert the upload URL to an object path
+        const objectPath = convertUploadUrlToObjectPath(uploadedFile.uploadURL);
+        setBannerImageUrl(objectPath);
+      }
+    }
+  };
+
+  const handleBannerSave = () => {
+    if (bannerImageUrl && bannerLinkUrl) {
+      bannerUpdateMutation.mutate({ bannerImageUrl, bannerLinkUrl });
+    } else {
+      toast({
+        title: "Missing information",
+        description: "Please upload an image and provide a link URL.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -309,20 +370,57 @@ export default function Events() {
           
           {showHeaderEdit && isMasterAdmin && (
             <div className="absolute top-12 right-2 bg-white rounded-lg shadow-lg p-4 min-w-48">
-              <h3 className="font-semibold mb-2">Update Header Image</h3>
-              <ObjectUploader
-                maxNumberOfFiles={1}
-                maxFileSize={10485760}
-                onGetUploadParameters={handleGetUploadParameters}
-                onComplete={handleUploadComplete}
-                buttonClassName="w-full bg-[#ff55e1] hover:bg-[#ff55e1]/90 text-white"
-              >
-                <span>Upload New Header</span>
-              </ObjectUploader>
+              <div className="space-y-4">
+                <div>
+                  <h3 className="font-semibold mb-2">Update Events Header</h3>
+                  <ObjectUploader
+                    maxNumberOfFiles={1}
+                    maxFileSize={10485760}
+                    onGetUploadParameters={handleGetUploadParameters}
+                    onComplete={handleUploadComplete}
+                    buttonClassName="w-full bg-[#80bc04] hover:bg-[#80bc04]/90 text-white"
+                  >
+                    <span>Upload Events Header</span>
+                  </ObjectUploader>
+                </div>
+                
+                <div className="border-t pt-4">
+                  <h3 className="font-semibold mb-2">Update Podcast Banner</h3>
+                  <div className="space-y-2">
+                    <ObjectUploader
+                      maxNumberOfFiles={1}
+                      maxFileSize={10485760}
+                      onGetUploadParameters={handleGetUploadParameters}
+                      onComplete={handleBannerUploadComplete}
+                      buttonClassName="w-full bg-[#ff55e1] hover:bg-[#ff55e1]/90 text-white"
+                    >
+                      <span>Upload Banner Image (5:1 ratio)</span>
+                    </ObjectUploader>
+                    <input
+                      type="url"
+                      placeholder="Banner link URL (e.g., https://example.com)"
+                      value={bannerLinkUrl}
+                      onChange={(e) => setBannerLinkUrl(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                    />
+                    {bannerImageUrl && bannerLinkUrl && (
+                      <Button
+                        size="sm"
+                        onClick={handleBannerSave}
+                        className="w-full bg-[#ff55e1] hover:bg-[#ff55e1]/90 text-white"
+                        disabled={bannerUpdateMutation.isPending}
+                      >
+                        Save Podcast Banner
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </div>
+              
               <Button
                 size="sm"
                 variant="ghost"
-                className="w-full mt-2"
+                className="w-full mt-4"
                 onClick={() => setShowHeaderEdit(false)}
               >
                 Cancel
