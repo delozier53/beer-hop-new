@@ -1,12 +1,19 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Search, Star, MapPin } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Search, Star, MapPin, Edit, Plus, Upload } from "lucide-react";
 import { Link } from "wouter";
 import { useLocation } from "@/hooks/use-location";
 import { convertGoogleDriveImageUrl } from "@/lib/imageUtils";
+import { ObjectUploader } from "@/components/ObjectUploader";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
 import type { Brewery } from "@shared/schema";
+import type { UploadResult } from "@uppy/core";
 
 interface BreweryWithDistance extends Brewery {
   distance?: number;
@@ -14,7 +21,16 @@ interface BreweryWithDistance extends Brewery {
 
 export default function Breweries() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [isBannerDialogOpen, setIsBannerDialogOpen] = useState(false);
+  const [bannerImageUrl, setBannerImageUrl] = useState("");
+  const [bannerLinkUrl, setBannerLinkUrl] = useState("");
   const { latitude, longitude } = useLocation();
+  const { user: currentUser } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  // Check if user is master admin
+  const isMasterAdmin = currentUser?.email === 'joshuamdelozier@gmail.com';
 
   const { data: breweries = [], isLoading } = useQuery<BreweryWithDistance[]>({
     queryKey: ["/api/breweries", { lat: latitude, lng: longitude }],
@@ -31,6 +47,135 @@ export default function Breweries() {
       }
       return response.json();
     }
+  });
+
+  // Get global settings for banner
+  const { data: globalSettings } = useQuery({
+    queryKey: ["/api/global-settings"],
+  });
+
+  // Helper function to convert object storage paths to proper URLs
+  const getImageUrl = (imagePath: string): string => {
+    if (!imagePath) return '';
+    
+    // If it's already a full URL, return as is
+    if (imagePath.startsWith('http')) {
+      return imagePath;
+    }
+    
+    // Convert object storage path to accessible URL
+    if (imagePath.startsWith('/') && imagePath.includes('uploads/')) {
+      // Extract the object ID from the path
+      const parts = imagePath.split('/');
+      const objectId = parts[parts.length - 1];
+      return `/objects/uploads/${objectId}`;
+    }
+    
+    return imagePath;
+  };
+
+  // Banner image upload handlers
+  const handleBannerImageUpload = async () => {
+    try {
+      const response = await fetch("/api/objects/upload", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      return {
+        method: "PUT" as const,
+        url: data.uploadURL,
+      };
+    } catch (error) {
+      console.error("Error getting upload URL:", error);
+      throw error;
+    }
+  };
+
+  const handleBannerImageUploadComplete = async (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
+    if (result.successful && result.successful.length > 0) {
+      const uploadedFile = result.successful[0];
+      const uploadURL = uploadedFile.uploadURL;
+      
+      try {
+        // First normalize the URL
+        const normalizeResponse = await fetch("/api/objects/normalize", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ url: uploadURL }),
+        });
+        
+        let finalImagePath = uploadURL || "";
+        if (normalizeResponse.ok) {
+          const normalizeData = await normalizeResponse.json();
+          finalImagePath = normalizeData.objectPath || uploadURL || "";
+        }
+        
+        setBannerImageUrl(finalImagePath);
+        
+        toast({
+          title: "Success",
+          description: "Banner image uploaded successfully! Don't forget to add a link URL and save.",
+        });
+      } catch (error) {
+        console.error("Error uploading banner image:", error);
+        toast({
+          title: "Error",
+          description: "Failed to upload banner image. Please try again.",
+          variant: "destructive",
+        });
+      }
+    }
+  };
+
+  // Banner save mutation
+  const saveBannerMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch("/api/global-settings/breweries-banner", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "x-user-id": currentUser?.id || "",
+        },
+        body: JSON.stringify({
+          bannerImageUrl,
+          bannerLinkUrl,
+        }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to update banner");
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Breweries banner updated successfully!",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/global-settings"] });
+      setIsBannerDialogOpen(false);
+      setBannerImageUrl("");
+      setBannerLinkUrl("");
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: "Failed to update banner. Please try again.",
+        variant: "destructive",
+      });
+    },
   });
 
   const filteredBreweries = breweries.filter(brewery =>
@@ -110,6 +255,105 @@ export default function Breweries() {
           </div>
         </div>
       </div>
+
+      {/* Breweries Banner Section - Clickable Banner Image (5:1 ratio) - positioned between header and breweries */}
+      {(globalSettings as any)?.breweriesBannerImage && (globalSettings as any)?.breweriesBannerLink ? (
+        <div className="px-6 pt-4 pb-2 relative">
+          <div 
+            className="w-full cursor-pointer rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow"
+            style={{ aspectRatio: '5/1' }}
+            onClick={() => {
+              if ((globalSettings as any)?.breweriesBannerLink) {
+                window.open((globalSettings as any).breweriesBannerLink, '_blank');
+              }
+            }}
+          >
+            <img 
+              src={getImageUrl((globalSettings as any).breweriesBannerImage)} 
+              alt="Breweries Banner"
+              className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+            />
+          </div>
+          {isMasterAdmin && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="absolute top-6 right-8 bg-black/50 text-white border-white/50 hover:bg-white hover:text-black"
+              onClick={(e) => {
+                e.stopPropagation();
+                // Pre-populate with current values
+                setBannerImageUrl((globalSettings as any)?.breweriesBannerImage || "");
+                setBannerLinkUrl((globalSettings as any)?.breweriesBannerLink || "");
+                setIsBannerDialogOpen(true);
+              }}
+            >
+              <Edit className="w-4 h-4 mr-1" />
+              Edit Banner
+            </Button>
+          )}
+        </div>
+      ) : isMasterAdmin ? (
+        <div className="px-6 pt-4 pb-2">
+          <div 
+            className="w-full border-2 border-dashed border-gray-300 rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow flex items-center justify-center cursor-pointer"
+            style={{ aspectRatio: '5/1' }}
+            onClick={() => {
+              setBannerImageUrl("");
+              setBannerLinkUrl("");
+              setIsBannerDialogOpen(true);
+            }}
+          >
+            <div className="text-center text-gray-500">
+              <Plus className="w-8 h-8 mx-auto mb-2" />
+              <p className="text-sm">Add Banner Image</p>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {/* Banner Editor Dialog */}
+      <Dialog open={isBannerDialogOpen} onOpenChange={setIsBannerDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Breweries Banner</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="banner-image">Banner Image (5:1 ratio recommended)</Label>
+              <ObjectUploader
+                maxNumberOfFiles={1}
+                maxFileSize={10485760}
+                onGetUploadParameters={handleBannerImageUpload}
+                onComplete={handleBannerImageUploadComplete}
+                buttonClassName="w-full mt-2"
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                Upload Banner Image
+              </ObjectUploader>
+            </div>
+            <div>
+              <Label htmlFor="banner-link">Banner Link URL</Label>
+              <Input
+                id="banner-link"
+                type="url"
+                placeholder="https://example.com"
+                value={bannerLinkUrl}
+                onChange={(e) => setBannerLinkUrl(e.target.value)}
+                className="mt-1"
+              />
+            </div>
+            {bannerImageUrl && bannerLinkUrl && (
+              <Button
+                onClick={() => saveBannerMutation.mutate()}
+                disabled={saveBannerMutation.isPending}
+                className="w-full"
+              >
+                {saveBannerMutation.isPending ? "Saving..." : "Save Banner"}
+              </Button>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Brewery List */}
       <div className="px-6 py-4 space-y-4">
