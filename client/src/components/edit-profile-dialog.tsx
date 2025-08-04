@@ -32,7 +32,7 @@ export function EditProfileDialog({ user, userId }: EditProfileDialogProps) {
 
   const updateProfileMutation = useMutation({
     mutationFn: async (updates: { username?: string; profileImage?: string; headerImage?: string }) => {
-      const response = await apiRequest("PUT", `/api/users/${userId}`, updates);
+      const response = await apiRequest(`/api/users/${userId}`, "PUT", updates);
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
         throw new Error(errorData.message || `HTTP ${response.status}`);
@@ -166,7 +166,7 @@ export function EditProfileDialog({ user, userId }: EditProfileDialogProps) {
                 maxNumberOfFiles={1}
                 maxFileSize={5242880} // 5MB
                 onGetUploadParameters={async () => {
-                  const response = await apiRequest("POST", "/api/objects/upload");
+                  const response = await apiRequest("/api/objects/upload", "POST");
                   const data = await response.json();
                   return {
                     method: "PUT" as const,
@@ -178,9 +178,9 @@ export function EditProfileDialog({ user, userId }: EditProfileDialogProps) {
                     const uploadedFile = result.successful[0];
                     if (uploadedFile.uploadURL) {
                       // Normalize the upload URL to object path
-                      apiRequest("POST", "/api/objects/normalize", { url: uploadedFile.uploadURL })
+                      apiRequest("/api/objects/normalize", "POST", { url: uploadedFile.uploadURL })
                         .then(res => res.json())
-                        .then(data => setHeaderImage(data.objectPath || uploadedFile.uploadURL))
+                        .then(data => setHeaderImage(data.objectPath || uploadedFile.uploadURL || ""))
                         .catch(err => {
                           console.error("Error normalizing path:", err);
                           setHeaderImage(uploadedFile.uploadURL);

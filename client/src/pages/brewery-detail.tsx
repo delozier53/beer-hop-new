@@ -108,7 +108,7 @@ export default function BreweryDetail() {
 
   const checkInMutation = useMutation({
     mutationFn: async (breweryId: string) => {
-      const response = await apiRequest("POST", "/api/checkins", {
+      const response = await apiRequest("/api/checkins", "POST", {
         userId: currentUser?.id,
         breweryId,
         notes: null
@@ -148,7 +148,7 @@ export default function BreweryDetail() {
 
   const favoriteMutation = useMutation({
     mutationFn: async (breweryId: string) => {
-      const response = await apiRequest("PUT", `/api/users/${currentUser?.id}/favorites`, {
+      const response = await apiRequest(`/api/users/${currentUser?.id}/favorites`, "PUT", {
         breweryId
       });
       return response.json();
@@ -164,7 +164,7 @@ export default function BreweryDetail() {
 
   const updateBreweryMutation = useMutation({
     mutationFn: async (updates: any) => {
-      const response = await apiRequest("PUT", `/api/breweries/${id}`, {
+      const response = await apiRequest(`/api/breweries/${id}`, "PUT", {
         ...updates,
         socialLinks: {
           website: updates.website || null,
@@ -727,7 +727,7 @@ export default function BreweryDetail() {
                   maxNumberOfFiles={1}
                   maxFileSize={10485760}
                   onGetUploadParameters={async () => {
-                    const response = await apiRequest("POST", "/api/objects/upload", {});
+                    const response = await apiRequest("/api/objects/upload", "POST", {});
                     const data = await response.json();
                     return {
                       method: "PUT" as const,
@@ -739,7 +739,7 @@ export default function BreweryDetail() {
                       const uploadURL = result.successful[0].uploadURL;
                       try {
                         // Convert the upload URL to an object path using the objectStorage service
-                        const response = await apiRequest("POST", "/api/objects/normalize", { url: uploadURL });
+                        const response = await apiRequest("/api/objects/normalize", "POST", { url: uploadURL });
                         const data = await response.json();
                         setEditFormData({...editFormData, image: data.objectPath});
                         toast({
@@ -777,7 +777,7 @@ export default function BreweryDetail() {
                   maxNumberOfFiles={1}
                   maxFileSize={10485760}
                   onGetUploadParameters={async () => {
-                    const response = await apiRequest("POST", "/api/objects/upload", {});
+                    const response = await apiRequest("/api/objects/upload", "POST", {});
                     const data = await response.json();
                     return {
                       method: "PUT" as const,
@@ -789,7 +789,7 @@ export default function BreweryDetail() {
                       const uploadURL = result.successful[0].uploadURL;
                       try {
                         // Convert the upload URL to an object path using the objectStorage service
-                        const response = await apiRequest("POST", "/api/objects/normalize", { url: uploadURL });
+                        const response = await apiRequest("/api/objects/normalize", "POST", { url: uploadURL });
                         const data = await response.json();
                         setEditFormData({...editFormData, logo: data.objectPath});
                         toast({
