@@ -392,10 +392,24 @@ export default function Podcast() {
   // Banner save mutation
   const saveBannerMutation = useMutation({
     mutationFn: async () => {
-      return apiRequest("/api/global-settings/podcast-banner", "PUT", {
-        bannerImageUrl,
-        bannerLinkUrl,
+      const response = await fetch("/api/global-settings/podcast-banner", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "x-user-id": user?.id || "",
+        },
+        body: JSON.stringify({
+          bannerImageUrl,
+          bannerLinkUrl,
+        }),
       });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to update banner");
+      }
+      
+      return response.json();
     },
     onSuccess: () => {
       toast({
