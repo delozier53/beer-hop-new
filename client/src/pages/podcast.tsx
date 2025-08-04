@@ -33,6 +33,9 @@ export default function Podcast() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingEpisode, setEditingEpisode] = useState<PodcastEpisode | null>(null);
   const [isHeaderImageDialogOpen, setIsHeaderImageDialogOpen] = useState(false);
+  const [isBannerDialogOpen, setIsBannerDialogOpen] = useState(false);
+  const [bannerImageUrl, setBannerImageUrl] = useState("");
+  const [bannerLinkUrl, setBannerLinkUrl] = useState("");
   const { toast } = useToast();
   const { user } = useAuth();
   
@@ -323,6 +326,96 @@ export default function Podcast() {
     }
   };
 
+  // Banner image upload handlers
+  const handleBannerImageUpload = async () => {
+    try {
+      const response = await fetch("/api/objects/upload", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      return {
+        method: "PUT" as const,
+        url: data.uploadURL,
+      };
+    } catch (error) {
+      console.error("Error getting upload URL:", error);
+      throw error;
+    }
+  };
+
+  const handleBannerImageUploadComplete = async (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
+    if (result.successful && result.successful.length > 0) {
+      const uploadedFile = result.successful[0];
+      const uploadURL = uploadedFile.uploadURL;
+      
+      try {
+        // First normalize the URL
+        const normalizeResponse = await fetch("/api/objects/normalize", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ url: uploadURL }),
+        });
+        
+        let finalImagePath = uploadURL || "";
+        if (normalizeResponse.ok) {
+          const normalizeData = await normalizeResponse.json();
+          finalImagePath = normalizeData.objectPath || uploadURL || "";
+        }
+        
+        setBannerImageUrl(finalImagePath);
+        
+        toast({
+          title: "Success",
+          description: "Banner image uploaded successfully! Don't forget to add a link URL and save.",
+        });
+      } catch (error) {
+        console.error("Error uploading banner image:", error);
+        toast({
+          title: "Error",
+          description: "Failed to upload banner image. Please try again.",
+          variant: "destructive",
+        });
+      }
+    }
+  };
+
+  // Banner save mutation
+  const saveBannerMutation = useMutation({
+    mutationFn: async () => {
+      return apiRequest("/api/global-settings/podcast-banner", "PUT", {
+        bannerImageUrl,
+        bannerLinkUrl,
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Banner updated successfully!",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/global-settings"] });
+      setIsBannerDialogOpen(false);
+      setBannerImageUrl("");
+      setBannerLinkUrl("");
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: "Failed to update banner. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const openSpotify = (spotifyUrl: string) => {
     window.open(spotifyUrl, '_blank');
   };
@@ -387,7 +480,7 @@ export default function Podcast() {
 
       {/* Clickable Banner Image (5:1 ratio) - positioned between header and episodes */}
       {bannerImage && (
-        <div className="px-6 pt-4 pb-2">
+        <div className="px-6 pt-4 pb-2 relative">
           <div 
             className="w-full cursor-pointer rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow"
             style={{ aspectRatio: '5/1' }}
@@ -402,6 +495,43 @@ export default function Podcast() {
               alt="Podcast Banner"
               className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
             />
+          </div>
+          {isMasterAdmin && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="absolute top-6 right-8 bg-black/50 text-white border-white/50 hover:bg-white hover:text-black"
+              onClick={(e) => {
+                e.stopPropagation();
+                // Pre-populate with current values
+                setBannerImageUrl((globalSettings as any)?.podcastBannerImage || "");
+                setBannerLinkUrl((globalSettings as any)?.podcastBannerLink || "");
+                setIsBannerDialogOpen(true);
+              }}
+            >
+              <Edit className="w-4 h-4 mr-1" />
+              Edit Banner
+            </Button>
+          )}
+        </div>
+      )}
+      
+      {/* Show banner placeholder for admin if no banner exists */}
+      {!bannerImage && isMasterAdmin && (
+        <div className="px-6 pt-4 pb-2">
+          <div 
+            className="w-full border-2 border-dashed border-gray-300 rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow flex items-center justify-center cursor-pointer"
+            style={{ aspectRatio: '5/1' }}
+            onClick={() => {
+              setBannerImageUrl("");
+              setBannerLinkUrl("");
+              setIsBannerDialogOpen(true);
+            }}
+          >
+            <div className="text-center text-gray-500">
+              <Plus className="w-8 h-8 mx-auto mb-2" />
+              <p className="text-sm">Add Banner Image</p>
+            </div>
           </div>
         </div>
       )}
@@ -835,6 +965,88 @@ export default function Podcast() {
               <Upload className="w-4 h-4 mr-2" />
               Choose Image
             </ObjectUploader>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Banner Image Upload Dialog */}
+      <Dialog open={isBannerDialogOpen} onOpenChange={setIsBannerDialogOpen}>
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Update Banner Image</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-gray-600">
+              Upload a new banner image and set the URL it should link to when clicked. The banner appears below the header in a 5:1 aspect ratio.
+            </p>
+            
+            {/* Current banner preview */}
+            {bannerImageUrl && (
+              <div className="space-y-2">
+                <Label>Current Banner Preview:</Label>
+                <div 
+                  className="w-full rounded-lg overflow-hidden border"
+                  style={{ aspectRatio: '5/1' }}
+                >
+                  <img 
+                    src={bannerImageUrl}
+                    alt="Banner Preview"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              </div>
+            )}
+            
+            {/* Upload new image */}
+            <div className="space-y-2">
+              <Label>Upload New Banner Image:</Label>
+              <ObjectUploader
+                maxNumberOfFiles={1}
+                maxFileSize={10485760} // 10MB
+                onGetUploadParameters={handleBannerImageUpload}
+                onComplete={handleBannerImageUploadComplete}
+                buttonClassName="w-full bg-[#ff55e1] hover:bg-[#ff55e1]/90 text-white"
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                Choose Banner Image
+              </ObjectUploader>
+            </div>
+            
+            {/* URL input */}
+            <div className="space-y-2">
+              <Label htmlFor="bannerUrl">Link URL (where banner should redirect):</Label>
+              <Input
+                id="bannerUrl"
+                type="url"
+                placeholder="https://example.com"
+                value={bannerLinkUrl}
+                onChange={(e) => setBannerLinkUrl(e.target.value)}
+              />
+            </div>
+            
+            {/* Action buttons */}
+            <div className="flex gap-2 pt-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setIsBannerDialogOpen(false);
+                  setBannerImageUrl("");
+                  setBannerLinkUrl("");
+                }}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                onClick={() => saveBannerMutation.mutate()}
+                disabled={!bannerImageUrl || !bannerLinkUrl || saveBannerMutation.isPending}
+                className="flex-1 bg-[#ff55e1] hover:bg-[#ff55e1]/90"
+              >
+                {saveBannerMutation.isPending ? "Saving..." : "Save Banner"}
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
