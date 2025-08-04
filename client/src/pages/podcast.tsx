@@ -102,7 +102,7 @@ export default function Podcast() {
         duration: editingEpisode.duration, // Keep original duration
         releaseDate: data.releaseDate,
       };
-      return apiRequest("PUT", `/api/podcast-episodes/${editingEpisode.id}`, episodeData);
+      return apiRequest(`/api/podcast-episodes/${editingEpisode.id}`, "PUT", episodeData);
     },
     onSuccess: () => {
       toast({

@@ -757,7 +757,7 @@ export default function BreweryDetail() {
                       }
                     }
                   }}
-                  buttonClassName="w-full border-gray-300"
+                  buttonClassName="w-full bg-hops hover:bg-hops/90 text-white border-0"
                 >
                   Upload Header Image
                 </ObjectUploader>
@@ -807,7 +807,7 @@ export default function BreweryDetail() {
                       }
                     }
                   }}
-                  buttonClassName="w-full border-gray-300"
+                  buttonClassName="w-full bg-hops hover:bg-hops/90 text-white border-0"
                 >
                   Upload Logo
                 </ObjectUploader>

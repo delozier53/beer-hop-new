@@ -195,7 +195,7 @@ export default function Leaderboard() {
             <div className="flex justify-center mb-6">
               <Dialog open={showAllBadges} onOpenChange={setShowAllBadges}>
                 <DialogTrigger asChild>
-                  <Button variant="outline" className="flex items-center gap-2">
+                  <Button className="flex items-center gap-2 bg-hops hover:bg-hops/90 text-white">
                     <Info className="w-4 h-4" />
                     See All Badges
                   </Button>
