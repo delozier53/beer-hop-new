@@ -190,57 +190,59 @@ export default function Events() {
     }
   };
 
-  // Get the header image from global settings or use default
-  const headerImageUrl = (globalSettings as any)?.eventsHeaderImage || 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=400';
+  // Get the header image from global settings only (no default fallback)
+  const headerImageUrl = (globalSettings as any)?.eventsHeaderImage;
 
   if (isLoading || isLoadingSpecial) {
     return (
       <div className="mobile-container">
-        {/* Header image without text overlay */}
-        <div className="relative">
-          <div 
-            className="w-full h-48"
-            style={{
-              backgroundImage: `url('${headerImageUrl}')`,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center'
-            }}
-          />
-          {isMasterAdmin && (
-            <Button
-              size="sm"
-              variant="secondary"
-              className="absolute top-2 right-2 bg-white/90 hover:bg-white"
-              onClick={() => setShowHeaderEdit(!showHeaderEdit)}
-            >
-              <Edit className="w-4 h-4 mr-1" />
-              Edit Header
-            </Button>
-          )}
-          
-          {showHeaderEdit && isMasterAdmin && (
-            <div className="absolute top-12 right-2 bg-white rounded-lg shadow-lg p-4 min-w-48">
-              <h3 className="font-semibold mb-2">Update Header Image</h3>
-              <ObjectUploader
-                maxNumberOfFiles={1}
-                maxFileSize={10485760}
-                onGetUploadParameters={handleGetUploadParameters}
-                onComplete={handleUploadComplete}
-                buttonClassName="w-full bg-[#ff55e1] hover:bg-[#ff55e1]/90 text-white"
-              >
-                <span>Upload New Header</span>
-              </ObjectUploader>
+        {/* Header image without text overlay - only show if headerImageUrl exists */}
+        {headerImageUrl && (
+          <div className="relative">
+            <div 
+              className="w-full h-48"
+              style={{
+                backgroundImage: `url('${headerImageUrl}')`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center'
+              }}
+            />
+            {isMasterAdmin && (
               <Button
                 size="sm"
-                variant="ghost"
-                className="w-full mt-2"
-                onClick={() => setShowHeaderEdit(false)}
+                variant="secondary"
+                className="absolute top-2 right-2 bg-white/90 hover:bg-white"
+                onClick={() => setShowHeaderEdit(!showHeaderEdit)}
               >
-                Cancel
+                <Edit className="w-4 h-4 mr-1" />
+                Edit Header
               </Button>
-            </div>
-          )}
-        </div>
+            )}
+            
+            {showHeaderEdit && isMasterAdmin && (
+              <div className="absolute top-12 right-2 bg-white rounded-lg shadow-lg p-4 min-w-48">
+                <h3 className="font-semibold mb-2">Update Header Image</h3>
+                <ObjectUploader
+                  maxNumberOfFiles={1}
+                  maxFileSize={10485760}
+                  onGetUploadParameters={handleGetUploadParameters}
+                  onComplete={handleUploadComplete}
+                  buttonClassName="w-full bg-[#ff55e1] hover:bg-[#ff55e1]/90 text-white"
+                >
+                  <span>Upload New Header</span>
+                </ObjectUploader>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="w-full mt-2"
+                  onClick={() => setShowHeaderEdit(false)}
+                >
+                  Cancel
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
         
         <div className="px-6 py-6 space-y-4">
           <h2 className="text-xl font-bold mb-4">Upcoming Events</h2>
@@ -282,51 +284,53 @@ export default function Events() {
 
   return (
     <div className="mobile-container pb-20">
-      {/* Header image with fade overlay */}
-      <div className="relative">
-        <div 
-          className="w-full h-48"
-          style={{
-            backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url('${headerImageUrl}')`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center'
-          }}
-        />
-        {isMasterAdmin && (
-          <Button
-            size="sm"
-            variant="secondary"
-            className="absolute top-2 right-2 bg-white/90 hover:bg-white"
-            onClick={() => setShowHeaderEdit(!showHeaderEdit)}
-          >
-            <Edit className="w-4 h-4 mr-1" />
-            Edit Header
-          </Button>
-        )}
-        
-        {showHeaderEdit && isMasterAdmin && (
-          <div className="absolute top-12 right-2 bg-white rounded-lg shadow-lg p-4 min-w-48">
-            <h3 className="font-semibold mb-2">Update Header Image</h3>
-            <ObjectUploader
-              maxNumberOfFiles={1}
-              maxFileSize={10485760}
-              onGetUploadParameters={handleGetUploadParameters}
-              onComplete={handleUploadComplete}
-              buttonClassName="w-full bg-[#ff55e1] hover:bg-[#ff55e1]/90 text-white"
-            >
-              <span>Upload New Header</span>
-            </ObjectUploader>
+      {/* Header image with fade overlay - only show if headerImageUrl exists */}
+      {headerImageUrl && (
+        <div className="relative">
+          <div 
+            className="w-full h-48"
+            style={{
+              backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url('${headerImageUrl}')`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center'
+            }}
+          />
+          {isMasterAdmin && (
             <Button
               size="sm"
-              variant="ghost"
-              className="w-full mt-2"
-              onClick={() => setShowHeaderEdit(false)}
+              variant="secondary"
+              className="absolute top-2 right-2 bg-white/90 hover:bg-white"
+              onClick={() => setShowHeaderEdit(!showHeaderEdit)}
             >
-              Cancel
+              <Edit className="w-4 h-4 mr-1" />
+              Edit Header
             </Button>
-          </div>
-        )}
-      </div>
+          )}
+          
+          {showHeaderEdit && isMasterAdmin && (
+            <div className="absolute top-12 right-2 bg-white rounded-lg shadow-lg p-4 min-w-48">
+              <h3 className="font-semibold mb-2">Update Header Image</h3>
+              <ObjectUploader
+                maxNumberOfFiles={1}
+                maxFileSize={10485760}
+                onGetUploadParameters={handleGetUploadParameters}
+                onComplete={handleUploadComplete}
+                buttonClassName="w-full bg-[#ff55e1] hover:bg-[#ff55e1]/90 text-white"
+              >
+                <span>Upload New Header</span>
+              </ObjectUploader>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="w-full mt-2"
+                onClick={() => setShowHeaderEdit(false)}
+              >
+                Cancel
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
       
       <div className="px-6 py-6">
         <div className="flex items-center justify-between mb-4">
