@@ -15,6 +15,7 @@ import { ObjectUploader } from "@/components/ObjectUploader";
 import type { PodcastEpisode, User } from "@shared/schema";
 import type { UploadResult } from "@uppy/core";
 import podcastBanner from "@assets/BH_Podcast_Banner (5)_1754202035969.jpg";
+import { useAuth } from "@/hooks/useAuth";
 
 interface EpisodeFormData {
   title: string;
@@ -32,14 +33,13 @@ export default function Podcast() {
   const [editingEpisode, setEditingEpisode] = useState<PodcastEpisode | null>(null);
   const [isHeaderImageDialogOpen, setIsHeaderImageDialogOpen] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
   
   const { data: episodes = [], isLoading } = useQuery<PodcastEpisode[]>({
     queryKey: ["/api/podcast-episodes"],
   });
   
-  const { data: user } = useQuery<User>({
-    queryKey: ["/api/users/joshuamdelozier"],
-  });
+  // Use authenticated user from useAuth hook instead of hardcoded query
 
   const { data: podcastHeader } = useQuery<{ headerImage: string | null }>({
     queryKey: ["/api/podcast/header"],

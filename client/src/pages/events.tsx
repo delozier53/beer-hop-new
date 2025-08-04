@@ -7,6 +7,7 @@ import { Calendar, Clock, MapPin, Users, ExternalLink, Edit, Plus } from "lucide
 import { Link } from "wouter";
 import { ObjectUploader } from "@/components/ObjectUploader";
 import { CreateSpecialEventModal } from "@/components/CreateSpecialEventModal";
+import { useAuth } from "@/hooks/useAuth";
 
 // Helper function to format date from YYYY-MM-DD to "Month Day, Year"
 function formatEventDate(dateString: string): string {
@@ -66,6 +67,7 @@ export default function Events() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user: currentUser } = useAuth();
   
   const { data: events = [], isLoading } = useQuery<EventWithBrewery[]>({
     queryKey: ["/api/events"],
@@ -80,10 +82,8 @@ export default function Events() {
     queryKey: ["/api/global-settings"],
   });
 
-  // Get current user to check admin status
-  const { data: currentUser } = useQuery<any>({
-    queryKey: ['/api/users/joshuamdelozier'], // Hardcoded for demo
-  });
+  // Check if current authenticated user is master admin
+  // No need for additional query - we use the authenticated user from useAuth
 
   // Sort special events chronologically (earliest first)
   const sortedSpecialEvents = [...specialEvents].sort((a, b) => {

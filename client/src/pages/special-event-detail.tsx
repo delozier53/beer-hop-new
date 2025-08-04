@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Calendar, Clock, MapPin, ExternalLink, ArrowLeft, Edit } from "lucide-react";
 import { Link, useParams } from "wouter";
 import { SpecialEventEditModal } from "@/components/special-event-edit-modal";
+import { useAuth } from "@/hooks/useAuth";
 import type { SpecialEvent } from "@shared/schema";
 
 // Helper function to format date from YYYY-MM-DD to "Month Day, Year"
@@ -53,15 +54,13 @@ function getImageUrl(imagePath: string): string {
 export default function SpecialEventDetail() {
   const { id } = useParams();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const { user: currentUser } = useAuth();
   
   const { data: event, isLoading } = useQuery<SpecialEvent>({
     queryKey: [`/api/special-events/${id}`],
   });
 
-  // Get current user - in a real app this would come from auth context
-  const { data: currentUser } = useQuery<any>({
-    queryKey: ['/api/users/joshuamdelozier'], // Hardcoded for demo
-  });
+  // Use authenticated user from useAuth hook
 
   // Check if user can edit this event
   const canEdit = currentUser && event && (

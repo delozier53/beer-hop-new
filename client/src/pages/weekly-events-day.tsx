@@ -7,6 +7,7 @@ import { ArrowLeft, Clock, Plus, Edit } from "lucide-react";
 import { Link, useParams } from "wouter";
 import WeeklyEventCreateModal from "@/components/weekly-event-create-modal";
 import WeeklyEventEditModal from "@/components/weekly-event-edit-modal";
+import { useAuth } from "@/hooks/useAuth";
 
 interface WeeklyEvent {
   id: string;
@@ -99,6 +100,7 @@ export default function WeeklyEventsDay() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState<WeeklyEvent | null>(null);
+  const { user: currentUser } = useAuth();
   
   const { data: weeklyEvents = [], isLoading } = useQuery<WeeklyEvent[]>({
     queryKey: [`/api/weekly-events/${day}`],
@@ -108,9 +110,7 @@ export default function WeeklyEventsDay() {
     queryKey: ['/api/breweries'],
   });
 
-  const { data: currentUser } = useQuery<{role: string}>({
-    queryKey: ['/api/users/joshuamdelozier'], // TODO: Make this dynamic based on actual user
-  });
+  // Use authenticated user from useAuth hook instead of hardcoded query
 
   // Get user's current location
   useEffect(() => {
