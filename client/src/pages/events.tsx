@@ -282,12 +282,12 @@ export default function Events() {
 
   return (
     <div className="mobile-container pb-20">
-      {/* Header image without text overlay */}
+      {/* Header image with fade overlay */}
       <div className="relative">
         <div 
           className="w-full h-48"
           style={{
-            backgroundImage: `url('${headerImageUrl}')`,
+            backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url('${headerImageUrl}')`,
             backgroundSize: 'cover',
             backgroundPosition: 'center'
           }}
@@ -360,6 +360,9 @@ export default function Events() {
             Weekly Events
           </Button>
         </div>
+
+        {/* Divider */}
+        <div className="border-b border-gray-200 mb-6"></div>
 
         {selectedTab === "special" ? (
           // Special Events Display
