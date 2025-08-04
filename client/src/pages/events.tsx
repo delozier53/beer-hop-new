@@ -3,7 +3,10 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, Clock, MapPin, Users, ExternalLink, Edit, Plus } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Calendar, Clock, MapPin, Users, ExternalLink, Edit, Plus, Upload } from "lucide-react";
 import { Link } from "wouter";
 import { ObjectUploader } from "@/components/ObjectUploader";
 import { CreateSpecialEventModal } from "@/components/CreateSpecialEventModal";
@@ -65,6 +68,7 @@ export default function Events() {
   const [selectedTab, setSelectedTab] = useState<"special" | "weekly">("special");
   const [showHeaderEdit, setShowHeaderEdit] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [isBannerDialogOpen, setIsBannerDialogOpen] = useState(false);
   const [bannerImageUrl, setBannerImageUrl] = useState("");
   const [bannerLinkUrl, setBannerLinkUrl] = useState("");
   const { toast } = useToast();
@@ -170,37 +174,105 @@ export default function Events() {
     },
   });
 
-  const bannerUpdateMutation = useMutation({
-    mutationFn: async ({ bannerImageUrl, bannerLinkUrl }: { bannerImageUrl: string; bannerLinkUrl: string }) => {
-      const response = await fetch('/api/global-settings/podcast-banner', {
-        method: 'PUT',
+  // Banner image upload handlers
+  const handleBannerImageUpload = async () => {
+    try {
+      const response = await fetch("/api/objects/upload", {
+        method: "POST",
         headers: {
-          'x-user-id': 'joshuamdelozier',
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify({ bannerImageUrl, bannerLinkUrl }),
       });
       
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to update banner');
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      return {
+        method: "PUT" as const,
+        url: data.uploadURL,
+      };
+    } catch (error) {
+      console.error("Error getting upload URL:", error);
+      throw error;
+    }
+  };
+
+  const handleBannerImageUploadComplete = async (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
+    if (result.successful && result.successful.length > 0) {
+      const uploadedFile = result.successful[0];
+      const uploadURL = uploadedFile.uploadURL;
+      
+      try {
+        // First normalize the URL
+        const normalizeResponse = await fetch("/api/objects/normalize", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ url: uploadURL }),
+        });
+        
+        let finalImagePath = uploadURL || "";
+        if (normalizeResponse.ok) {
+          const normalizeData = await normalizeResponse.json();
+          finalImagePath = normalizeData.objectPath || uploadURL || "";
+        }
+        
+        setBannerImageUrl(finalImagePath);
+        
+        toast({
+          title: "Success",
+          description: "Banner image uploaded successfully! Don't forget to add a link URL and save.",
+        });
+      } catch (error) {
+        console.error("Error uploading banner image:", error);
+        toast({
+          title: "Error",
+          description: "Failed to upload banner image. Please try again.",
+          variant: "destructive",
+        });
+      }
+    }
+  };
+
+  // Banner save mutation
+  const saveBannerMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch("/api/global-settings/events-banner", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "x-user-id": currentUser?.id || "",
+        },
+        body: JSON.stringify({
+          bannerImageUrl,
+          bannerLinkUrl,
+        }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to update banner");
       }
       
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/global-settings"] });
       toast({
-        title: "Banner updated",
-        description: "Podcast banner has been updated for all users.",
+        title: "Success",
+        description: "Events banner updated successfully!",
       });
+      queryClient.invalidateQueries({ queryKey: ["/api/global-settings"] });
+      setIsBannerDialogOpen(false);
       setBannerImageUrl("");
       setBannerLinkUrl("");
     },
     onError: (error: any) => {
       toast({
-        title: "Update failed",
-        description: error.message || "Failed to update banner.",
+        title: "Error",
+        description: "Failed to update banner. Please try again.",
         variant: "destructive",
       });
     },
@@ -217,28 +289,7 @@ export default function Events() {
     }
   };
 
-  const handleBannerUploadComplete = (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
-    if (result.successful && result.successful.length > 0) {
-      const uploadedFile = result.successful[0];
-      if (uploadedFile.uploadURL) {
-        // Convert the upload URL to an object path
-        const objectPath = convertUploadUrlToObjectPath(uploadedFile.uploadURL);
-        setBannerImageUrl(objectPath);
-      }
-    }
-  };
 
-  const handleBannerSave = () => {
-    if (bannerImageUrl && bannerLinkUrl) {
-      bannerUpdateMutation.mutate({ bannerImageUrl, bannerLinkUrl });
-    } else {
-      toast({
-        title: "Missing information",
-        description: "Please upload an image and provide a link URL.",
-        variant: "destructive",
-      });
-    }
-  };
 
   const convertUploadUrlToObjectPath = (uploadUrl: string): string => {
     try {
@@ -370,57 +421,20 @@ export default function Events() {
           
           {showHeaderEdit && isMasterAdmin && (
             <div className="absolute top-12 right-2 bg-white rounded-lg shadow-lg p-4 min-w-48">
-              <div className="space-y-4">
-                <div>
-                  <h3 className="font-semibold mb-2">Update Events Header</h3>
-                  <ObjectUploader
-                    maxNumberOfFiles={1}
-                    maxFileSize={10485760}
-                    onGetUploadParameters={handleGetUploadParameters}
-                    onComplete={handleUploadComplete}
-                    buttonClassName="w-full bg-[#80bc04] hover:bg-[#80bc04]/90 text-white"
-                  >
-                    <span>Upload Events Header</span>
-                  </ObjectUploader>
-                </div>
-                
-                <div className="border-t pt-4">
-                  <h3 className="font-semibold mb-2">Update Podcast Banner</h3>
-                  <div className="space-y-2">
-                    <ObjectUploader
-                      maxNumberOfFiles={1}
-                      maxFileSize={10485760}
-                      onGetUploadParameters={handleGetUploadParameters}
-                      onComplete={handleBannerUploadComplete}
-                      buttonClassName="w-full bg-[#ff55e1] hover:bg-[#ff55e1]/90 text-white"
-                    >
-                      <span>Upload Banner Image (5:1 ratio)</span>
-                    </ObjectUploader>
-                    <input
-                      type="url"
-                      placeholder="Banner link URL (e.g., https://example.com)"
-                      value={bannerLinkUrl}
-                      onChange={(e) => setBannerLinkUrl(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-                    />
-                    {bannerImageUrl && bannerLinkUrl && (
-                      <Button
-                        size="sm"
-                        onClick={handleBannerSave}
-                        className="w-full bg-[#ff55e1] hover:bg-[#ff55e1]/90 text-white"
-                        disabled={bannerUpdateMutation.isPending}
-                      >
-                        Save Podcast Banner
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              </div>
-              
+              <h3 className="font-semibold mb-2">Update Events Header</h3>
+              <ObjectUploader
+                maxNumberOfFiles={1}
+                maxFileSize={10485760}
+                onGetUploadParameters={handleGetUploadParameters}
+                onComplete={handleUploadComplete}
+                buttonClassName="w-full bg-[#80bc04] hover:bg-[#80bc04]/90 text-white"
+              >
+                <span>Upload Events Header</span>
+              </ObjectUploader>
               <Button
                 size="sm"
                 variant="ghost"
-                className="w-full mt-4"
+                className="w-full mt-2"
                 onClick={() => setShowHeaderEdit(false)}
               >
                 Cancel
@@ -429,6 +443,92 @@ export default function Events() {
           )}
         </div>
       )}
+
+      {/* Events Banner Section */}
+      {(globalSettings as any)?.eventsBannerImage && (globalSettings as any)?.eventsBannerLink ? (
+        <div className="relative">
+          <a 
+            href={(globalSettings as any).eventsBannerLink} 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="block"
+          >
+            <img 
+              src={getImageUrl((globalSettings as any).eventsBannerImage)} 
+              alt="Featured Events"
+              className="w-full h-auto object-cover cursor-pointer hover:opacity-95 transition-opacity"
+              style={{ aspectRatio: '5/1' }}
+            />
+          </a>
+          {isMasterAdmin && (
+            <Button
+              size="sm"
+              variant="secondary"
+              className="absolute top-2 right-2 bg-white/90 hover:bg-white"
+              onClick={() => setIsBannerDialogOpen(true)}
+            >
+              <Edit className="w-4 h-4 mr-1" />
+              Edit Banner
+            </Button>
+          )}
+        </div>
+      ) : isMasterAdmin ? (
+        <div className="px-6 py-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsBannerDialogOpen(true)}
+            className="w-full border-dashed"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Add Events Banner
+          </Button>
+        </div>
+      ) : null}
+
+      {/* Banner Editor Dialog */}
+      <Dialog open={isBannerDialogOpen} onOpenChange={setIsBannerDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Events Banner</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="banner-image">Banner Image (5:1 ratio recommended)</Label>
+              <ObjectUploader
+                maxNumberOfFiles={1}
+                maxFileSize={10485760}
+                onGetUploadParameters={handleBannerImageUpload}
+                onComplete={handleBannerImageUploadComplete}
+                buttonClassName="w-full mt-2"
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                Upload Banner Image
+              </ObjectUploader>
+            </div>
+            <div>
+              <Label htmlFor="banner-link">Banner Link URL</Label>
+              <Input
+                id="banner-link"
+                type="url"
+                placeholder="https://example.com"
+                value={bannerLinkUrl}
+                onChange={(e) => setBannerLinkUrl(e.target.value)}
+                className="mt-1"
+              />
+            </div>
+            {bannerImageUrl && bannerLinkUrl && (
+              <Button
+                onClick={() => saveBannerMutation.mutate()}
+                disabled={saveBannerMutation.isPending}
+                className="w-full"
+              >
+                {saveBannerMutation.isPending ? "Saving..." : "Save Banner"}
+              </Button>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
       
       <div className="px-6 py-6">
         <div className="flex items-center justify-between mb-4">
