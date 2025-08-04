@@ -5,6 +5,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { BottomNavigation } from "@/components/bottom-navigation";
 import { useAuth } from "@/hooks/useAuth";
+import { useState, useEffect } from "react";
+import { LocationPermissionDialog } from "@/components/LocationPermissionDialog";
 import Welcome from "@/pages/welcome";
 import Profile from "@/pages/profile";
 import Breweries from "@/pages/breweries";
@@ -21,6 +23,23 @@ import NotFound from "@/pages/not-found";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
+  const [showLocationDialog, setShowLocationDialog] = useState(false);
+
+  // Show location permission dialog after user authenticates
+  useEffect(() => {
+    if (isAuthenticated && !isLoading) {
+      // Check if we've already asked for permission in this session
+      const hasAskedForLocation = sessionStorage.getItem('location-permission-asked');
+      if (!hasAskedForLocation) {
+        // Delay showing the dialog slightly to let the user see they've logged in
+        const timer = setTimeout(() => {
+          setShowLocationDialog(true);
+          sessionStorage.setItem('location-permission-asked', 'true');
+        }, 1000);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [isAuthenticated, isLoading]);
 
   if (isLoading) {
     return (
@@ -57,6 +76,15 @@ function Router() {
         )}
       </Switch>
       {isAuthenticated && <BottomNavigation />}
+      
+      {/* Location Permission Dialog */}
+      <LocationPermissionDialog 
+        open={showLocationDialog}
+        onOpenChange={setShowLocationDialog}
+        onPermissionGranted={() => {
+          console.log('Location permission granted');
+        }}
+      />
     </div>
   );
 }

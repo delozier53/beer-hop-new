@@ -47,14 +47,32 @@ function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: numbe
 function getCurrentPosition(): Promise<GeolocationPosition> {
   return new Promise((resolve, reject) => {
     if (!navigator.geolocation) {
-      reject(new Error('Geolocation is not supported by this browser.'));
+      reject(new Error('Location access is required for check-ins. Please use a browser that supports location services.'));
       return;
     }
     
-    navigator.geolocation.getCurrentPosition(resolve, reject, {
-      enableHighAccuracy: true,
+    navigator.geolocation.getCurrentPosition(
+      resolve, 
+      (error) => {
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            reject(new Error('Please allow location access in your browser settings to check in at breweries.'));
+            break;
+          case error.POSITION_UNAVAILABLE:
+            reject(new Error('Unable to determine your location. Please check your device\'s location settings.'));
+            break;
+          case error.TIMEOUT:
+            reject(new Error('Location request timed out. Please try again.'));
+            break;
+          default:
+            reject(new Error('Unable to access your location. Please ensure location services are enabled.'));
+            break;
+        }
+      }, 
+      {
+        enableHighAccuracy: true,
       timeout: 10000,
-      maximumAge: 60000 // 1 minute cache
+      maximumAge: 30000
     });
   });
 }
@@ -214,6 +232,25 @@ export default function BreweryDetail() {
     getUserLocation();
   }, []);
 
+  // Function to retry location access
+  const retryLocationAccess = async () => {
+    try {
+      const position = await getCurrentPosition();
+      setUserLocation({
+        lat: position.coords.latitude,
+        lng: position.coords.longitude
+      });
+      setLocationError(null);
+      toast({
+        title: "Location access granted!",
+        description: "You can now check in at breweries.",
+      });
+    } catch (error) {
+      console.error('Error getting location:', error);
+      setLocationError(error instanceof Error ? error.message : 'Unable to get location');
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="mobile-container">
@@ -333,6 +370,25 @@ export default function BreweryDetail() {
             </button>
           </div>
         </div>
+
+        {/* Location Error Warning */}
+        {locationError && (
+          <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+            <div className="flex items-start gap-3">
+              <MapPin className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-sm text-amber-800 mb-2">{locationError}</p>
+                <Button 
+                  size="sm"
+                  onClick={retryLocationAccess}
+                  className="bg-[#80bc04] hover:bg-[#80bc04]/90 text-white"
+                >
+                  Enable Location Access
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Action Buttons */}
         <div className="mb-6 space-y-3">
