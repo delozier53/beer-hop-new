@@ -200,7 +200,7 @@ export default function Welcome() {
         {/* Verification Step */}
         {step === "verification" && (
           <Card>
-            <CardHeader>
+            <CardHeader className="text-center">
               <CardTitle>Enter Verification Code</CardTitle>
               <CardDescription>
                 We sent a 6-digit code to {userEmail}. Check your email and enter it below.
