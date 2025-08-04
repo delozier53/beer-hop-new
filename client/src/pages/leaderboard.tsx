@@ -24,9 +24,9 @@ export default function Leaderboard() {
     return { name: "White Hop", color: "bg-gray-300" };
   };
 
-  // Filter users with at least 10 check-ins and group by badge category
+  // Filter users with at least 100 check-ins and group by badge category
   const groupedUsers = leaderboard
-    .filter(user => user.checkins >= 10)
+    .filter(user => user.checkins >= 100)
     .reduce((groups, user) => {
       const badge = getBadgeCategory(user.checkins);
       if (!groups[badge.name]) {
@@ -81,7 +81,7 @@ export default function Leaderboard() {
       {/* Screen Title */}
       <div className="px-6 py-4 bg-white border-b">
         <h2 className="text-2xl font-bold text-gray-900 text-center">Badge Rankings</h2>
-        <p className="text-center text-gray-600 text-sm mt-1">Users with at least 10 check-ins</p>
+        <p className="text-center text-gray-600 text-sm mt-1">Users with at least 100 check-ins</p>
       </div>
 
       {/* All Users */}
