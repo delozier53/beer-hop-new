@@ -18,9 +18,13 @@ interface EmailParams {
 export async function sendEmail(params: EmailParams): Promise<boolean> {
   try {
     console.log('Attempting to send email to:', params.to);
+    const fromAddress = params.from || 'jdelozier@beerhopok.com';
     await mailService.send({
       to: params.to,
-      from: params.from || 'jdelozier@beerhopok.com',
+      from: {
+        email: fromAddress,
+        name: 'Beer Hop'
+      },
       subject: params.subject,
       text: params.text || '',
       html: params.html || '',
@@ -30,9 +34,16 @@ export async function sendEmail(params: EmailParams): Promise<boolean> {
   } catch (error) {
     console.error('SendGrid email error:', error);
     if (error && typeof error === 'object' && 'response' in error) {
-      console.error('SendGrid response:', (error as any).response?.body);
-      console.error('This is likely because the sender email domain is not verified in SendGrid.');
-      console.error('Please verify a sender email address or domain in your SendGrid account.');
+      const response = (error as any).response;
+      console.error('SendGrid response status:', response?.status);
+      console.error('SendGrid response body:', JSON.stringify(response?.body, null, 2));
+      
+      if (response?.body?.errors) {
+        response.body.errors.forEach((err: any, index: number) => {
+          console.error(`SendGrid Error ${index + 1}:`, err.message);
+          if (err.field) console.error(`Field: ${err.field}`);
+        });
+      }
     }
     return false;
   }
