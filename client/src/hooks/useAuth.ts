@@ -23,6 +23,8 @@ export function useAuth() {
   const logout = () => {
     localStorage.removeItem("beer-hop-user");
     setUser(null);
+    // Force page refresh to ensure proper state reset
+    window.location.href = "/";
   };
 
   return {
