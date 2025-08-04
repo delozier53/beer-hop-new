@@ -312,8 +312,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "User not found" });
       }
 
-      // Check permissions: master admin or brewery owner
-      const isMasterAdmin = user.role === 'admin';
+      // Check permissions: master admin (only joshuamdelozier@gmail.com) or brewery owner
+      const isMasterAdmin = user.email === 'joshuamdelozier@gmail.com';
       const isBreweryOwner = user.role === 'brewery_owner';
       
       if (!isMasterAdmin && !isBreweryOwner) {
@@ -361,8 +361,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "User not found" });
       }
 
-      // Check permissions: master admin or event owner
-      const isMasterAdmin = user.role === 'admin';
+      // Check permissions: master admin (only joshuamdelozier@gmail.com) or event owner
+      const isMasterAdmin = user.email === 'joshuamdelozier@gmail.com';
       const isEventOwner = event.ownerId === userId;
       
       if (!isMasterAdmin && !isEventOwner) {
@@ -403,8 +403,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "User not found" });
       }
 
-      // Check permissions: master admin or event owner
-      const isMasterAdmin = user.role === 'admin';
+      // Check permissions: master admin (only joshuamdelozier@gmail.com) or event owner
+      const isMasterAdmin = user.email === 'joshuamdelozier@gmail.com';
       const isEventOwner = event.ownerId === userId;
       
       if (!isMasterAdmin && !isEventOwner) {
@@ -473,8 +473,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "User not found" });
       }
 
-      // Check permissions: master admin or brewery owner
-      const isMasterAdmin = user.role === 'admin';
+      // Check permissions: master admin (only joshuamdelozier@gmail.com) or brewery owner
+      const isMasterAdmin = user.email === 'joshuamdelozier@gmail.com';
       const isBreweryOwner = user.role === 'brewery_owner';
       
       if (!isMasterAdmin && !isBreweryOwner) {
@@ -510,8 +510,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "User not found" });
       }
 
-      // Check permissions: master admin or brewery owner
-      const isMasterAdmin = user.role === 'admin';
+      // Check permissions: master admin (only joshuamdelozier@gmail.com) or brewery owner
+      const isMasterAdmin = user.email === 'joshuamdelozier@gmail.com';
       const isBreweryOwner = user.role === 'brewery_owner';
       
       if (!isMasterAdmin && !isBreweryOwner) {
@@ -551,8 +551,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "User not found" });
       }
 
-      // Check permissions: master admin or brewery owner
-      const isMasterAdmin = user.role === 'admin';
+      // Check permissions: master admin (only joshuamdelozier@gmail.com) or brewery owner
+      const isMasterAdmin = user.email === 'joshuamdelozier@gmail.com';
       const isBreweryOwner = user.role === 'brewery_owner';
       
       if (!isMasterAdmin && !isBreweryOwner) {

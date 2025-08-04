@@ -47,7 +47,7 @@ export default function Podcast() {
 
   const headerImage = podcastHeader?.headerImage || podcastBanner;
   
-  const isMasterAdmin = user?.role === 'admin';
+  const isMasterAdmin = user?.email === 'joshuamdelozier@gmail.com';
 
   const form = useForm<EpisodeFormData>({
     defaultValues: {

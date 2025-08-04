@@ -65,7 +65,7 @@ export default function SpecialEventDetail() {
 
   // Check if user can edit this event
   const canEdit = currentUser && event && (
-    currentUser.role === 'admin' || // Master admin
+    currentUser.email === 'joshuamdelozier@gmail.com' || // Master admin (only joshuamdelozier@gmail.com)
     event.ownerId === currentUser.id // Event owner
   );
 

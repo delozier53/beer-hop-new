@@ -113,8 +113,8 @@ export default function Events() {
     return dateString;
   };
 
-  // Check if user is master admin or brewery owner
-  const isMasterAdmin = currentUser?.role === 'admin';
+  // Check if user is master admin (only joshuamdelozier@gmail.com) or brewery owner
+  const isMasterAdmin = currentUser?.email === 'joshuamdelozier@gmail.com';
   const isBreweryOwner = currentUser?.role === 'brewery_owner';
   const canCreateEvents = isMasterAdmin || isBreweryOwner;
 

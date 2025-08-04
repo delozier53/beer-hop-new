@@ -213,7 +213,7 @@ export default function WeeklyEventsDay() {
           </div>
           
           {/* Admin/Owner Create Button */}
-          {currentUser && ('role' in currentUser) && (currentUser.role === 'admin' || currentUser.role === 'brewery_owner') && (
+          {currentUser && ('email' in currentUser) && (currentUser.email === 'joshuamdelozier@gmail.com' || currentUser.role === 'brewery_owner') && (
             <Button 
               className="bg-[#1a5632] hover:bg-[#1a5632]/90 text-white"
               onClick={() => setIsCreateModalOpen(true)}
@@ -289,7 +289,7 @@ export default function WeeklyEventsDay() {
                     </div>
                     
                     {/* Edit Button - Only visible to admin/brewery owners */}
-                    {currentUser && ('role' in currentUser) && (currentUser.role === 'admin' || currentUser.role === 'brewery_owner') && (
+                    {currentUser && ('email' in currentUser) && (currentUser.email === 'joshuamdelozier@gmail.com' || currentUser.role === 'brewery_owner') && (
                       <Button
                         variant="ghost"
                         size="sm"

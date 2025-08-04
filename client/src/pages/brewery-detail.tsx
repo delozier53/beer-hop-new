@@ -24,10 +24,11 @@ import {
 } from "lucide-react";
 import { Link, useParams, useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 import { useState, useEffect } from "react";
 import type { Brewery, User, CheckIn } from "@shared/schema";
 
-const CURRENT_USER_ID = "joshuamdelozier";
+
 
 // Calculate distance between two coordinates using Haversine formula
 function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
@@ -63,6 +64,7 @@ export default function BreweryDetail() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user: currentUser } = useAuth();
   const [notes, setNotes] = useState("");
   const [isNotesDialogOpen, setIsNotesDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -93,29 +95,30 @@ export default function BreweryDetail() {
   });
 
   const { data: user } = useQuery<User>({
-    queryKey: ["/api/users", CURRENT_USER_ID],
+    queryKey: ["/api/users", currentUser?.id],
+    enabled: !!currentUser?.id,
   });
 
   // Check if user can check in at this brewery
   const { data: canCheckInData } = useQuery<{ canCheckIn: boolean; timeRemaining?: number }>({
-    queryKey: ["/api/checkins/can-checkin", CURRENT_USER_ID, id],
-    enabled: !!id,
+    queryKey: ["/api/checkins/can-checkin", currentUser?.id, id],
+    enabled: !!id && !!currentUser?.id,
     refetchInterval: 60000, // Refetch every minute to update countdown
   });
 
   const checkInMutation = useMutation({
     mutationFn: async (breweryId: string) => {
       const response = await apiRequest("POST", "/api/checkins", {
-        userId: CURRENT_USER_ID,
+        userId: currentUser?.id,
         breweryId,
         notes: null
       });
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/users", CURRENT_USER_ID] });
+      queryClient.invalidateQueries({ queryKey: ["/api/users", currentUser?.id] });
       queryClient.invalidateQueries({ queryKey: ["/api/breweries"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/checkins/can-checkin", CURRENT_USER_ID, id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/checkins/can-checkin", currentUser?.id, id] });
       queryClient.invalidateQueries({ queryKey: ["/api/leaderboard"] }); // Update leaderboard
       toast({
         title: "Check-in successful!",
@@ -145,13 +148,13 @@ export default function BreweryDetail() {
 
   const favoriteMutation = useMutation({
     mutationFn: async (breweryId: string) => {
-      const response = await apiRequest("PUT", `/api/users/${CURRENT_USER_ID}/favorites`, {
+      const response = await apiRequest("PUT", `/api/users/${currentUser?.id}/favorites`, {
         breweryId
       });
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/users", CURRENT_USER_ID] });
+      queryClient.invalidateQueries({ queryKey: ["/api/users", currentUser?.id] });
       toast({
         title: "Favorites updated",
         description: "Your favorite breweries have been updated.",
@@ -286,8 +289,8 @@ export default function BreweryDetail() {
             {/* Logo displayed in banner, removed circle image and craft brewery label */}
           </div>
           <div className="flex items-center space-x-2">
-            {/* Edit Button - Only visible for master admins and brewery owners */}
-            {(user?.role === 'admin' || user?.id === brewery.ownerId) && (
+            {/* Edit Button - Only visible for master admin (joshuamdelozier@gmail.com) and brewery owners */}
+            {(currentUser?.email === 'joshuamdelozier@gmail.com' || user?.id === brewery.ownerId) && (
               <Button
                 variant="outline"
                 size="sm"
@@ -746,7 +749,7 @@ export default function BreweryDetail() {
                       } catch (error) {
                         console.error("Error normalizing upload URL:", error);
                         // Fallback to direct URL
-                        setEditFormData({...editFormData, image: uploadURL});
+                        setEditFormData({...editFormData, image: uploadURL || ""});
                         toast({
                           title: "Header image uploaded!",
                           description: "Your brewery header image has been uploaded successfully.",
@@ -796,7 +799,7 @@ export default function BreweryDetail() {
                       } catch (error) {
                         console.error("Error normalizing upload URL:", error);
                         // Fallback to direct URL
-                        setEditFormData({...editFormData, logo: uploadURL});
+                        setEditFormData({...editFormData, logo: uploadURL || ""});
                         toast({
                           title: "Logo uploaded!",
                           description: "Your brewery logo has been uploaded successfully.",
