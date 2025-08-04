@@ -15,6 +15,7 @@ import { ObjectUploader } from "@/components/ObjectUploader";
 import type { PodcastEpisode, User } from "@shared/schema";
 import type { UploadResult } from "@uppy/core";
 import podcastBanner from "@assets/BH_Podcast_Banner (5)_1754202035969.jpg";
+import podcastBannerDemo from "@assets/podcast-banner-demo.svg";
 import { useAuth } from "@/hooks/useAuth";
 
 interface EpisodeFormData {
@@ -51,8 +52,8 @@ export default function Podcast() {
   });
 
   const headerImage = podcastHeader?.headerImage || podcastBanner;
-  const bannerImage = (globalSettings as any)?.podcastBannerImage;
-  const bannerLink = (globalSettings as any)?.podcastBannerLink;
+  const bannerImage = (globalSettings as any)?.podcastBannerImage || podcastBannerDemo;
+  const bannerLink = (globalSettings as any)?.podcastBannerLink || "https://example.com";
   
   const isMasterAdmin = user?.email === 'joshuamdelozier@gmail.com';
 
