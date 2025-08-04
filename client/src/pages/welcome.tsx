@@ -59,7 +59,12 @@ export default function Welcome() {
           title: "Welcome back!",
           description: `Good to see you again, ${data.user.name}`,
         });
-        setLocation("/");
+        // Add a small delay to ensure the toast shows, then redirect
+        setTimeout(() => {
+          setLocation("/");
+          // Force a page refresh to ensure proper state update
+          window.location.reload();
+        }, 1500);
       }
     },
     onError: (error: any) => {
@@ -83,7 +88,12 @@ export default function Welcome() {
         title: "Welcome to Beer Hop!",
         description: "Your account has been created successfully",
       });
-      setLocation("/");
+      // Add a small delay to ensure the toast shows, then redirect
+      setTimeout(() => {
+        setLocation("/");
+        // Force a page refresh to ensure proper state update
+        window.location.reload();
+      }, 1500);
     },
     onError: (error: any) => {
       toast({
