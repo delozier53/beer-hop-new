@@ -20,10 +20,10 @@ export async function sendEmail(params: EmailParams): Promise<boolean> {
     console.log('Attempting to send email to:', params.to);
     await mailService.send({
       to: params.to,
-      from: params.from || 'your-verified-email@yourdomain.com',
+      from: params.from || 'jdelozier@beerhopok.com',
       subject: params.subject,
-      text: params.text,
-      html: params.html,
+      text: params.text || '',
+      html: params.html || '',
     });
     console.log('Email sent successfully to:', params.to);
     return true;
@@ -87,7 +87,7 @@ export async function sendVerificationCode(email: string, code: string): Promise
 
   return await sendEmail({
     to: email,
-    from: 'your-verified-email@yourdomain.com', // CHANGE THIS: Must be verified in SendGrid
+    from: 'jdelozier@beerhopok.com', // Verified sender email in SendGrid
     subject: 'Beer Hop - Verification Code',
     text,
     html
