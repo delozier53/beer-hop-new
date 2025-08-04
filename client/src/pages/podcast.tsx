@@ -384,9 +384,9 @@ export default function Podcast() {
         )}
       </div>
 
-      {/* Clickable Banner Image (5:1 ratio) */}
+      {/* Clickable Banner Image (5:1 ratio) - positioned between header and episodes */}
       {bannerImage && (
-        <div className="px-6 pt-4">
+        <div className="px-6 pt-4 pb-2">
           <div 
             className="w-full cursor-pointer rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow"
             style={{ aspectRatio: '5/1' }}
@@ -406,7 +406,7 @@ export default function Podcast() {
       )}
 
       {/* Episodes List */}
-      <div className="px-6 py-6">
+      <div className="px-6 py-4">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-bold">Latest Episodes</h2>
           {isMasterAdmin && (
