@@ -71,7 +71,7 @@ export default function Podcast() {
         releaseDate: data.releaseDate,
         episodeNumber: data.episodeNumber,
       };
-      return apiRequest("POST", "/api/podcast-episodes", episodeData);
+      return apiRequest("/api/podcast-episodes", "POST", episodeData);
     },
     onSuccess: () => {
       toast({
@@ -125,7 +125,7 @@ export default function Podcast() {
 
   const deleteEpisodeMutation = useMutation({
     mutationFn: async (episodeId: string) => {
-      return apiRequest("DELETE", `/api/podcast-episodes/${episodeId}`);
+      return apiRequest(`/api/podcast-episodes/${episodeId}`, "DELETE");
     },
     onSuccess: () => {
       toast({
