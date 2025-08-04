@@ -585,6 +585,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.put("/api/profile-images", async (req, res) => {
+    try {
+      const { profileImageURL, userId } = req.body;
+      
+      if (!profileImageURL || !userId) {
+        return res.status(400).json({ error: "profileImageURL and userId are required" });
+      }
+
+      const { ObjectStorageService } = await import("./objectStorage");
+      const objectStorageService = new ObjectStorageService();
+      const objectPath = await objectStorageService.trySetObjectEntityAclPolicy(
+        profileImageURL,
+        {
+          owner: userId,
+          visibility: "public", // Profile images should be public
+        },
+      );
+
+      res.status(200).json({
+        objectPath: objectPath,
+      });
+    } catch (error) {
+      console.error("Error setting profile image:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
   // Object storage download endpoint for event images
   app.get("/objects/:objectPath(*)", async (req, res) => {
     try {
@@ -857,10 +884,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/auth/complete-profile", async (req, res) => {
     try {
-      const { email, username, name, location } = req.body;
+      const { email, username, profileImageUrl } = req.body;
       
-      if (!email || !username || !name) {
-        return res.status(400).json({ message: "Email, username, and name are required" });
+      if (!email || !username) {
+        return res.status(400).json({ message: "Email and username are required" });
       }
 
       // Check if username is already taken
@@ -869,13 +896,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Username is already taken" });
       }
 
-      // Create new user
+      // Create new user (no name required anymore, just username)
       const newUser = await storage.createUser({
         username,
-        name,
+        name: username, // Use username as display name initially
         email,
-        location: location || null,
-        profileImage: null,
+        location: null,
+        profileImage: profileImageUrl || null,
         headerImage: null,
         role: "user",
         checkins: 0,

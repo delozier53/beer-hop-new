@@ -64,6 +64,7 @@ export function ObjectUploader({
       restrictions: {
         maxNumberOfFiles,
         maxFileSize,
+        allowedFileTypes: ['image/*'], // Only allow images for profile photos
       },
       autoProceed: false,
     })
@@ -73,24 +74,13 @@ export function ObjectUploader({
       })
       .on("complete", (result) => {
         onComplete?.(result);
-        // Close the modal after successful upload
-        setTimeout(() => {
-          setShowModal(false);
-        }, 1000);
+        setShowModal(false);
       })
   );
 
   return (
     <div>
-      <Button 
-        type="button"
-        onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          setShowModal(true);
-        }} 
-        className={buttonClassName}
-      >
+      <Button onClick={() => setShowModal(true)} className={buttonClassName} type="button">
         {children}
       </Button>
 

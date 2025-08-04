@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Upload, User } from "lucide-react";
+import { ObjectUploader } from "@/components/ObjectUploader";
 import beerHopLogo from "@assets/Beer Hop Logo_1754263599088.png";
 
 export default function Welcome() {
@@ -19,8 +20,7 @@ export default function Welcome() {
 
   // Profile fields for new users
   const [username, setUsername] = useState("");
-  const [name, setName] = useState("");
-  const [location, setUserLocation] = useState("");
+  const [profileImageUrl, setProfileImageUrl] = useState("");
 
   const sendCodeMutation = useMutation({
     mutationFn: async (email: string) => {
@@ -77,9 +77,25 @@ export default function Welcome() {
   });
 
   const completeProfileMutation = useMutation({
-    mutationFn: async (profileData: any) => {
+    mutationFn: async (profileData: { email: string; username: string; profileImageUrl: string | null }) => {
+      // First complete the profile
       const response = await apiRequest("/api/auth/complete-profile", "POST", profileData);
-      return await response.json();
+      const result = await response.json();
+      
+      // If there's a profile image, set its ACL policy
+      if (profileData.profileImageUrl && result.user) {
+        try {
+          await apiRequest("/api/profile-images", "PUT", {
+            profileImageURL: profileData.profileImageUrl,
+            userId: result.user.id,
+          });
+        } catch (error) {
+          console.error("Failed to set profile image ACL:", error);
+          // Don't fail the entire profile creation for this
+        }
+      }
+      
+      return result;
     },
     onSuccess: (data: any) => {
       // Store user data in localStorage for session management
@@ -132,19 +148,18 @@ export default function Welcome() {
 
   const handleCompleteProfile = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!username || !name) {
+    if (!username) {
       toast({
         title: "Missing information",
-        description: "Username and name are required",
+        description: "Username is required",
         variant: "destructive",
       });
       return;
-    }  
+    }
     completeProfileMutation.mutate({
       email: userEmail,
       username,
-      name,
-      location: null,
+      profileImageUrl: profileImageUrl || null,
     });
   };
 
@@ -257,14 +272,56 @@ export default function Welcome() {
                   disabled={completeProfileMutation.isPending}
                   required
                 />
-                <Input
-                  type="text"
-                  placeholder="First and Last Name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  disabled={completeProfileMutation.isPending}
-                  required
-                />
+
+                {/* Profile Photo Upload */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-700">Profile Photo (Optional)</label>
+                  <div className="flex items-center space-x-3">
+                    {profileImageUrl ? (
+                      <div className="flex items-center space-x-2">
+                        <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
+                          <img src={profileImageUrl} alt="Profile" className="w-full h-full object-cover" />
+                        </div>
+                        <span className="text-sm text-green-600">Photo uploaded!</span>
+                      </div>
+                    ) : (
+                      <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center">
+                        <User className="w-6 h-6 text-gray-400" />
+                      </div>
+                    )}
+                    <ObjectUploader
+                      maxNumberOfFiles={1}
+                      maxFileSize={5242880}
+                      onGetUploadParameters={async () => {
+                        const response = await apiRequest("/api/objects/upload", "POST", {});
+                        const data = await response.json();
+                        return {
+                          method: "PUT" as const,
+                          url: data.uploadURL,
+                        };
+                      }}
+                      onComplete={(result) => {
+                        if (result.successful && result.successful[0]) {
+                          const uploadURL = result.successful[0].uploadURL;
+                          // Convert the upload URL to the object path for profile display
+                          const objectId = uploadURL.split('/').pop()?.split('?')[0];
+                          if (objectId) {
+                            setProfileImageUrl(`/objects/uploads/${objectId}`);
+                          }
+                          toast({
+                            title: "Photo uploaded",
+                            description: "Your profile photo has been uploaded successfully",
+                          });
+                        }
+                      }}
+                      buttonClassName="text-sm"
+                    >
+                      <Upload className="w-4 h-4 mr-2" />
+                      {profileImageUrl ? "Change Photo" : "Upload Photo"}
+                    </ObjectUploader>
+                  </div>
+                </div>
+
                 <Button 
                   type="submit" 
                   className="w-full text-white hover:opacity-90"
@@ -272,6 +329,7 @@ export default function Welcome() {
                   disabled={completeProfileMutation.isPending}
                 >
                   {completeProfileMutation.isPending ? "Creating Account..." : "Complete Profile"}
+                  <ArrowRight className="h-4 w-4 ml-2" />
                 </Button>
               </form>
             </CardContent>
