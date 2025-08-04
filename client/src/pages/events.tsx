@@ -444,28 +444,36 @@ export default function Events() {
         </div>
       )}
 
-      {/* Events Banner Section */}
+      {/* Events Banner Section - Clickable Banner Image (5:1 ratio) - positioned between header and events */}
       {(globalSettings as any)?.eventsBannerImage && (globalSettings as any)?.eventsBannerLink ? (
-        <div className="relative">
-          <a 
-            href={(globalSettings as any).eventsBannerLink} 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="block"
+        <div className="px-6 pt-4 pb-2 relative">
+          <div 
+            className="w-full cursor-pointer rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow"
+            style={{ aspectRatio: '5/1' }}
+            onClick={() => {
+              if ((globalSettings as any)?.eventsBannerLink) {
+                window.open((globalSettings as any).eventsBannerLink, '_blank');
+              }
+            }}
           >
             <img 
               src={getImageUrl((globalSettings as any).eventsBannerImage)} 
-              alt="Featured Events"
-              className="w-full h-auto object-cover cursor-pointer hover:opacity-95 transition-opacity"
-              style={{ aspectRatio: '5/1' }}
+              alt="Events Banner"
+              className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
             />
-          </a>
+          </div>
           {isMasterAdmin && (
             <Button
               size="sm"
-              variant="secondary"
-              className="absolute top-2 right-2 bg-white/90 hover:bg-white"
-              onClick={() => setIsBannerDialogOpen(true)}
+              variant="outline"
+              className="absolute top-6 right-8 bg-black/50 text-white border-white/50 hover:bg-white hover:text-black"
+              onClick={(e) => {
+                e.stopPropagation();
+                // Pre-populate with current values
+                setBannerImageUrl((globalSettings as any)?.eventsBannerImage || "");
+                setBannerLinkUrl((globalSettings as any)?.eventsBannerLink || "");
+                setIsBannerDialogOpen(true);
+              }}
             >
               <Edit className="w-4 h-4 mr-1" />
               Edit Banner
@@ -473,16 +481,21 @@ export default function Events() {
           )}
         </div>
       ) : isMasterAdmin ? (
-        <div className="px-6 py-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setIsBannerDialogOpen(true)}
-            className="w-full border-dashed"
+        <div className="px-6 pt-4 pb-2">
+          <div 
+            className="w-full border-2 border-dashed border-gray-300 rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow flex items-center justify-center cursor-pointer"
+            style={{ aspectRatio: '5/1' }}
+            onClick={() => {
+              setBannerImageUrl("");
+              setBannerLinkUrl("");
+              setIsBannerDialogOpen(true);
+            }}
           >
-            <Plus className="w-4 h-4 mr-2" />
-            Add Events Banner
-          </Button>
+            <div className="text-center text-gray-500">
+              <Plus className="w-8 h-8 mx-auto mb-2" />
+              <p className="text-sm">Add Banner Image</p>
+            </div>
+          </div>
         </div>
       ) : null}
 
