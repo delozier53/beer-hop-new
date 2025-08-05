@@ -194,41 +194,54 @@ export function openSmartLink(url: string): void {
       }
     }
     
-    // Special handling for other social media
-    if (domain.includes('facebook.com')) {
+    // Special handling for Facebook
+    if (domain.includes('facebook.com') || domain.includes('fb.com')) {
+      // Mark that we're navigating externally
+      sessionStorage.setItem('external-nav', 'true');
+      
       const pathname = urlObj.pathname;
-      const handle = pathname.split('/').filter(part => part.length > 0)[0];
+      console.log('Facebook URL pathname:', pathname);
+      
+      // Extract handle from various Facebook URL formats
+      let handle = '';
+      if (pathname.includes('/profile.php')) {
+        // Handle format: facebook.com/profile.php?id=123456
+        const urlParams = new URLSearchParams(urlObj.search);
+        handle = urlParams.get('id') || '';
+      } else {
+        // Handle format: facebook.com/username
+        const pathParts = pathname.split('/').filter(part => part.length > 0);
+        handle = pathParts[0] || '';
+      }
       
       if (handle) {
-        // Mark that we're navigating externally
-        sessionStorage.setItem('external-nav', 'true');
-        
-        const fbAppUrl = `fb://profile/${handle}`;
+        let fbAppUrl = '';
+        if (handle.match(/^\d+$/)) {
+          // Numeric ID
+          fbAppUrl = `fb://profile/${handle}`;
+        } else {
+          // Username
+          fbAppUrl = `fb://page/${handle}`;
+        }
         console.log('Attempting to open Facebook app with:', fbAppUrl);
         
         try {
-          // Create a hidden iframe to attempt app opening
-          const iframe = document.createElement('iframe');
-          iframe.style.display = 'none';
-          iframe.src = fbAppUrl;
-          document.body.appendChild(iframe);
-          
-          // Clean up iframe after a short delay
-          setTimeout(() => {
-            if (document.body.contains(iframe)) {
-              document.body.removeChild(iframe);
-            }
-          }, 100);
-          
-          console.log('Attempted Facebook app opening via iframe');
+          // Try multiple methods for better compatibility
+          window.location.href = fbAppUrl;
+          console.log('Attempted Facebook app opening via window.location');
         } catch (e) {
           console.log('Facebook app opening failed:', e);
         }
         
         // Fallback to web version
         setTimeout(() => {
+          console.log('Facebook app timeout - opening web version');
           window.open(url, '_blank', 'noopener,noreferrer');
-        }, 1500);
+        }, 2000);
+        return;
+      } else {
+        console.log('Could not extract Facebook handle, opening web version');
+        window.open(url, '_blank', 'noopener,noreferrer');
         return;
       }
     }

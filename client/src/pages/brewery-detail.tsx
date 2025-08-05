@@ -804,7 +804,13 @@ export default function BreweryDetail() {
           <div className="flex space-x-4">
             {brewery.socialLinks.website && (
               <button 
-                onClick={() => openSmartLink(brewery.socialLinks.website)}
+                onClick={() => {
+                  if (brewery.socialLinks.website) {
+                    console.log('Opening website:', brewery.socialLinks.website);
+                    sessionStorage.setItem('external-nav', 'true');
+                    window.open(brewery.socialLinks.website, '_blank', 'noopener,noreferrer');
+                  }
+                }}
                 className="w-12 h-12 rounded-full bg-hops hover:bg-hops-dark text-white flex items-center justify-center transition-colors"
               >
                 <Globe className="w-6 h-6" />
@@ -812,7 +818,12 @@ export default function BreweryDetail() {
             )}
             {brewery.socialLinks.facebook && (
               <button 
-                onClick={() => openSmartLink(brewery.socialLinks.facebook)}
+                onClick={() => {
+                  if (brewery.socialLinks.facebook) {
+                    console.log('Opening Facebook:', brewery.socialLinks.facebook);
+                    openSmartLink(brewery.socialLinks.facebook);
+                  }
+                }}
                 className="w-12 h-12 rounded-full bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center transition-colors"
               >
                 <Facebook className="w-6 h-6" />
