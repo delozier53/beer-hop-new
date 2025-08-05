@@ -140,7 +140,17 @@ export default function Leaderboard() {
   if (isLoading) {
     return (
       <div className="mobile-container">
-        {/* Badges Header Image - At the very top */}
+        {/* Back Button - At the very top */}
+        <div className="absolute top-4 left-4 z-30">
+          <button 
+            className="w-10 h-10 bg-black/50 rounded-full flex items-center justify-center text-white shadow-lg"
+            onClick={() => navigate("/")}
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Badges Header Image */}
         <div className="bg-white">
           <img 
             src={badgesHeaderImage} 
@@ -149,21 +159,16 @@ export default function Leaderboard() {
           />
         </div>
 
-        <div className="bg-gradient-to-r from-amber to-hops p-6 text-white">
-          <div className="flex items-center justify-between mb-4">
-            <button 
-              className="w-10 h-10 bg-black/20 rounded-full flex items-center justify-center"
-              onClick={() => navigate("/")}
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </button>
-            <h1 className="text-xl font-bold">Check-in Leaderboard</h1>
-            <div className="w-10"></div>
-          </div>
+        <div className="px-6 py-4 bg-white border-b">
+          <h2 className="text-2xl font-bold text-gray-900 text-center">Leaderboard</h2>
+          <p className="text-center text-gray-600 text-sm mt-1">Users with at least 100 check-ins</p>
+        </div>
+
+        <div className="px-6 py-4">
           <div className="animate-pulse space-y-4">
-            <div className="h-20 bg-white/20 rounded"></div>
-            <div className="h-16 bg-white/20 rounded"></div>
-            <div className="h-16 bg-white/20 rounded"></div>
+            <div className="h-20 bg-gray-200 rounded"></div>
+            <div className="h-16 bg-gray-200 rounded"></div>
+            <div className="h-16 bg-gray-200 rounded"></div>
           </div>
         </div>
       </div>
@@ -172,7 +177,17 @@ export default function Leaderboard() {
 
   return (
     <div className="mobile-container pb-20">
-      {/* Badges Header Image - At the very top */}
+      {/* Back Button - At the very top */}
+      <div className="absolute top-4 left-4 z-30">
+        <button 
+          className="w-10 h-10 bg-black/50 rounded-full flex items-center justify-center text-white shadow-lg"
+          onClick={() => navigate("/")}
+        >
+          <ArrowLeft className="w-5 h-5" />
+        </button>
+      </div>
+
+      {/* Badges Header Image */}
       <div className="bg-white">
         <img 
           src={badgesHeaderImage} 
@@ -181,22 +196,9 @@ export default function Leaderboard() {
         />
       </div>
 
-      <div className="bg-gradient-to-r from-amber to-hops p-6 text-white">
-        <div className="flex items-center justify-between mb-4">
-          <button 
-            className="w-10 h-10 bg-black/20 rounded-full flex items-center justify-center"
-            onClick={() => navigate("/")}
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-          <h1 className="text-xl font-bold text-black">Leaderboard</h1>
-          <div className="w-10"></div>
-        </div>
-      </div>
-
       {/* Screen Title */}
       <div className="px-6 py-4 bg-white border-b">
-        <h2 className="text-2xl font-bold text-gray-900 text-center">Badge Rankings</h2>
+        <h2 className="text-2xl font-bold text-gray-900 text-center">Leaderboard</h2>
         <p className="text-center text-gray-600 text-sm mt-1">Users with at least 100 check-ins</p>
       </div>
 
