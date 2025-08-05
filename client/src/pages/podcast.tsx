@@ -462,9 +462,6 @@ export default function Podcast() {
   if (isLoading) {
     return (
       <div className="mobile-container">
-        <div className="hero-banner from-purple-600 to-pink-600">
-          <div className="hero-overlay" />
-        </div>
         <div className="px-6 py-6 space-y-4">
           {[...Array(3)].map((_, i) => (
             <Card key={i} className="animate-pulse">

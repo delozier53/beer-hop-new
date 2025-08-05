@@ -71,6 +71,8 @@ Key recent changes (August 2025):
 - Fixed Spotify podcast episode links not opening on mobile devices (August 5, 2025)
 - Replaced iframe-based app opening with direct navigation using window.location.href for mobile
 - Added mobile device detection for optimized Spotify app opening on mobile vs desktop
+- Removed pink/purple fallback background from podcast header loading state (August 5, 2025)
+- Eliminated momentary flash of gradient colors before header image loads
 - Implemented comprehensive performance optimizations for slow loading (August 5, 2025)
 - Optimized database queries: leaderboard shows only users with 100+ check-ins, limited to top 100 with proper sorting
 - Added caching layers to prevent repeated CSV processing and database initialization checks
