@@ -259,36 +259,50 @@ export function openSmartLink(url: string): void {
       
       console.log('Generated Spotify app URL:', spotifyAppUrl);
       
-      // Try to open Spotify app directly without popup
+      // Use the most direct approach that bypasses popups
       try {
-        // Create a hidden iframe approach that's more reliable on mobile
-        const iframe = document.createElement('iframe');
-        iframe.style.display = 'none';
-        iframe.style.width = '1px';
-        iframe.style.height = '1px';
-        iframe.src = spotifyAppUrl;
-        
-        document.body.appendChild(iframe);
-        
-        // Remove iframe after attempting to open
+        // Method 1: Try direct window.location assignment (works on many mobile browsers)
         setTimeout(() => {
-          if (document.body.contains(iframe)) {
-            document.body.removeChild(iframe);
-          }
-        }, 1000);
+          window.location.assign(spotifyAppUrl);
+        }, 10);
         
-        console.log('Attempted to open Spotify app via iframe');
-        
-        // Fallback: if user doesn't switch to app in 2 seconds, they may need the web version
-        setTimeout(() => {
-          if (!document.hidden) {
-            console.log('User still on page, app may not have opened');
-            // Don't automatically open web version to avoid confusion
-          }
-        }, 2000);
+        console.log('Attempted direct location assignment to Spotify app');
         
       } catch (e) {
-        console.log('Iframe method failed:', e);
+        console.log('Direct assignment failed, trying alternative:', e);
+        
+        // Method 2: Create and programmatically click a link
+        try {
+          const a = document.createElement('a');
+          a.href = spotifyAppUrl;
+          a.style.display = 'none';
+          a.target = '_blank';
+          a.rel = 'noopener noreferrer';
+          
+          // Add to DOM temporarily
+          document.body.appendChild(a);
+          
+          // Simulate user click
+          const clickEvent = new MouseEvent('click', {
+            bubbles: true,
+            cancelable: true,
+            view: window
+          });
+          
+          a.dispatchEvent(clickEvent);
+          
+          // Clean up
+          setTimeout(() => {
+            if (document.body.contains(a)) {
+              document.body.removeChild(a);
+            }
+          }, 100);
+          
+          console.log('Attempted programmatic click method');
+          
+        } catch (e2) {
+          console.log('All methods failed:', e2);
+        }
       }
       
       return;
