@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { ArrowLeft, Trophy, Medal, Award, Info } from "lucide-react";
 import { useLocation } from "wouter";
 import type { User } from "@shared/schema";
+import badgesHeaderImage from "@assets/Badges_Header_1754356120920.jpg";
 
 export default function Leaderboard() {
   const [, navigate] = useLocation();
@@ -175,8 +176,15 @@ export default function Leaderboard() {
         </div>
       </div>
 
-      {/* Screen Title */}
+      {/* Badges Header Image */}
       <div className="px-6 py-4 bg-white border-b">
+        <div className="mb-4">
+          <img 
+            src={badgesHeaderImage} 
+            alt="Badges Header"
+            className="w-full h-auto rounded-lg shadow-md"
+          />
+        </div>
         <h2 className="text-2xl font-bold text-gray-900 text-center">Badge Rankings</h2>
         <p className="text-center text-gray-600 text-sm mt-1">Users with at least 100 check-ins</p>
       </div>
