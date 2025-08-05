@@ -55,14 +55,9 @@ export default function Profile() {
   if (userLoading) {
     return (
       <div className="mobile-container">
-        <div className="hero-banner from-amber to-hops">
-          <div className="hero-overlay" />
-        </div>
-        <div className="px-6 py-6">
-          <div className="animate-pulse space-y-4">
-            <div className="h-20 w-20 bg-gray-300 rounded-full"></div>
-            <div className="h-4 bg-gray-300 rounded w-3/4"></div>
-            <div className="h-4 bg-gray-300 rounded w-1/2"></div>
+        <div className="flex items-center justify-center h-full">
+          <div className="text-center">
+            <div className="text-gray-600">Loading...</div>
           </div>
         </div>
       </div>

@@ -73,6 +73,8 @@ Key recent changes (August 2025):
 - Added mobile device detection for optimized Spotify app opening on mobile vs desktop
 - Removed pink/purple fallback background from podcast header loading state (August 5, 2025)
 - Eliminated momentary flash of gradient colors before header image loads
+- Removed skeleton loading animation from profile screen (August 5, 2025)
+- Replaced animated skeleton placeholders with simple "Loading..." text
 - Implemented comprehensive performance optimizations for slow loading (August 5, 2025)
 - Optimized database queries: leaderboard shows only users with 100+ check-ins, limited to top 100 with proper sorting
 - Added caching layers to prevent repeated CSV processing and database initialization checks
