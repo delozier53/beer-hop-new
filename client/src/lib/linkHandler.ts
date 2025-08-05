@@ -143,37 +143,31 @@ export function openSmartLink(url: string): void {
         // Try multiple approaches for better compatibility
         let appOpened = false;
         
-        // Method 1: Try window.location for immediate redirect
+        // Use a more reliable method to try opening the app
         try {
-          window.location.assign(instagramAppUrl);
-          appOpened = true;
-          console.log('Attempted window.location.assign');
+          // Create a hidden iframe to attempt app opening
+          const iframe = document.createElement('iframe');
+          iframe.style.display = 'none';
+          iframe.src = instagramAppUrl;
+          document.body.appendChild(iframe);
+          
+          // Clean up iframe after a short delay
+          setTimeout(() => {
+            if (document.body.contains(iframe)) {
+              document.body.removeChild(iframe);
+            }
+          }, 100);
+          
+          console.log('Attempted Instagram app opening via iframe');
         } catch (e) {
-          console.log('window.location.assign failed:', e);
-        }
-        
-        // Method 2: Fallback with hidden link click
-        if (!appOpened) {
-          const link = document.createElement('a');
-          link.href = instagramAppUrl;
-          link.style.display = 'none';
-          document.body.appendChild(link);
-          
-          try {
-            link.click();
-            console.log('Attempted hidden link click');
-          } catch (e) {
-            console.log('Hidden link click failed:', e);
-          }
-          
-          document.body.removeChild(link);
+          console.log('Instagram app opening failed:', e);
         }
         
         // Set up fallback to web version
         const fallbackTimer = setTimeout(() => {
           console.log('Instagram app timeout - opening web version');
           window.open(url, '_blank', 'noopener,noreferrer');
-        }, 1500);
+        }, 2000);
         
         // Listen for visibility change (user switched to app)
         const handleVisibilityChange = () => {
@@ -185,6 +179,11 @@ export function openSmartLink(url: string): void {
         };
         
         document.addEventListener('visibilitychange', handleVisibilityChange);
+        
+        // Also clear timer if user comes back to page quickly (app didn't open)
+        setTimeout(() => {
+          document.removeEventListener('visibilitychange', handleVisibilityChange);
+        }, 3000);
         
         // Clean up listener
         setTimeout(() => {
@@ -206,10 +205,30 @@ export function openSmartLink(url: string): void {
         
         const fbAppUrl = `fb://profile/${handle}`;
         console.log('Attempting to open Facebook app with:', fbAppUrl);
-        window.location.href = fbAppUrl;
+        
+        try {
+          // Create a hidden iframe to attempt app opening
+          const iframe = document.createElement('iframe');
+          iframe.style.display = 'none';
+          iframe.src = fbAppUrl;
+          document.body.appendChild(iframe);
+          
+          // Clean up iframe after a short delay
+          setTimeout(() => {
+            if (document.body.contains(iframe)) {
+              document.body.removeChild(iframe);
+            }
+          }, 100);
+          
+          console.log('Attempted Facebook app opening via iframe');
+        } catch (e) {
+          console.log('Facebook app opening failed:', e);
+        }
+        
+        // Fallback to web version
         setTimeout(() => {
           window.open(url, '_blank', 'noopener,noreferrer');
-        }, 500);
+        }, 1500);
         return;
       }
     }
@@ -222,15 +241,37 @@ export function openSmartLink(url: string): void {
       const pathname = urlObj.pathname;
       const spotifyAppUrl = `spotify:${pathname.replace(/\//g, ':')}`;
       console.log('Attempting to open Spotify app with:', spotifyAppUrl);
-      window.location.href = spotifyAppUrl;
+      
+      try {
+        // Create a hidden iframe to attempt app opening
+        const iframe = document.createElement('iframe');
+        iframe.style.display = 'none';
+        iframe.src = spotifyAppUrl;
+        document.body.appendChild(iframe);
+        
+        // Clean up iframe after a short delay
+        setTimeout(() => {
+          if (document.body.contains(iframe)) {
+            document.body.removeChild(iframe);
+          }
+        }, 100);
+        
+        console.log('Attempted Spotify app opening via iframe');
+      } catch (e) {
+        console.log('Spotify app opening failed:', e);
+      }
+      
+      // Fallback to web version
       setTimeout(() => {
         window.open(url, '_blank', 'noopener,noreferrer');
-      }, 500);
+      }, 1500);
       return;
     }
     
     // For all other URLs, just open in new tab
     console.log('Opening in new tab:', url);
+    // Mark that we're navigating externally for non-app links too
+    sessionStorage.setItem('external-nav', 'true');
     window.open(url, '_blank', 'noopener,noreferrer');
     
   } catch (error) {

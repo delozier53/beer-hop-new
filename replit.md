@@ -53,6 +53,11 @@ Key recent changes (August 2025):
 - Added comprehensive Terms of Service and Privacy Policy with push notification coverage
 - Implemented 6-digit verification code system with email delivery and database persistence
 - Updated welcome page with Beer Hop branding and professional green color scheme (#80bc04)
+- Implemented smart back button system that only appears after external link navigation (August 5, 2025)
+- Enhanced social media link handling to open native apps (Instagram, Facebook, Spotify) with iframe method
+- Added external navigation tracking using sessionStorage with auto-hide functionality
+- Fixed banner link behavior to properly attempt native app opening before web fallback
+- Added "Millennium Lounge: Official Podcast Sponsor" text under podcast banner advertisements
 
 The database schema supports complex relationships between entities, such as users having multiple check-ins and favorite breweries, breweries having associated podcast episodes, and a badge system based on check-in counts. Geographic data uses authentic latitude and longitude coordinates from the provided brewery coordinate CSV file, ensuring accurate distance calculations for Oklahoma breweries.
 
