@@ -140,6 +140,15 @@ export default function Leaderboard() {
   if (isLoading) {
     return (
       <div className="mobile-container">
+        {/* Badges Header Image - At the very top */}
+        <div className="bg-white">
+          <img 
+            src={badgesHeaderImage} 
+            alt="Badges Header"
+            className="w-full h-auto"
+          />
+        </div>
+
         <div className="bg-gradient-to-r from-amber to-hops p-6 text-white">
           <div className="flex items-center justify-between mb-4">
             <button 
@@ -163,6 +172,15 @@ export default function Leaderboard() {
 
   return (
     <div className="mobile-container pb-20">
+      {/* Badges Header Image - At the very top */}
+      <div className="bg-white">
+        <img 
+          src={badgesHeaderImage} 
+          alt="Badges Header"
+          className="w-full h-auto"
+        />
+      </div>
+
       <div className="bg-gradient-to-r from-amber to-hops p-6 text-white">
         <div className="flex items-center justify-between mb-4">
           <button 
@@ -176,15 +194,8 @@ export default function Leaderboard() {
         </div>
       </div>
 
-      {/* Badges Header Image */}
+      {/* Screen Title */}
       <div className="px-6 py-4 bg-white border-b">
-        <div className="mb-4">
-          <img 
-            src={badgesHeaderImage} 
-            alt="Badges Header"
-            className="w-full h-auto rounded-lg shadow-md"
-          />
-        </div>
         <h2 className="text-2xl font-bold text-gray-900 text-center">Badge Rankings</h2>
         <p className="text-center text-gray-600 text-sm mt-1">Users with at least 100 check-ins</p>
       </div>
