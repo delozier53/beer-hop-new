@@ -68,6 +68,9 @@ Key recent changes (August 2025):
 - Fixed brewery banner upload bug - resolved authentication issue with x-user-id header (August 5, 2025)
 - Removed link URL box from all banner edit popups since banners are display-only
 - Updated banner save logic to only require image URL, not link URL
+- Fixed Spotify podcast episode links not opening on mobile devices (August 5, 2025)
+- Replaced iframe-based app opening with direct navigation using window.location.href for mobile
+- Added mobile device detection for optimized Spotify app opening on mobile vs desktop
 - Implemented comprehensive performance optimizations for slow loading (August 5, 2025)
 - Optimized database queries: leaderboard shows only users with 100+ check-ins, limited to top 100 with proper sorting
 - Added caching layers to prevent repeated CSV processing and database initialization checks

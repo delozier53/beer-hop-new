@@ -243,29 +243,53 @@ export function openSmartLink(url: string): void {
       const spotifyAppUrl = `spotify:${pathname.replace(/\//g, ':')}`;
       console.log('Attempting to open Spotify app with:', spotifyAppUrl);
       
-      try {
-        // Create a hidden iframe to attempt app opening
-        const iframe = document.createElement('iframe');
-        iframe.style.display = 'none';
-        iframe.src = spotifyAppUrl;
-        document.body.appendChild(iframe);
+      // For mobile devices, use window.location.href which works better than iframe
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      
+      if (isMobile) {
+        try {
+          // On mobile, direct navigation works better
+          window.location.href = spotifyAppUrl;
+          console.log('Mobile Spotify app opening triggered');
+          
+          // Set up fallback timer in case app doesn't open
+          setTimeout(() => {
+            // Only fallback if we're still on the same page (app didn't open)
+            if (!document.hidden) {
+              console.log('Spotify app failed to open - opening web version');
+              window.open(url, '_blank', 'noopener,noreferrer');
+            }
+          }, 2500);
+          
+        } catch (e) {
+          console.log('Mobile Spotify app opening failed:', e);
+          window.open(url, '_blank', 'noopener,noreferrer');
+        }
+      } else {
+        // Desktop fallback using iframe method
+        try {
+          const iframe = document.createElement('iframe');
+          iframe.style.display = 'none';
+          iframe.src = spotifyAppUrl;
+          document.body.appendChild(iframe);
+          
+          setTimeout(() => {
+            if (document.body.contains(iframe)) {
+              document.body.removeChild(iframe);
+            }
+          }, 100);
+          
+          console.log('Attempted Spotify app opening via iframe');
+        } catch (e) {
+          console.log('Spotify app opening failed:', e);
+        }
         
-        // Clean up iframe after a short delay
+        // Fallback to web version
         setTimeout(() => {
-          if (document.body.contains(iframe)) {
-            document.body.removeChild(iframe);
-          }
-        }, 100);
-        
-        console.log('Attempted Spotify app opening via iframe');
-      } catch (e) {
-        console.log('Spotify app opening failed:', e);
+          window.open(url, '_blank', 'noopener,noreferrer');
+        }, 1500);
       }
       
-      // Fallback to web version
-      setTimeout(() => {
-        window.open(url, '_blank', 'noopener,noreferrer');
-      }, 1500);
       return;
     }
     
