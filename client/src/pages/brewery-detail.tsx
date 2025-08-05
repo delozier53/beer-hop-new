@@ -803,24 +803,20 @@ export default function BreweryDetail() {
           <h3 className="font-semibold mb-3">Connect</h3>
           <div className="flex space-x-4">
             {brewery.socialLinks.website && (
-              <a 
-                href={brewery.socialLinks.website} 
-                target="_blank" 
-                rel="noopener noreferrer"
+              <button 
+                onClick={() => openSmartLink(brewery.socialLinks.website)}
                 className="w-12 h-12 rounded-full bg-hops hover:bg-hops-dark text-white flex items-center justify-center transition-colors"
               >
                 <Globe className="w-6 h-6" />
-              </a>
+              </button>
             )}
             {brewery.socialLinks.facebook && (
-              <a 
-                href={brewery.socialLinks.facebook} 
-                target="_blank" 
-                rel="noopener noreferrer"
+              <button 
+                onClick={() => openSmartLink(brewery.socialLinks.facebook)}
                 className="w-12 h-12 rounded-full bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center transition-colors"
               >
                 <Facebook className="w-6 h-6" />
-              </a>
+              </button>
             )}
             {brewery.socialLinks.instagram && (
               <a 
