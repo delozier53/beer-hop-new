@@ -809,16 +809,12 @@ export default function BreweryDetail() {
                   e.stopPropagation();
                   const url = brewery.socialLinks.website;
                   if (url) {
-                    console.log('Website button clicked. Opening:', url);
+                    console.log('Website button clicked. Opening in same window:', url);
+                    // Mark that we're navigating externally for back button
                     sessionStorage.setItem('external-nav', 'true');
-                    const newWindow = window.open(url, '_blank', 'noopener,noreferrer');
-                    if (!newWindow) {
-                      console.error('Popup blocked or window.open failed');
-                      // Fallback: try direct navigation
-                      window.location.href = url;
-                    } else {
-                      console.log('New window opened successfully');
-                    }
+                    sessionStorage.setItem('return-url', window.location.href);
+                    // Navigate in same window
+                    window.location.href = url;
                   }
                 }}
                 className="w-12 h-12 rounded-full bg-hops hover:bg-hops-dark text-white flex items-center justify-center transition-colors"
