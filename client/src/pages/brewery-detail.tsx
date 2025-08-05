@@ -420,7 +420,7 @@ export default function BreweryDetail() {
 
       {/* Brewery Logo - Overlapping position like profile photo */}
       {brewery.logo && (
-        <div className="relative -mt-12 mb-6 flex justify-center">
+        <div className="relative -mt-12 mb-3 flex justify-center">
           <img 
             src={convertGoogleDriveImageUrl(brewery.logo)} 
             alt={`${brewery.name} logo`}
@@ -432,9 +432,9 @@ export default function BreweryDetail() {
         </div>
       )}
 
-      <div className="px-6 py-6">
+      <div className="px-6 py-3">
         {/* Brewery Header */}
-        <div className="flex items-start justify-between mb-6">
+        <div className="flex items-start justify-between mb-4">
           <div>
             <h1 className="text-2xl font-bold">{brewery.name}</h1>
             {/* Logo displayed in banner, removed circle image and craft brewery label */}
