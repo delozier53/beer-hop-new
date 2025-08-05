@@ -57,7 +57,8 @@ export default function Podcast() {
     queryKey: ["/api/global-settings"],
   });
 
-  const headerImage = podcastHeader?.headerImage || podcastBanner;
+  // Only use the podcast header image if it exists, no fallback to avoid flashing
+  const headerImage = podcastHeader?.headerImage;
   const bannerImage = (globalSettings as any)?.podcastBannerImage || podcastBannerDemo;
   const bannerLink = (globalSettings as any)?.podcastBannerLink || "https://example.com";
   
@@ -485,30 +486,48 @@ export default function Podcast() {
 
   return (
     <div className="mobile-container pb-20">
-      {/* Hero Banner */}
-      <div 
-        className="hero-banner relative"
-        style={{
-          backgroundImage: `url(${headerImage})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat'
-        }}
-      >
-        <div className="hero-overlay" />
+      {/* Hero Banner - Only show if header image exists */}
+      {headerImage && (
+        <div 
+          className="hero-banner relative"
+          style={{
+            backgroundImage: `url(${headerImage})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat'
+          }}
+        >
+          <div className="hero-overlay" />
 
-        {isMasterAdmin && (
-          <Button
-            size="sm"
-            variant="outline"
-            className="absolute top-4 right-4 bg-black/50 text-white border-white/50 hover:bg-white hover:text-black"
+          {isMasterAdmin && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="absolute top-4 right-4 bg-black/50 text-white border-white/50 hover:bg-white hover:text-black"
+              onClick={() => setIsHeaderImageDialogOpen(true)}
+            >
+              <Edit className="w-4 h-4 mr-1" />
+              Edit Image
+            </Button>
+          )}
+        </div>
+      )}
+
+      {/* Show header placeholder for admin if no header exists */}
+      {!headerImage && isMasterAdmin && (
+        <div className="px-6 pt-4">
+          <div 
+            className="w-full border-2 border-dashed border-gray-300 rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow flex items-center justify-center cursor-pointer bg-gray-50"
+            style={{ height: '200px' }}
             onClick={() => setIsHeaderImageDialogOpen(true)}
           >
-            <Edit className="w-4 h-4 mr-1" />
-            Edit Image
-          </Button>
-        )}
-      </div>
+            <div className="text-center text-gray-500">
+              <Plus className="w-8 h-8 mx-auto mb-2" />
+              <p className="text-sm">Add Header Image</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Clickable Banner Image (5:1 ratio) - positioned between header and episodes */}
       {bannerImage && (
@@ -548,6 +567,11 @@ export default function Podcast() {
               Edit Banner
             </Button>
           )}
+          
+          {/* Sponsor Text */}
+          <div className="text-center mt-2">
+            <p className="text-xs text-gray-500">Millennium Lounge: Official Podcast Sponsor</p>
+          </div>
         </div>
       )}
       
