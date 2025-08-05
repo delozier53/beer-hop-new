@@ -236,33 +236,40 @@ export function openSmartLink(url: string): void {
     
     // Special handling for Spotify
     if (domain.includes('spotify.com')) {
-      console.log('Opening Spotify URL:', url);
+      console.log('Attempting to open Spotify URL:', url);
       
+      // Extract the episode/track/show ID from the URL
       const pathname = urlObj.pathname;
-      const spotifyAppUrl = `spotify:${pathname.replace(/\//g, ':')}`;
-      console.log('Spotify app URL:', spotifyAppUrl);
+      let spotifyAppUrl = '';
       
-      // Try to open in Spotify app first, then fallback to web
+      // Handle different Spotify URL formats
+      if (pathname.includes('/episode/')) {
+        const episodeId = pathname.split('/episode/')[1]?.split('?')[0];
+        spotifyAppUrl = `spotify:episode:${episodeId}`;
+      } else if (pathname.includes('/track/')) {
+        const trackId = pathname.split('/track/')[1]?.split('?')[0];
+        spotifyAppUrl = `spotify:track:${trackId}`;
+      } else if (pathname.includes('/show/')) {
+        const showId = pathname.split('/show/')[1]?.split('?')[0];
+        spotifyAppUrl = `spotify:show:${showId}`;
+      } else {
+        // Fallback to path conversion
+        spotifyAppUrl = `spotify:${pathname.replace(/\//g, ':')}`;
+      }
+      
+      console.log('Generated Spotify app URL:', spotifyAppUrl);
+      
+      // Try the most reliable mobile approach
       try {
-        // Create a temporary link element to trigger app opening
-        const link = document.createElement('a');
-        link.href = spotifyAppUrl;
-        link.style.display = 'none';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        
+        window.open(spotifyAppUrl, '_system');
         console.log('Attempted to open Spotify app');
-        
-        // Quick fallback to web version if app doesn't respond
-        setTimeout(() => {
-          console.log('Opening Spotify web version as fallback');
-          window.open(url, '_blank', 'noopener,noreferrer');
-        }, 1000);
-        
       } catch (e) {
-        console.log('Spotify app opening failed, opening web version:', e);
-        window.open(url, '_blank', 'noopener,noreferrer');
+        console.log('First attempt failed, trying location.href:', e);
+        try {
+          window.location.href = spotifyAppUrl;
+        } catch (e2) {
+          console.log('Both methods failed:', e2);
+        }
       }
       
       return;
