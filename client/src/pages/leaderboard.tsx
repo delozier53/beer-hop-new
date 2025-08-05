@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { ArrowLeft, Trophy, Medal, Award, Info, Edit } from "lucide-react";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 import { ObjectUploader } from "@/components/ObjectUploader";
 import type { User } from "@shared/schema";
 import badgesHeaderImage from "@assets/Badges_Header_1754356120920.jpg";
@@ -23,16 +24,14 @@ export default function Leaderboard() {
     queryKey: ["/api/leaderboard"],
   });
 
-  const { data: currentUser } = useQuery({
-    queryKey: ["/api/users/joshuamdelozier"],
-  });
+  const { user: currentUser } = useAuth();
 
   const { data: globalSettings } = useQuery({
     queryKey: ["/api/global-settings"],
   });
 
   // Check if user is master admin
-  const isMasterAdmin = (currentUser as any)?.email === 'joshuamdelozier@gmail.com';
+  const isMasterAdmin = currentUser?.email === 'joshuamdelozier@gmail.com';
 
   // Get the current header image (fallback to default)
   const getHeaderImage = () => {
