@@ -259,17 +259,36 @@ export function openSmartLink(url: string): void {
       
       console.log('Generated Spotify app URL:', spotifyAppUrl);
       
-      // Try the most reliable mobile approach
+      // Try to open Spotify app directly without popup
       try {
-        window.open(spotifyAppUrl, '_system');
-        console.log('Attempted to open Spotify app');
+        // Create a hidden iframe approach that's more reliable on mobile
+        const iframe = document.createElement('iframe');
+        iframe.style.display = 'none';
+        iframe.style.width = '1px';
+        iframe.style.height = '1px';
+        iframe.src = spotifyAppUrl;
+        
+        document.body.appendChild(iframe);
+        
+        // Remove iframe after attempting to open
+        setTimeout(() => {
+          if (document.body.contains(iframe)) {
+            document.body.removeChild(iframe);
+          }
+        }, 1000);
+        
+        console.log('Attempted to open Spotify app via iframe');
+        
+        // Fallback: if user doesn't switch to app in 2 seconds, they may need the web version
+        setTimeout(() => {
+          if (!document.hidden) {
+            console.log('User still on page, app may not have opened');
+            // Don't automatically open web version to avoid confusion
+          }
+        }, 2000);
+        
       } catch (e) {
-        console.log('First attempt failed, trying location.href:', e);
-        try {
-          window.location.href = spotifyAppUrl;
-        } catch (e2) {
-          console.log('Both methods failed:', e2);
-        }
+        console.log('Iframe method failed:', e);
       }
       
       return;

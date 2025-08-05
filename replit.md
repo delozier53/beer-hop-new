@@ -69,8 +69,8 @@ Key recent changes (August 2025):
 - Removed link URL box from all banner edit popups since banners are display-only
 - Updated banner save logic to only require image URL, not link URL
 - Fixed Spotify podcast episode links not opening on mobile devices (August 5, 2025)
-- Replaced complex window.location.href navigation with simple link-based app opening
-- Simplified Spotify link handling to eliminate spinning wheel issue and improve reliability
+- Implemented iframe-based Spotify app opening to bypass browser permission popups
+- Enhanced Spotify URL parsing to properly handle episode/track/show IDs for direct app opening
 - Removed pink/purple fallback background from podcast header loading state (August 5, 2025)
 - Eliminated momentary flash of gradient colors before header image loads
 - Removed skeleton loading animation from profile screen (August 5, 2025)
