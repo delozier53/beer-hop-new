@@ -7,6 +7,7 @@ import { BottomNavigation } from "@/components/bottom-navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { useState, useEffect } from "react";
 import { LocationPermissionDialog } from "@/components/LocationPermissionDialog";
+import { BackButton } from "@/components/BackButton";
 import Welcome from "@/pages/welcome";
 import Profile from "@/pages/profile";
 import Breweries from "@/pages/breweries";
@@ -54,6 +55,7 @@ function Router() {
   // Show Terms and Privacy pages even when not authenticated
   return (
     <div className="relative">
+      <BackButton />
       <Switch>
         <Route path="/terms" component={Terms} />
         <Route path="/privacy" component={Privacy} />

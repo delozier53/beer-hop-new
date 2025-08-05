@@ -13,7 +13,7 @@ import { ObjectUploader } from "@/components/ObjectUploader";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { openSmartLink } from "@/lib/linkHandler";
-import { BackButton } from "@/components/BackButton";
+
 import type { Brewery } from "@shared/schema";
 import type { UploadResult } from "@uppy/core";
 
@@ -239,7 +239,6 @@ export default function Breweries() {
 
   return (
     <div className="mobile-container pb-20">
-      <BackButton />
       {/* Header */}
       <div className="bg-white border-b border-gray-200 sticky top-0 z-20">
         <div className="px-6 py-4">

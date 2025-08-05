@@ -137,6 +137,9 @@ export function openSmartLink(url: string): void {
         const instagramAppUrl = `instagram://user?username=${handle}`;
         console.log('Attempting to open Instagram app with:', instagramAppUrl);
         
+        // Mark that we're navigating externally
+        sessionStorage.setItem('external-nav', 'true');
+        
         // Try multiple approaches for better compatibility
         let appOpened = false;
         
@@ -198,6 +201,9 @@ export function openSmartLink(url: string): void {
       const handle = pathname.split('/').filter(part => part.length > 0)[0];
       
       if (handle) {
+        // Mark that we're navigating externally
+        sessionStorage.setItem('external-nav', 'true');
+        
         const fbAppUrl = `fb://profile/${handle}`;
         console.log('Attempting to open Facebook app with:', fbAppUrl);
         window.location.href = fbAppUrl;
@@ -210,6 +216,9 @@ export function openSmartLink(url: string): void {
     
     // Special handling for Spotify
     if (domain.includes('spotify.com')) {
+      // Mark that we're navigating externally
+      sessionStorage.setItem('external-nav', 'true');
+      
       const pathname = urlObj.pathname;
       const spotifyAppUrl = `spotify:${pathname.replace(/\//g, ':')}`;
       console.log('Attempting to open Spotify app with:', spotifyAppUrl);

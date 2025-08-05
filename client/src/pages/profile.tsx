@@ -9,7 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import type { User, Badge, Brewery } from "@shared/schema";
 import defaultHeaderImage from "@assets/BH Drip_1754199454816.png";
 import { convertGoogleDriveImageUrl } from "@/lib/imageUtils";
-import { BackButton } from "@/components/BackButton";
+
 
 export default function Profile() {
   const queryClient = useQueryClient();
@@ -81,7 +81,6 @@ export default function Profile() {
 
   return (
     <div className="mobile-container">
-      <BackButton />
       {/* Hero Banner */}
       <div 
         className="hero-banner from-amber to-hops relative"

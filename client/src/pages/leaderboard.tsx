@@ -8,7 +8,7 @@ import { ArrowLeft, Trophy, Medal, Award, Info, Edit } from "lucide-react";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { BackButton } from "@/components/BackButton";
+
 import { ObjectUploader } from "@/components/ObjectUploader";
 import type { User } from "@shared/schema";
 import badgesHeaderImage from "@assets/Badges_Header_1754356120920.jpg";
@@ -258,7 +258,6 @@ export default function Leaderboard() {
 
   return (
     <div className="mobile-container pb-20">
-      <BackButton />
       {/* Back Button - At the very top */}
       <div className="absolute top-4 left-4 z-30">
         <button 

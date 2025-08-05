@@ -13,7 +13,7 @@ import { CreateSpecialEventModal } from "@/components/CreateSpecialEventModal";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { openSmartLink } from "@/lib/linkHandler";
-import { BackButton } from "@/components/BackButton";
+
 import type { Event, SpecialEvent } from "@shared/schema";
 import type { UploadResult } from "@uppy/core";
 
@@ -398,7 +398,6 @@ export default function Events() {
 
   return (
     <div className="mobile-container pb-20">
-      <BackButton />
       {/* Header image with fade overlay - only show if headerImageUrl exists */}
       {headerImageUrl && (
         <div className="relative">
