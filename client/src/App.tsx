@@ -22,14 +22,14 @@ import Privacy from "@/pages/privacy";
 import NotFound from "@/pages/not-found";
 
 function Router() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
   const [showLocationDialog, setShowLocationDialog] = useState(false);
 
   // Show location permission dialog after user authenticates
   useEffect(() => {
-    if (isAuthenticated && !isLoading) {
-      // Check if we've already asked for permission (stored permanently)
-      const hasAskedForLocation = localStorage.getItem('location-permission-asked');
+    if (isAuthenticated && !isLoading && user) {
+      // Check if we've already asked for permission for this specific user
+      const hasAskedForLocation = localStorage.getItem(`location-permission-asked-${user.id}`);
       if (!hasAskedForLocation) {
         // Delay showing the dialog slightly to let the user see they've logged in
         const timer = setTimeout(() => {
@@ -38,7 +38,7 @@ function Router() {
         return () => clearTimeout(timer);
       }
     }
-  }, [isAuthenticated, isLoading]);
+  }, [isAuthenticated, isLoading, user]);
 
   if (isLoading) {
     return (
@@ -77,20 +77,21 @@ function Router() {
       {isAuthenticated && <BottomNavigation />}
       
       {/* Location Permission Dialog */}
-      <LocationPermissionDialog 
-        open={showLocationDialog}
-        onOpenChange={(open) => {
-          setShowLocationDialog(open);
-          // Mark that we've asked for permission when dialog is closed
-          if (!open) {
-            localStorage.setItem('location-permission-asked', 'true');
-          }
-        }}
-        onPermissionGranted={() => {
-          console.log('Location permission granted');
-          localStorage.setItem('location-permission-asked', 'true');
-        }}
-      />
+      {user && (
+        <LocationPermissionDialog 
+          open={showLocationDialog}
+          onOpenChange={(open) => {
+            setShowLocationDialog(open);
+            // Mark that we've asked for permission when dialog is closed
+            if (!open) {
+              localStorage.setItem(`location-permission-asked-${user.id}`, 'true');
+            }
+          }}
+          onPermissionGranted={() => {
+            localStorage.setItem(`location-permission-asked-${user.id}`, 'true');
+          }}
+        />
+      )}
     </div>
   );
 }
