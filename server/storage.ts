@@ -1424,11 +1424,11 @@ export class DatabaseStorage implements IStorage {
 
   async getLeaderboard(): Promise<User[]> {
     await this.initializeUsersIfEmpty();
-    // Optimized query: only get users with checkins > 0, sorted by database, limited to top 100
+    // Only show users with at least 100 check-ins, sorted by database, limited to top 100
     const topUsers = await db
       .select()
       .from(users)
-      .where(gte(users.checkins, 1))
+      .where(gte(users.checkins, 100))
       .orderBy(desc(users.checkins))
       .limit(100);
     return topUsers;
