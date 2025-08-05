@@ -13,6 +13,7 @@ import { openSmartLink } from "@/lib/linkHandler";
 
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { ObjectUploader } from "@/components/ObjectUploader";
+import { BackButton } from "@/components/BackButton";
 
 import type { PodcastEpisode, User } from "@shared/schema";
 import type { UploadResult } from "@uppy/core";
@@ -486,6 +487,7 @@ export default function Podcast() {
 
   return (
     <div className="mobile-container pb-20">
+      <BackButton />
       {/* Hero Banner - Only show if header image exists */}
       {headerImage && (
         <div 

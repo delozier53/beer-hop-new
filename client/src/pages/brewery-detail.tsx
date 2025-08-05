@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { convertGoogleDriveImageUrl } from "@/lib/imageUtils";
+import { BackButton } from "@/components/BackButton";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -402,6 +403,7 @@ export default function BreweryDetail() {
 
   return (
     <div className="mobile-container pb-20">
+      <BackButton />
       {/* Hero Banner */}
       <div 
         className="relative h-56 bg-cover bg-center"
