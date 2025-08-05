@@ -12,32 +12,54 @@ export function BackButton({ className = "" }: BackButtonProps) {
   const [showBackButton, setShowBackButton] = useState(false);
 
   useEffect(() => {
-    // Check if we're returning from external navigation on page load
-    const checkExternalNavigation = () => {
+    // Check if we should show the Facebook-style back button
+    const checkBackButtonVisibility = () => {
+      // Show if we're on an external site (not our Beer Hop app)
+      const currentDomain = window.location.hostname;
+      const isExternalSite = !currentDomain.includes('replit.app') && 
+                            !currentDomain.includes('localhost') && 
+                            currentDomain !== '127.0.0.1' &&
+                            !currentDomain.includes('replit.dev');
+      
+      // Also check if we have the external navigation flag (for when returning to app)
       const wasExternalNavigation = sessionStorage.getItem('external-nav');
-      if (wasExternalNavigation) {
+      
+      if (isExternalSite || wasExternalNavigation) {
         setShowBackButton(true);
-        // Auto-hide after 15 seconds for website links
-        setTimeout(() => {
-          setShowBackButton(false);
-          sessionStorage.removeItem('external-nav');
-          sessionStorage.removeItem('return-url');
-        }, 15000);
+        
+        // Only auto-hide if we're back in the app (not on external site)
+        if (!isExternalSite && wasExternalNavigation) {
+          setTimeout(() => {
+            setShowBackButton(false);
+            sessionStorage.removeItem('external-nav');
+            sessionStorage.removeItem('return-url');
+          }, 15000);
+        }
       }
     };
 
     // Check immediately when component mounts
-    checkExternalNavigation();
+    checkBackButtonVisibility();
 
-    // Also check when user returns from external app (for app links)
+    // Check when user returns from external navigation
     const handleVisibilityChange = () => {
       if (!document.hidden) {
-        checkExternalNavigation();
+        checkBackButtonVisibility();
       }
     };
 
+    // Check when page loads (for external sites)
+    const handlePageLoad = () => {
+      checkBackButtonVisibility();
+    };
+
     document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('load', handlePageLoad);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('load', handlePageLoad);
+    };
   }, []);
 
   const handleBack = () => {
@@ -51,22 +73,29 @@ export function BackButton({ className = "" }: BackButtonProps) {
       sessionStorage.removeItem('return-url');
       window.location.href = returnUrl;
     } else {
-      // Navigate back to the main app screen
-      setLocation('/');
+      // Try to go back in browser history first
+      if (window.history.length > 1) {
+        window.history.back();
+      } else {
+        // Navigate back to the main app screen as fallback
+        const origin = window.location.origin;
+        window.location.href = origin;
+      }
     }
   };
 
   if (!showBackButton) return null;
 
   return (
-    <Button
-      variant="ghost"
-      size="sm"
-      onClick={handleBack}
-      className={`fixed top-4 left-4 z-50 bg-white/90 backdrop-blur-sm shadow-md hover:bg-white border border-gray-200 ${className}`}
-    >
-      <ArrowLeft className="w-4 h-4 mr-2" />
-      Back to Beer Hop
-    </Button>
+    <div className={`fixed top-4 left-4 z-50 ${className}`}>
+      <button
+        onClick={handleBack}
+        className="flex items-center space-x-2 bg-black/80 hover:bg-black rounded-full px-3 py-2 text-white shadow-lg backdrop-blur-sm transition-colors"
+        aria-label="Back to Beer Hop"
+      >
+        <ArrowLeft className="w-4 h-4" />
+        <span className="text-sm font-medium">Beer Hop OK</span>
+      </button>
+    </div>
   );
 }

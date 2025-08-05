@@ -61,6 +61,10 @@ Key recent changes (August 2025):
 - Optimized Facebook app opening for mobile-only usage with proper fb:// URL schemes (August 5, 2025)
 - Removed browser fallbacks for Facebook links as requested - app-only navigation
 - Enhanced brewery detail page social buttons for mobile Facebook and website link handling
+- Implemented Facebook-style persistent back button for external websites (August 5, 2025)
+- Created external back button script that injects "Beer Hop OK" back button on external sites
+- Both website and Facebook links now open in same tab with consistent back navigation
+- Removed all banner ad click functionality - banners are now display-only images
 
 The database schema supports complex relationships between entities, such as users having multiple check-ins and favorite breweries, breweries having associated podcast episodes, and a badge system based on check-in counts. Geographic data uses authentic latitude and longitude coordinates from the provided brewery coordinate CSV file, ensuring accurate distance calculations for Oklahoma breweries.
 

@@ -807,6 +807,12 @@ export default function BreweryDetail() {
                     console.log('Website button clicked. Opening in same tab:', url);
                     sessionStorage.setItem('external-nav', 'true');
                     sessionStorage.setItem('return-url', window.location.href);
+                    
+                    // Create a script to inject back button on external site
+                    const script = document.createElement('script');
+                    script.src = '/external-back-button.js';
+                    document.head.appendChild(script);
+                    
                     window.location.href = url;
                   }
                 }}
@@ -825,6 +831,12 @@ export default function BreweryDetail() {
                     console.log('Facebook button clicked. Opening in same tab:', url);
                     sessionStorage.setItem('external-nav', 'true');
                     sessionStorage.setItem('return-url', window.location.href);
+                    
+                    // Create a script to inject back button on external site
+                    const script = document.createElement('script');
+                    script.src = '/external-back-button.js';
+                    document.head.appendChild(script);
+                    
                     window.location.href = url;
                   }
                 }}
