@@ -804,11 +804,21 @@ export default function BreweryDetail() {
           <div className="flex space-x-4">
             {brewery.socialLinks.website && (
               <button 
-                onClick={() => {
-                  if (brewery.socialLinks.website) {
-                    console.log('Opening website:', brewery.socialLinks.website);
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  const url = brewery.socialLinks.website;
+                  if (url) {
+                    console.log('Website button clicked. Opening:', url);
                     sessionStorage.setItem('external-nav', 'true');
-                    window.open(brewery.socialLinks.website, '_blank', 'noopener,noreferrer');
+                    const newWindow = window.open(url, '_blank', 'noopener,noreferrer');
+                    if (!newWindow) {
+                      console.error('Popup blocked or window.open failed');
+                      // Fallback: try direct navigation
+                      window.location.href = url;
+                    } else {
+                      console.log('New window opened successfully');
+                    }
                   }
                 }}
                 className="w-12 h-12 rounded-full bg-hops hover:bg-hops-dark text-white flex items-center justify-center transition-colors"
@@ -818,10 +828,52 @@ export default function BreweryDetail() {
             )}
             {brewery.socialLinks.facebook && (
               <button 
-                onClick={() => {
-                  if (brewery.socialLinks.facebook) {
-                    console.log('Opening Facebook:', brewery.socialLinks.facebook);
-                    openSmartLink(brewery.socialLinks.facebook);
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  const url = brewery.socialLinks.facebook;
+                  if (url) {
+                    console.log('Facebook button clicked. URL:', url);
+                    // Try direct Facebook app opening first
+                    sessionStorage.setItem('external-nav', 'true');
+                    try {
+                      // Extract Facebook handle/ID from URL
+                      const fbUrl = new URL(url);
+                      const pathname = fbUrl.pathname;
+                      console.log('Facebook pathname:', pathname);
+                      
+                      let handle = '';
+                      if (pathname.includes('/profile.php')) {
+                        const urlParams = new URLSearchParams(fbUrl.search);
+                        handle = urlParams.get('id') || '';
+                      } else {
+                        const pathParts = pathname.split('/').filter(part => part.length > 0);
+                        handle = pathParts[0] || '';
+                      }
+                      
+                      if (handle) {
+                        const fbAppUrl = handle.match(/^\d+$/) ? `fb://profile/${handle}` : `fb://page/${handle}`;
+                        console.log('Trying Facebook app URL:', fbAppUrl);
+                        
+                        // Try to open app
+                        window.location.href = fbAppUrl;
+                        
+                        // Fallback after 2 seconds
+                        setTimeout(() => {
+                          console.log('Facebook app fallback - opening web version');
+                          const newWindow = window.open(url, '_blank', 'noopener,noreferrer');
+                          if (!newWindow) {
+                            window.location.href = url;
+                          }
+                        }, 2000);
+                      } else {
+                        console.log('Could not extract handle, opening web version');
+                        window.open(url, '_blank', 'noopener,noreferrer');
+                      }
+                    } catch (error) {
+                      console.error('Facebook URL parsing failed:', error);
+                      window.open(url, '_blank', 'noopener,noreferrer');
+                    }
                   }
                 }}
                 className="w-12 h-12 rounded-full bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center transition-colors"
