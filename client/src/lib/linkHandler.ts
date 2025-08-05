@@ -117,7 +117,12 @@ function buildNativeUrl(webUrl: string, mapping: NativeAppMapping): string {
  * Smart link opener that tries native app first, falls back to web
  */
 export function openSmartLink(url: string): void {
-  if (!url) return;
+  if (!url) {
+    console.log('openSmartLink called with empty URL');
+    return;
+  }
+  
+  console.log('openSmartLink called with URL:', url);
   
   try {
     const urlObj = new URL(url);
@@ -130,6 +135,7 @@ export function openSmartLink(url: string): void {
     
     if (mapping) {
       const nativeUrl = buildNativeUrl(url, mapping);
+      console.log('Found native app mapping, attempting to open:', nativeUrl);
       
       // Try to open in native app
       const attemptNativeOpen = () => {
@@ -172,6 +178,7 @@ export function openSmartLink(url: string): void {
       
     } else {
       // No native app mapping, open in new tab
+      console.log('No native app mapping found, opening in new tab:', url);
       window.open(url, '_blank', 'noopener,noreferrer');
     }
     

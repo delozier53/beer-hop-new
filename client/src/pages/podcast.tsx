@@ -10,6 +10,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Play, ExternalLink, Edit, Plus, Upload, Headphones, Search, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { openSmartLink } from "@/lib/linkHandler";
+import { openSimpleLink } from "@/lib/simpleLinkHandler";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { ObjectUploader } from "@/components/ObjectUploader";
 
@@ -59,6 +60,8 @@ export default function Podcast() {
   const headerImage = podcastHeader?.headerImage || podcastBanner;
   const bannerImage = (globalSettings as any)?.podcastBannerImage || podcastBannerDemo;
   const bannerLink = (globalSettings as any)?.podcastBannerLink || "https://example.com";
+  
+  console.log('Podcast banner data:', { bannerImage, bannerLink, globalSettings: globalSettings });
   
   const isMasterAdmin = user?.email === 'joshuamdelozier@gmail.com';
 
@@ -514,8 +517,11 @@ export default function Podcast() {
             className="w-full cursor-pointer rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow"
             style={{ aspectRatio: '5/1' }}
             onClick={() => {
+              console.log('Banner clicked! bannerLink:', bannerLink);
               if (bannerLink) {
-                openSmartLink(bannerLink);
+                openSimpleLink(bannerLink);
+              } else {
+                console.log('No banner link available');
               }
             }}
           >
