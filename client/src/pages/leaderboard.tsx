@@ -393,16 +393,6 @@ export default function Leaderboard() {
                 </div>
               </ObjectUploader>
             </div>
-            
-            <div>
-              <Label htmlFor="header-url-input">Or enter image URL</Label>
-              <Input
-                id="header-url-input"
-                value={headerImageUrl}
-                onChange={(e) => setHeaderImageUrl(e.target.value)}
-                placeholder="Enter image URL..."
-              />
-            </div>
 
             <div className="flex justify-end space-x-2">
               <Button
