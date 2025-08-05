@@ -447,22 +447,16 @@ export default function Events() {
       )}
 
       {/* Events Banner Section - Clickable Banner Image (5:1 ratio) - positioned between header and events */}
-      {(globalSettings as any)?.eventsBannerImage && (globalSettings as any)?.eventsBannerLink ? (
+      {(globalSettings as any)?.eventsBannerImage ? (
         <div className="px-6 pt-4 pb-2 relative">
           <div 
-            className="w-full cursor-pointer rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow"
+            className="w-full rounded-lg overflow-hidden shadow-md"
             style={{ aspectRatio: '5/1' }}
-            onClick={() => {
-              console.log('Events banner clicked! eventsBannerLink:', (globalSettings as any)?.eventsBannerLink);
-              if ((globalSettings as any)?.eventsBannerLink) {
-                openSmartLink((globalSettings as any).eventsBannerLink);
-              }
-            }}
           >
             <img 
               src={getImageUrl((globalSettings as any).eventsBannerImage)} 
               alt="Events Banner"
-              className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+              className="w-full h-full object-cover"
             />
           </div>
           {isMasterAdmin && (

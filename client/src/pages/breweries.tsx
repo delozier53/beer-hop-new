@@ -243,22 +243,16 @@ export default function Breweries() {
       <div className="bg-white border-b border-gray-200 sticky top-0 z-20">
         <div className="px-6 py-4">
           {/* Breweries Banner Section - Clickable Banner Image (5:1 ratio) - positioned ABOVE the heading */}
-          {(globalSettings as any)?.breweriesBannerImage && (globalSettings as any)?.breweriesBannerLink ? (
+          {(globalSettings as any)?.breweriesBannerImage ? (
             <div className="mb-4 relative">
               <div 
-                className="w-full cursor-pointer rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow"
+                className="w-full rounded-lg overflow-hidden shadow-md"
                 style={{ aspectRatio: '5/1' }}
-                onClick={() => {
-                  console.log('Breweries banner clicked! breweriesBannerLink:', (globalSettings as any)?.breweriesBannerLink);
-                  if ((globalSettings as any)?.breweriesBannerLink) {
-                    openSmartLink((globalSettings as any).breweriesBannerLink);
-                  }
-                }}
               >
                 <img 
                   src={getImageUrl((globalSettings as any).breweriesBannerImage)} 
                   alt="Breweries Banner"
-                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                  className="w-full h-full object-cover"
                 />
               </div>
               {isMasterAdmin && (

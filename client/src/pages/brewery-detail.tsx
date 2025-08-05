@@ -488,24 +488,19 @@ export default function BreweryDetail() {
         </div>
 
         {/* Brewery Banner - 500x100 positioned between name and check-in button */}
-        {brewery.bannerImage || brewery.bannerLink ? (
+        {brewery.bannerImage ? (
           <div className="mb-6 relative">
             <div 
-              className="w-full cursor-pointer rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow"
+              className="w-full rounded-lg overflow-hidden shadow-md"
               style={{ 
                 aspectRatio: '5/1', // 500x100 aspect ratio
                 maxHeight: '100px'
-              }}
-              onClick={() => {
-                if (brewery.bannerLink) {
-                  openSmartLink(brewery.bannerLink);
-                }
               }}
             >
               <img 
                 src={getBannerImage(brewery)} 
                 alt="Brewery Banner"
-                className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                className="w-full h-full object-cover"
                 onError={(e) => {
                   // Fallback to default banner
                   e.currentTarget.src = defaultBannerImage;
@@ -809,11 +804,9 @@ export default function BreweryDetail() {
                   e.stopPropagation();
                   const url = brewery.socialLinks.website;
                   if (url) {
-                    console.log('Website button clicked. Opening in same window:', url);
-                    // Mark that we're navigating externally for back button
+                    console.log('Website button clicked. Opening in same tab:', url);
                     sessionStorage.setItem('external-nav', 'true');
                     sessionStorage.setItem('return-url', window.location.href);
-                    // Navigate in same window
                     window.location.href = url;
                   }
                 }}
@@ -829,53 +822,10 @@ export default function BreweryDetail() {
                   e.stopPropagation();
                   const url = brewery.socialLinks.facebook;
                   if (url) {
-                    console.log('Facebook button clicked. URL:', url);
+                    console.log('Facebook button clicked. Opening in same tab:', url);
                     sessionStorage.setItem('external-nav', 'true');
-                    try {
-                      // Extract Facebook handle/ID from URL
-                      const fbUrl = new URL(url);
-                      const pathname = fbUrl.pathname;
-                      console.log('Facebook pathname:', pathname);
-                      
-                      let handle = '';
-                      if (pathname.includes('/profile.php')) {
-                        const urlParams = new URLSearchParams(fbUrl.search);
-                        handle = urlParams.get('id') || '';
-                      } else {
-                        const pathParts = pathname.split('/').filter(part => part.length > 0);
-                        handle = pathParts[0] || '';
-                      }
-                      
-                      if (handle) {
-                        // Mobile-optimized Facebook app URL schemes
-                        console.log('Detected mobile app - using mobile Facebook URL schemes for handle:', handle);
-                        
-                        // For mobile, Facebook uses specific URL schemes that work better
-                        let fbAppUrl = '';
-                        
-                        if (handle.match(/^\d+$/)) {
-                          // Numeric Facebook ID
-                          fbAppUrl = `fb://profile/${handle}`;
-                        } else {
-                          // Facebook page/username - use the mobile app URL scheme
-                          fbAppUrl = `fb://page/${handle}`;
-                        }
-                        
-                        console.log('Opening Facebook app with mobile URL:', fbAppUrl);
-                        
-                        // Mobile-specific approach - direct window.location works best
-                        try {
-                          window.location.href = fbAppUrl;
-                          console.log('Successfully triggered Facebook app opening');
-                        } catch (e) {
-                          console.error('Facebook app opening failed:', e);
-                        }
-                      } else {
-                        console.log('Could not extract Facebook handle from URL');
-                      }
-                    } catch (error) {
-                      console.error('Facebook URL parsing failed:', error);
-                    }
+                    sessionStorage.setItem('return-url', window.location.href);
+                    window.location.href = url;
                   }
                 }}
                 className="w-12 h-12 rounded-full bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center transition-colors"

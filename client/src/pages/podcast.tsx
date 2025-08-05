@@ -534,21 +534,13 @@ export default function Podcast() {
       {bannerImage && (
         <div className="px-6 pt-4 pb-2 relative">
           <div 
-            className="w-full cursor-pointer rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow"
+            className="w-full rounded-lg overflow-hidden shadow-md"
             style={{ aspectRatio: '5/1' }}
-            onClick={() => {
-              console.log('Banner clicked! bannerLink:', bannerLink);
-              if (bannerLink) {
-                openSmartLink(bannerLink);
-              } else {
-                console.log('No banner link available');
-              }
-            }}
           >
             <img 
               src={bannerImage}
               alt="Podcast Banner"
-              className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+              className="w-full h-full object-cover"
             />
           </div>
           {isMasterAdmin && (
