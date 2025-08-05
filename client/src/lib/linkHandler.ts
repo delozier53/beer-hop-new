@@ -128,59 +128,58 @@ export function openSmartLink(url: string): void {
     const urlObj = new URL(url);
     const domain = urlObj.hostname.toLowerCase();
     
-    // Find matching native app mapping
-    const mapping = NATIVE_APP_MAPPINGS.find(m => 
-      domain === m.domain || domain.endsWith('.' + m.domain)
-    );
-    
-    if (mapping) {
-      const nativeUrl = buildNativeUrl(url, mapping);
-      console.log('Found native app mapping, attempting to open:', nativeUrl);
+    // Special handling for Instagram URLs
+    if (domain.includes('instagram.com')) {
+      const pathname = urlObj.pathname;
+      const handle = pathname.split('/').filter(part => part.length > 0)[0];
       
-      // Try to open in native app
-      const attemptNativeOpen = () => {
-        // Create a hidden iframe to attempt the native app open
-        const iframe = document.createElement('iframe');
-        iframe.style.display = 'none';
-        iframe.src = nativeUrl;
-        document.body.appendChild(iframe);
+      if (handle) {
+        const instagramAppUrl = `instagram://user?username=${handle}`;
+        console.log('Attempting to open Instagram app with:', instagramAppUrl);
         
-        // Clean up the iframe after a short delay
+        // Try to open Instagram app
+        window.location.href = instagramAppUrl;
+        
+        // Fallback to web version after a short delay
         setTimeout(() => {
-          document.body.removeChild(iframe);
-        }, 100);
-      };
-      
-      // Set up fallback to web URL
-      const fallbackTimer = setTimeout(() => {
-        // If we're still here after the timeout, open web URL
-        window.open(url, '_blank', 'noopener,noreferrer');
-      }, 1000);
-      
-      // Try native app first
-      attemptNativeOpen();
-      
-      // Listen for page visibility change to detect if native app opened
-      const handleVisibilityChange = () => {
-        if (document.hidden) {
-          // User switched to another app, likely the native app opened
-          clearTimeout(fallbackTimer);
-          document.removeEventListener('visibilitychange', handleVisibilityChange);
-        }
-      };
-      
-      document.addEventListener('visibilitychange', handleVisibilityChange);
-      
-      // Clean up listener after timeout
-      setTimeout(() => {
-        document.removeEventListener('visibilitychange', handleVisibilityChange);
-      }, 2000);
-      
-    } else {
-      // No native app mapping, open in new tab
-      console.log('No native app mapping found, opening in new tab:', url);
-      window.open(url, '_blank', 'noopener,noreferrer');
+          window.open(url, '_blank', 'noopener,noreferrer');
+        }, 500);
+        
+        return;
+      }
     }
+    
+    // Special handling for other social media
+    if (domain.includes('facebook.com')) {
+      const pathname = urlObj.pathname;
+      const handle = pathname.split('/').filter(part => part.length > 0)[0];
+      
+      if (handle) {
+        const fbAppUrl = `fb://profile/${handle}`;
+        console.log('Attempting to open Facebook app with:', fbAppUrl);
+        window.location.href = fbAppUrl;
+        setTimeout(() => {
+          window.open(url, '_blank', 'noopener,noreferrer');
+        }, 500);
+        return;
+      }
+    }
+    
+    // Special handling for Spotify
+    if (domain.includes('spotify.com')) {
+      const pathname = urlObj.pathname;
+      const spotifyAppUrl = `spotify:${pathname.replace(/\//g, ':')}`;
+      console.log('Attempting to open Spotify app with:', spotifyAppUrl);
+      window.location.href = spotifyAppUrl;
+      setTimeout(() => {
+        window.open(url, '_blank', 'noopener,noreferrer');
+      }, 500);
+      return;
+    }
+    
+    // For all other URLs, just open in new tab
+    console.log('Opening in new tab:', url);
+    window.open(url, '_blank', 'noopener,noreferrer');
     
   } catch (error) {
     console.error('Error opening smart link:', error);

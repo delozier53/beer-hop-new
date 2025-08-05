@@ -10,7 +10,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Play, ExternalLink, Edit, Plus, Upload, Headphones, Search, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { openSmartLink } from "@/lib/linkHandler";
-import { openSimpleLink } from "@/lib/simpleLinkHandler";
+
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { ObjectUploader } from "@/components/ObjectUploader";
 
@@ -519,7 +519,7 @@ export default function Podcast() {
             onClick={() => {
               console.log('Banner clicked! bannerLink:', bannerLink);
               if (bannerLink) {
-                openSimpleLink(bannerLink);
+                openSmartLink(bannerLink);
               } else {
                 console.log('No banner link available');
               }

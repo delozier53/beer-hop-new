@@ -248,6 +248,7 @@ export default function Breweries() {
                 className="w-full cursor-pointer rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow"
                 style={{ aspectRatio: '5/1' }}
                 onClick={() => {
+                  console.log('Breweries banner clicked! breweriesBannerLink:', (globalSettings as any)?.breweriesBannerLink);
                   if ((globalSettings as any)?.breweriesBannerLink) {
                     openSmartLink((globalSettings as any).breweriesBannerLink);
                   }

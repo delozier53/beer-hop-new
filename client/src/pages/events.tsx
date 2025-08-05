@@ -452,6 +452,7 @@ export default function Events() {
             className="w-full cursor-pointer rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow"
             style={{ aspectRatio: '5/1' }}
             onClick={() => {
+              console.log('Events banner clicked! eventsBannerLink:', (globalSettings as any)?.eventsBannerLink);
               if ((globalSettings as any)?.eventsBannerLink) {
                 openSmartLink((globalSettings as any).eventsBannerLink);
               }
