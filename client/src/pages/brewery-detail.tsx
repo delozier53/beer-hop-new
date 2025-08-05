@@ -834,7 +834,6 @@ export default function BreweryDetail() {
                   const url = brewery.socialLinks.facebook;
                   if (url) {
                     console.log('Facebook button clicked. URL:', url);
-                    // Try direct Facebook app opening first
                     sessionStorage.setItem('external-nav', 'true');
                     try {
                       // Extract Facebook handle/ID from URL
@@ -853,26 +852,15 @@ export default function BreweryDetail() {
                       
                       if (handle) {
                         const fbAppUrl = handle.match(/^\d+$/) ? `fb://profile/${handle}` : `fb://page/${handle}`;
-                        console.log('Trying Facebook app URL:', fbAppUrl);
+                        console.log('Opening Facebook app ONLY with URL:', fbAppUrl);
                         
-                        // Try to open app
+                        // Only try to open the Facebook app - no browser fallback
                         window.location.href = fbAppUrl;
-                        
-                        // Fallback after 2 seconds
-                        setTimeout(() => {
-                          console.log('Facebook app fallback - opening web version');
-                          const newWindow = window.open(url, '_blank', 'noopener,noreferrer');
-                          if (!newWindow) {
-                            window.location.href = url;
-                          }
-                        }, 2000);
                       } else {
-                        console.log('Could not extract handle, opening web version');
-                        window.open(url, '_blank', 'noopener,noreferrer');
+                        console.log('Could not extract Facebook handle from URL');
                       }
                     } catch (error) {
                       console.error('Facebook URL parsing failed:', error);
-                      window.open(url, '_blank', 'noopener,noreferrer');
                     }
                   }
                 }}
