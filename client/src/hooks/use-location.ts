@@ -16,6 +16,28 @@ export function useLocation() {
   });
 
   useEffect(() => {
+    // Check for cached location first (valid for 10 minutes)
+    const cachedLocation = localStorage.getItem('beer-hop-location');
+    const cacheTimestamp = localStorage.getItem('beer-hop-location-timestamp');
+    
+    if (cachedLocation && cacheTimestamp) {
+      const cacheAge = Date.now() - parseInt(cacheTimestamp);
+      if (cacheAge < 10 * 60 * 1000) { // 10 minutes
+        try {
+          const parsedLocation = JSON.parse(cachedLocation);
+          setLocation({
+            ...parsedLocation,
+            loading: false,
+          });
+          return;
+        } catch (error) {
+          console.error('Error parsing cached location:', error);
+          localStorage.removeItem('beer-hop-location');
+          localStorage.removeItem('beer-hop-location-timestamp');
+        }
+      }
+    }
+
     if (!navigator.geolocation) {
       setLocation({
         latitude: null,
@@ -28,12 +50,20 @@ export function useLocation() {
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        setLocation({
+        const newLocation = {
           latitude: position.coords.latitude,
           longitude: position.coords.longitude,
           error: null,
+        };
+        
+        setLocation({
+          ...newLocation,
           loading: false,
         });
+        
+        // Cache the location
+        localStorage.setItem('beer-hop-location', JSON.stringify(newLocation));
+        localStorage.setItem('beer-hop-location-timestamp', Date.now().toString());
       },
       (error) => {
         let errorMessage = 'An unknown error occurred.';
@@ -56,9 +86,9 @@ export function useLocation() {
         });
       },
       {
-        enableHighAccuracy: true,
-        timeout: 5000,
-        maximumAge: 0,
+        enableHighAccuracy: false, // Changed to false for faster response
+        timeout: 10000, // Increased timeout to 10 seconds
+        maximumAge: 10 * 60 * 1000, // Allow cached position up to 10 minutes old
       }
     );
   }, []);

@@ -48,12 +48,16 @@ export default function Breweries() {
         throw new Error('Failed to fetch breweries');
       }
       return response.json();
-    }
+    },
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+    gcTime: 10 * 60 * 1000, // Keep in memory for 10 minutes
   });
 
   // Get global settings for banner
   const { data: globalSettings } = useQuery({
     queryKey: ["/api/global-settings"],
+    staleTime: 10 * 60 * 1000, // Cache settings for 10 minutes
+    gcTime: 30 * 60 * 1000, // Keep in memory for 30 minutes
   });
 
   // Helper function to convert object storage paths to proper URLs

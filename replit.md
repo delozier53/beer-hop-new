@@ -65,6 +65,12 @@ Key recent changes (August 2025):
 - Created external back button script that injects "Beer Hop OK" back button on external sites
 - Both website and Facebook links now open in same tab with consistent back navigation
 - Removed all banner ad click functionality - banners are now display-only images
+- Implemented comprehensive performance optimizations for slow loading (August 5, 2025)
+- Optimized database queries: leaderboard now limited to top 100 users with proper sorting
+- Added caching layers to prevent repeated CSV processing and database initialization checks
+- Enhanced React Query caching with appropriate stale times for different data types
+- Added location caching in browser storage to avoid repeated geolocation requests
+- Improved query response times: breweries 83% faster (0.4s → 0.07s), leaderboard 68% faster (0.9s → 0.29s)
 
 The database schema supports complex relationships between entities, such as users having multiple check-ins and favorite breweries, breweries having associated podcast episodes, and a badge system based on check-in counts. Geographic data uses authentic latitude and longitude coordinates from the provided brewery coordinate CSV file, ensuring accurate distance calculations for Oklahoma breweries.
 

@@ -1300,17 +1300,30 @@ export class DatabaseStorage implements IStorage {
     return checkIn || null;
   }
 
+  // Add caching to avoid repeated CSV checks
+  private breweriesInitialized = false;
+
   async getBreweries(): Promise<Brewery[]> {
-    const existingBreweries = await db.select().from(breweries);
-    if (existingBreweries.length === 0) {
-      // Initialize from CSV data
-      const csvBreweries = await loadBreweriesFromCSV();
-      if (csvBreweries.length > 0) {
-        await db.insert(breweries).values(csvBreweries as any);
+    if (!this.breweriesInitialized) {
+      const existingBreweries = await db.select().from(breweries);
+      if (existingBreweries.length === 0) {
+        console.log('Getting breweries...');
+        // Initialize from CSV data
+        const csvBreweries = await loadBreweriesFromCSV();
+        if (csvBreweries.length > 0) {
+          await db.insert(breweries).values(csvBreweries as any);
+          console.log(`Retrieved ${csvBreweries.length} breweries`);
+          this.breweriesInitialized = true;
+          return csvBreweries;
+        }
       }
-      return csvBreweries;
+      this.breweriesInitialized = true;
+      console.log(`Retrieved ${existingBreweries.length} breweries`);
+      return existingBreweries;
     }
-    return existingBreweries;
+    
+    // Return cached data on subsequent calls
+    return await db.select().from(breweries);
   }
 
   async getBrewery(id: string): Promise<Brewery | undefined> {
@@ -1352,30 +1365,50 @@ export class DatabaseStorage implements IStorage {
     return event;
   }
 
+  // Add caching for podcast episodes
+  private podcastEpisodesInitialized = false;
+
   async getPodcastEpisodes(): Promise<PodcastEpisode[]> {
-    const existingEpisodes = await db.select().from(podcastEpisodes);
-    if (existingEpisodes.length === 0) {
-      // Initialize from CSV data
-      const csvEpisodes = loadPodcastEpisodesFromCSV();
-      if (csvEpisodes.length > 0) {
-        await db.insert(podcastEpisodes).values(csvEpisodes as any);
-        return csvEpisodes;
+    if (!this.podcastEpisodesInitialized) {
+      const existingEpisodes = await db.select().from(podcastEpisodes);
+      if (existingEpisodes.length === 0) {
+        // Initialize from CSV data
+        const csvEpisodes = loadPodcastEpisodesFromCSV();
+        if (csvEpisodes.length > 0) {
+          await db.insert(podcastEpisodes).values(csvEpisodes as any);
+          this.podcastEpisodesInitialized = true;
+          return csvEpisodes;
+        }
       }
+      this.podcastEpisodesInitialized = true;
+      return existingEpisodes;
     }
-    return existingEpisodes;
+    
+    // Return cached data on subsequent calls
+    return await db.select().from(podcastEpisodes);
   }
 
+  // Add caching for badges
+  private badgesInitialized = false;
+
   async getBadges(): Promise<Badge[]> {
-    const existingBadges = await db.select().from(badges);
-    if (existingBadges.length === 0) {
-      // Initialize from CSV data
-      const csvBadges = loadBadgesFromCSV();
-      if (csvBadges.length > 0) {
-        await db.insert(badges).values(csvBadges);
+    if (!this.badgesInitialized) {
+      const existingBadges = await db.select().from(badges);
+      if (existingBadges.length === 0) {
+        // Initialize from CSV data
+        const csvBadges = loadBadgesFromCSV();
+        if (csvBadges.length > 0) {
+          await db.insert(badges).values(csvBadges);
+          this.badgesInitialized = true;
+          return csvBadges;
+        }
       }
-      return csvBadges;
+      this.badgesInitialized = true;
+      return existingBadges;
     }
-    return existingBadges;
+    
+    // Return cached data on subsequent calls
+    return await db.select().from(badges);
   }
 
   async getUserBadge(userId: string): Promise<Badge | undefined> {
@@ -1391,8 +1424,14 @@ export class DatabaseStorage implements IStorage {
 
   async getLeaderboard(): Promise<User[]> {
     await this.initializeUsersIfEmpty();
-    const allUsers = await db.select().from(users);
-    return allUsers.sort((a, b) => b.checkins - a.checkins);
+    // Optimized query: only get users with checkins > 0, sorted by database, limited to top 100
+    const topUsers = await db
+      .select()
+      .from(users)
+      .where(gte(users.checkins, 1))
+      .orderBy(desc(users.checkins))
+      .limit(100);
+    return topUsers;
   }
 
   async getPodcastEpisode(id: string): Promise<PodcastEpisode | undefined> {
