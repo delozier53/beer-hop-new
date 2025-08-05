@@ -130,7 +130,7 @@ export default function Breweries() {
         
         toast({
           title: "Success",
-          description: "Banner image uploaded successfully! Don't forget to add a link URL and save.",
+          description: "Banner image uploaded successfully! Don't forget to save.",
         });
       } catch (error) {
         console.error("Error uploading banner image:", error);
@@ -332,18 +332,7 @@ export default function Breweries() {
                 Upload Banner Image
               </ObjectUploader>
             </div>
-            <div>
-              <Label htmlFor="banner-link">Banner Link URL</Label>
-              <Input
-                id="banner-link"
-                type="url"
-                placeholder="https://example.com"
-                value={bannerLinkUrl}
-                onChange={(e) => setBannerLinkUrl(e.target.value)}
-                className="mt-1"
-              />
-            </div>
-            {bannerImageUrl && bannerLinkUrl && (
+            {bannerImageUrl && (
               <Button
                 onClick={() => saveBannerMutation.mutate()}
                 disabled={saveBannerMutation.isPending}

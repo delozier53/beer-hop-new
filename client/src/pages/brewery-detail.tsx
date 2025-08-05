@@ -288,7 +288,7 @@ export default function BreweryDetail() {
         
         toast({
           title: "Success",
-          description: "Banner image uploaded successfully! Don't forget to add a link URL and save.",
+          description: "Banner image uploaded successfully! Don't forget to save.",
         });
       } catch (error) {
         console.error("Error uploading banner image:", error);
@@ -304,10 +304,23 @@ export default function BreweryDetail() {
   // Banner save mutation
   const saveBannerMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiRequest(`/api/breweries/${id}/banner`, "PUT", {
-        bannerImageUrl,
-        bannerLinkUrl,
+      const response = await fetch(`/api/breweries/${id}/banner`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "x-user-id": currentUser?.id || "",
+        },
+        body: JSON.stringify({
+          bannerImageUrl,
+          bannerLinkUrl,
+        }),
       });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to update banner");
+      }
+      
       return response.json();
     },
     onSuccess: () => {
@@ -567,18 +580,7 @@ export default function BreweryDetail() {
                   Upload Banner Image
                 </ObjectUploader>
               </div>
-              <div>
-                <Label htmlFor="banner-link">Banner Link URL</Label>
-                <Input
-                  id="banner-link"
-                  type="url"
-                  placeholder="https://example.com"
-                  value={bannerLinkUrl}
-                  onChange={(e) => setBannerLinkUrl(e.target.value)}
-                  className="mt-1"
-                />
-              </div>
-              {bannerImageUrl && bannerLinkUrl && (
+              {bannerImageUrl && (
                 <Button
                   onClick={() => saveBannerMutation.mutate()}
                   disabled={saveBannerMutation.isPending}

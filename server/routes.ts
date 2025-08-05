@@ -162,13 +162,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const { bannerImageUrl, bannerLinkUrl } = req.body;
-      if (!bannerImageUrl || !bannerLinkUrl) {
-        return res.status(400).json({ message: "Banner image URL and link URL required" });
+      if (!bannerImageUrl) {
+        return res.status(400).json({ message: "Banner image URL required" });
       }
 
       const brewery = await storage.updateBrewery(req.params.id, {
         bannerImage: bannerImageUrl,
-        bannerLink: bannerLinkUrl
+        bannerLink: bannerLinkUrl || null // Allow null banner link since banners are display-only
       });
       
       res.json({ success: true, brewery });

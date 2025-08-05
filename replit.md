@@ -65,6 +65,9 @@ Key recent changes (August 2025):
 - Created external back button script that injects "Beer Hop OK" back button on external sites
 - Both website and Facebook links now open in same tab with consistent back navigation
 - Removed all banner ad click functionality - banners are now display-only images
+- Fixed brewery banner upload bug - resolved authentication issue with x-user-id header (August 5, 2025)
+- Removed link URL box from all banner edit popups since banners are display-only
+- Updated banner save logic to only require image URL, not link URL
 - Implemented comprehensive performance optimizations for slow loading (August 5, 2025)
 - Optimized database queries: leaderboard shows only users with 100+ check-ins, limited to top 100 with proper sorting
 - Added caching layers to prevent repeated CSV processing and database initialization checks
