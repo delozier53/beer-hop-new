@@ -137,13 +137,56 @@ export function openSmartLink(url: string): void {
         const instagramAppUrl = `instagram://user?username=${handle}`;
         console.log('Attempting to open Instagram app with:', instagramAppUrl);
         
-        // Try to open Instagram app
-        window.location.href = instagramAppUrl;
+        // Try multiple approaches for better compatibility
+        let appOpened = false;
         
-        // Fallback to web version after a short delay
-        setTimeout(() => {
+        // Method 1: Try window.location for immediate redirect
+        try {
+          window.location.assign(instagramAppUrl);
+          appOpened = true;
+          console.log('Attempted window.location.assign');
+        } catch (e) {
+          console.log('window.location.assign failed:', e);
+        }
+        
+        // Method 2: Fallback with hidden link click
+        if (!appOpened) {
+          const link = document.createElement('a');
+          link.href = instagramAppUrl;
+          link.style.display = 'none';
+          document.body.appendChild(link);
+          
+          try {
+            link.click();
+            console.log('Attempted hidden link click');
+          } catch (e) {
+            console.log('Hidden link click failed:', e);
+          }
+          
+          document.body.removeChild(link);
+        }
+        
+        // Set up fallback to web version
+        const fallbackTimer = setTimeout(() => {
+          console.log('Instagram app timeout - opening web version');
           window.open(url, '_blank', 'noopener,noreferrer');
-        }, 500);
+        }, 1500);
+        
+        // Listen for visibility change (user switched to app)
+        const handleVisibilityChange = () => {
+          if (document.hidden) {
+            console.log('Page hidden - Instagram app likely opened');
+            clearTimeout(fallbackTimer);
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+          }
+        };
+        
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        
+        // Clean up listener
+        setTimeout(() => {
+          document.removeEventListener('visibilitychange', handleVisibilityChange);
+        }, 2000);
         
         return;
       }
