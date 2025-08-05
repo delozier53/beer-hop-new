@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { Link, useParams, useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
+import { openSmartLink } from "@/lib/linkHandler";
 import { useAuth } from "@/hooks/useAuth";
 import { useState, useEffect } from "react";
 import type { Brewery, User, CheckIn } from "@shared/schema";
@@ -496,7 +497,7 @@ export default function BreweryDetail() {
               }}
               onClick={() => {
                 if (brewery.bannerLink) {
-                  window.open(brewery.bannerLink, '_blank');
+                  openSmartLink(brewery.bannerLink);
                 }
               }}
             >
@@ -681,7 +682,7 @@ export default function BreweryDetail() {
             {brewery.tapListUrl ? (
               <Button 
                 className="bg-pink-600 hover:bg-pink-700 text-white"
-                onClick={() => brewery.tapListUrl && window.open(brewery.tapListUrl, '_blank')}
+                onClick={() => brewery.tapListUrl && openSmartLink(brewery.tapListUrl)}
               >
                 View Taplist
               </Button>
@@ -766,7 +767,7 @@ export default function BreweryDetail() {
             onClick={() => {
               const address = `${brewery.address}, ${brewery.city}, ${brewery.state} ${brewery.zipCode}`;
               const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
-              window.open(mapsUrl, '_blank');
+              openSmartLink(mapsUrl);
             }}
           >
             Get Directions
@@ -897,7 +898,7 @@ export default function BreweryDetail() {
                   variant="secondary" 
                   size="sm"
                   className="bg-white/20 hover:bg-white/30 text-white border-none"
-                  onClick={() => window.open(brewery.podcastUrl!, '_blank')}
+                  onClick={() => openSmartLink(brewery.podcastUrl!)}
                 >
                   Listen on Spotify
                 </Button>

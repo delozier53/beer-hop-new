@@ -11,6 +11,10 @@ import { Link } from "wouter";
 import { ObjectUploader } from "@/components/ObjectUploader";
 import { CreateSpecialEventModal } from "@/components/CreateSpecialEventModal";
 import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
+import { openSmartLink } from "@/lib/linkHandler";
+import type { Event, SpecialEvent } from "@shared/schema";
+import type { UploadResult } from "@uppy/core";
 
 // Helper function to format date from YYYY-MM-DD to "Month Day, Year"
 function formatEventDate(dateString: string): string {
@@ -53,9 +57,6 @@ function getImageUrl(imagePath: string): string {
   
   return imagePath;
 }
-import { useToast } from "@/hooks/use-toast";
-import type { Event, SpecialEvent } from "@shared/schema";
-import type { UploadResult } from "@uppy/core";
 
 interface EventWithBrewery extends Event {
   brewery: {
@@ -452,7 +453,7 @@ export default function Events() {
             style={{ aspectRatio: '5/1' }}
             onClick={() => {
               if ((globalSettings as any)?.eventsBannerLink) {
-                window.open((globalSettings as any).eventsBannerLink, '_blank');
+                openSmartLink((globalSettings as any).eventsBannerLink);
               }
             }}
           >
@@ -636,7 +637,7 @@ export default function Events() {
                             variant="outline"
                             onClick={(e) => {
                               e.preventDefault();
-                              window.open(event.ticketLink!, '_blank');
+                              openSmartLink(event.ticketLink!);
                             }}
                             className={event.rsvpRequired ? "bg-[#ff55e1] hover:bg-[#ff55e1]/90 text-white border-[#ff55e1]" : ""}
                           >

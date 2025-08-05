@@ -9,6 +9,7 @@ import { useForm } from "react-hook-form";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Play, ExternalLink, Edit, Plus, Upload, Headphones, Search, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { openSmartLink } from "@/lib/linkHandler";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { ObjectUploader } from "@/components/ObjectUploader";
 
@@ -432,7 +433,7 @@ export default function Podcast() {
   });
 
   const openSpotify = (spotifyUrl: string) => {
-    window.open(spotifyUrl, '_blank');
+    openSmartLink(spotifyUrl);
   };
   
   // Filter episodes based on search query
@@ -514,7 +515,7 @@ export default function Podcast() {
             style={{ aspectRatio: '5/1' }}
             onClick={() => {
               if (bannerLink) {
-                window.open(bannerLink, '_blank');
+                openSmartLink(bannerLink);
               }
             }}
           >

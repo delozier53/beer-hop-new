@@ -12,6 +12,7 @@ import { convertGoogleDriveImageUrl } from "@/lib/imageUtils";
 import { ObjectUploader } from "@/components/ObjectUploader";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { openSmartLink } from "@/lib/linkHandler";
 import type { Brewery } from "@shared/schema";
 import type { UploadResult } from "@uppy/core";
 
@@ -248,7 +249,7 @@ export default function Breweries() {
                 style={{ aspectRatio: '5/1' }}
                 onClick={() => {
                   if ((globalSettings as any)?.breweriesBannerLink) {
-                    window.open((globalSettings as any).breweriesBannerLink, '_blank');
+                    openSmartLink((globalSettings as any).breweriesBannerLink);
                   }
                 }}
               >

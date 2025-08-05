@@ -7,6 +7,7 @@ import { Calendar, Clock, MapPin, ExternalLink, ArrowLeft, Edit } from "lucide-r
 import { Link, useParams } from "wouter";
 import { SpecialEventEditModal } from "@/components/special-event-edit-modal";
 import { useAuth } from "@/hooks/useAuth";
+import { openSmartLink } from "@/lib/linkHandler";
 import type { SpecialEvent } from "@shared/schema";
 
 // Helper function to format date from YYYY-MM-DD to "Month Day, Year"
@@ -208,7 +209,7 @@ export default function SpecialEventDetail() {
                 <Button
                   size="lg"
                   className="bg-[#ff55e1] hover:bg-[#ff55e1]/90 text-white"
-                  onClick={() => window.open(event.ticketLink!, '_blank')}
+                  onClick={() => openSmartLink(event.ticketLink!)}
                 >
                   <ExternalLink className="w-4 h-4 mr-2" />
                   Get Tickets
