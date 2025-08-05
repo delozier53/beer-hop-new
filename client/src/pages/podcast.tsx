@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useForm } from "react-hook-form";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Play, ExternalLink, Edit, Plus, Upload, Headphones } from "lucide-react";
+import { Play, ExternalLink, Edit, Plus, Upload, Headphones, Search, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { ObjectUploader } from "@/components/ObjectUploader";
@@ -36,6 +36,7 @@ export default function Podcast() {
   const [isBannerDialogOpen, setIsBannerDialogOpen] = useState(false);
   const [bannerImageUrl, setBannerImageUrl] = useState("");
   const [bannerLinkUrl, setBannerLinkUrl] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
   const { toast } = useToast();
   const { user } = useAuth();
   
@@ -434,8 +435,21 @@ export default function Podcast() {
     window.open(spotifyUrl, '_blank');
   };
   
-  // Sort episodes by release date descending (most recent first)
-  const sortedEpisodes = [...episodes].sort((a, b) => 
+  // Filter episodes based on search query
+  const filteredEpisodes = episodes.filter(episode => {
+    if (!searchQuery.trim()) return true;
+    
+    const query = searchQuery.toLowerCase();
+    return (
+      episode.title.toLowerCase().includes(query) ||
+      episode.guest.toLowerCase().includes(query) ||
+      episode.business.toLowerCase().includes(query) ||
+      episode.description?.toLowerCase().includes(query)
+    );
+  });
+
+  // Sort filtered episodes by release date descending (most recent first)
+  const sortedEpisodes = [...filteredEpisodes].sort((a, b) => 
     new Date(b.releaseDate).getTime() - new Date(a.releaseDate).getTime()
   );
 
@@ -881,11 +895,50 @@ export default function Podcast() {
           </DialogContent>
         </Dialog>
 
+        {/* Search Bar */}
+        <div className="relative mb-6">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+          <Input
+            type="text"
+            placeholder="Search by guest, business, or title..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10 pr-10 bg-white border-gray-300 focus:border-[#ff55e1] focus:ring-[#ff55e1]"
+          />
+          {searchQuery && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0 hover:bg-gray-100"
+              onClick={() => setSearchQuery("")}
+            >
+              <X className="w-4 h-4" />
+            </Button>
+          )}
+        </div>
+
+        {/* Search Results Info */}
+        {searchQuery && (
+          <div className="mb-4 text-sm text-gray-600">
+            {filteredEpisodes.length === 0 ? (
+              <p>No episodes found for "{searchQuery}"</p>
+            ) : (
+              <p>Found {filteredEpisodes.length} episode{filteredEpisodes.length !== 1 ? 's' : ''} for "{searchQuery}"</p>
+            )}
+          </div>
+        )}
+
         {episodes.length === 0 ? (
           <div className="text-center py-8 text-gray-500">
             <Play className="w-12 h-12 mx-auto mb-2 opacity-50" />
             <p>No podcast episodes available</p>
             <p className="text-sm">Check back soon for new episodes</p>
+          </div>
+        ) : sortedEpisodes.length === 0 ? (
+          <div className="text-center py-8 text-gray-500">
+            <Play className="w-12 h-12 mx-auto mb-2 opacity-50" />
+            <p>No episodes found for "{searchQuery}"</p>
+            <p className="text-sm">Try a different search term</p>
           </div>
         ) : (
           <div className="space-y-4">
