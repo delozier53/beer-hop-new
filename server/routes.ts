@@ -754,6 +754,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.put("/api/global-settings/leaderboard-header", async (req, res) => {
+    try {
+      const userId = req.headers['x-user-id'] as string;
+      
+      if (!userId) {
+        return res.status(401).json({ message: "User ID required" });
+      }
+
+      // Get user to check admin status - only joshuamdelozier@gmail.com should be able to do this
+      const user = await storage.getUser(userId);
+      if (!user || user.email !== 'joshuamdelozier@gmail.com') {
+        return res.status(403).json({ message: "Master admin access required" });
+      }
+
+      const { headerImage } = req.body;
+      if (!headerImage) {
+        return res.status(400).json({ message: "Header image URL required" });
+      }
+
+      await storage.updateGlobalSetting('leaderboardHeaderImage', headerImage);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error updating leaderboard header:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   app.put("/api/global-settings/breweries-banner", async (req, res) => {
     try {
       const userId = req.headers['x-user-id'] as string;

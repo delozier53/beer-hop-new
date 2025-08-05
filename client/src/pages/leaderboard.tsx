@@ -1,18 +1,85 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { ArrowLeft, Trophy, Medal, Award, Info } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { ArrowLeft, Trophy, Medal, Award, Info, Edit } from "lucide-react";
 import { useLocation } from "wouter";
+import { useToast } from "@/hooks/use-toast";
+import { ObjectUploader } from "@/components/ObjectUploader";
 import type { User } from "@shared/schema";
 import badgesHeaderImage from "@assets/Badges_Header_1754356120920.jpg";
 
 export default function Leaderboard() {
   const [, navigate] = useLocation();
   const [showAllBadges, setShowAllBadges] = useState(false);
+  const [isHeaderDialogOpen, setIsHeaderDialogOpen] = useState(false);
+  const [headerImageUrl, setHeaderImageUrl] = useState("");
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const { data: leaderboard = [], isLoading } = useQuery<User[]>({
     queryKey: ["/api/leaderboard"],
+  });
+
+  const { data: currentUser } = useQuery({
+    queryKey: ["/api/users/joshuamdelozier"],
+  });
+
+  const { data: globalSettings } = useQuery({
+    queryKey: ["/api/global-settings"],
+  });
+
+  // Check if user is master admin
+  const isMasterAdmin = (currentUser as any)?.email === 'joshuamdelozier@gmail.com';
+
+  // Get the current header image (fallback to default)
+  const getHeaderImage = () => {
+    if ((globalSettings as any)?.leaderboardHeaderImage) {
+      return getImageUrl((globalSettings as any).leaderboardHeaderImage);
+    }
+    return badgesHeaderImage;
+  };
+
+  // Helper function to get image URL
+  const getImageUrl = (imagePath: string) => {
+    if (imagePath.startsWith('/objects/')) {
+      return imagePath;
+    }
+    if (imagePath.startsWith('http')) {
+      return imagePath;
+    }
+    return imagePath;
+  };
+
+  // Update header image mutation
+  const updateHeaderMutation = useMutation({
+    mutationFn: async (imageUrl: string) => {
+      const response = await fetch('/api/global-settings/leaderboard-header', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ headerImage: imageUrl }),
+      });
+      if (!response.ok) throw new Error('Failed to update header');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/global-settings"] });
+      setIsHeaderDialogOpen(false);
+      setHeaderImageUrl("");
+      toast({
+        title: "Success",
+        description: "Header image updated successfully!",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update header image. Please try again.",
+        variant: "destructive",
+      });
+    },
   });
 
   // Badge categories based on check-in counts
@@ -151,12 +218,26 @@ export default function Leaderboard() {
         </div>
 
         {/* Badges Header Image */}
-        <div className="bg-white">
+        <div className="bg-white relative">
           <img 
-            src={badgesHeaderImage} 
+            src={getHeaderImage()} 
             alt="Badges Header"
             className="w-full h-auto"
           />
+          {isMasterAdmin && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="absolute top-2 right-2 bg-black/50 text-white border-white/50 hover:bg-white hover:text-black"
+              onClick={() => {
+                setHeaderImageUrl((globalSettings as any)?.leaderboardHeaderImage || "");
+                setIsHeaderDialogOpen(true);
+              }}
+            >
+              <Edit className="w-4 h-4 mr-1" />
+              Edit Header
+            </Button>
+          )}
         </div>
 
         <div className="px-6 py-4 bg-white border-b">
@@ -188,12 +269,26 @@ export default function Leaderboard() {
       </div>
 
       {/* Badges Header Image */}
-      <div className="bg-white">
+      <div className="bg-white relative">
         <img 
-          src={badgesHeaderImage} 
+          src={getHeaderImage()} 
           alt="Badges Header"
           className="w-full h-auto"
         />
+        {isMasterAdmin && (
+          <Button
+            size="sm"
+            variant="outline"
+            className="absolute top-2 right-2 bg-black/50 text-white border-white/50 hover:bg-white hover:text-black"
+            onClick={() => {
+              setHeaderImageUrl((globalSettings as any)?.leaderboardHeaderImage || "");
+              setIsHeaderDialogOpen(true);
+            }}
+          >
+            <Edit className="w-4 h-4 mr-1" />
+            Edit Header
+          </Button>
+        )}
       </div>
 
       {/* Screen Title */}
@@ -252,6 +347,84 @@ export default function Leaderboard() {
                 </DialogContent>
               </Dialog>
             </div>
+
+      {/* Header Editor Dialog */}
+      <Dialog open={isHeaderDialogOpen} onOpenChange={setIsHeaderDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Leaderboard Header</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="header-image">Header Image</Label>
+              <ObjectUploader
+                maxNumberOfFiles={1}
+                maxFileSize={10485760}
+                onGetUploadParameters={async () => {
+                  const response = await fetch('/api/objects/upload', {
+                    method: 'POST',
+                  });
+                  const data = await response.json();
+                  return {
+                    method: 'PUT' as const,
+                    url: data.uploadURL,
+                  };
+                }}
+                onComplete={(result) => {
+                  if (result.successful && result.successful.length > 0) {
+                    const uploadURL = result.successful[0]?.uploadURL;
+                    if (uploadURL) {
+                      fetch('/api/objects/normalize', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ url: uploadURL }),
+                      })
+                      .then(res => res.json())
+                      .then(data => {
+                        setHeaderImageUrl(data.objectPath);
+                      });
+                    }
+                  }
+                }}
+              >
+                <div className="flex items-center gap-2">
+                  <span>📁</span>
+                  <span>Upload Header Image</span>
+                </div>
+              </ObjectUploader>
+            </div>
+            
+            <div>
+              <Label htmlFor="header-url-input">Or enter image URL</Label>
+              <Input
+                id="header-url-input"
+                value={headerImageUrl}
+                onChange={(e) => setHeaderImageUrl(e.target.value)}
+                placeholder="Enter image URL..."
+              />
+            </div>
+
+            <div className="flex justify-end space-x-2">
+              <Button
+                variant="outline"
+                onClick={() => setIsHeaderDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={() => {
+                  if (headerImageUrl.trim()) {
+                    updateHeaderMutation.mutate(headerImageUrl.trim());
+                  }
+                }}
+                disabled={!headerImageUrl.trim() || updateHeaderMutation.isPending}
+              >
+                {updateHeaderMutation.isPending ? "Updating..." : "Update Header"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
             {badgeOrder.map((badgeName) => {
               const group = groupedUsers[badgeName];
