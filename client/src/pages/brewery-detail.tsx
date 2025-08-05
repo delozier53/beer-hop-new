@@ -851,49 +851,29 @@ export default function BreweryDetail() {
                       }
                       
                       if (handle) {
-                        // Facebook app URL schemes that actually work
-                        let fbAppUrls = [];
+                        // Mobile-optimized Facebook app URL schemes
+                        console.log('Detected mobile app - using mobile Facebook URL schemes for handle:', handle);
+                        
+                        // For mobile, Facebook uses specific URL schemes that work better
+                        let fbAppUrl = '';
                         
                         if (handle.match(/^\d+$/)) {
-                          // Numeric ID - Facebook profile
-                          fbAppUrls = [
-                            `fb://profile/${handle}`,
-                            `fb://facewebmodal/f?href=https://www.facebook.com/profile.php?id=${handle}`
-                          ];
+                          // Numeric Facebook ID
+                          fbAppUrl = `fb://profile/${handle}`;
                         } else {
-                          // Username/page name - try page and profile formats
-                          fbAppUrls = [
-                            `fb://page/${handle}`,
-                            `fb://profile/${handle}`,
-                            `fb://facewebmodal/f?href=https://www.facebook.com/${handle}`
-                          ];
+                          // Facebook page/username - use the mobile app URL scheme
+                          fbAppUrl = `fb://page/${handle}`;
                         }
                         
-                        console.log('Trying Facebook app URLs:', fbAppUrls);
+                        console.log('Opening Facebook app with mobile URL:', fbAppUrl);
                         
-                        // Try each URL scheme
-                        let urlIndex = 0;
-                        const tryNextUrl = () => {
-                          if (urlIndex < fbAppUrls.length) {
-                            const fbAppUrl = fbAppUrls[urlIndex];
-                            console.log(`Attempting Facebook app URL ${urlIndex + 1}:`, fbAppUrl);
-                            
-                            try {
-                              window.location.href = fbAppUrl;
-                              urlIndex++;
-                              // If this fails, try the next one after a short delay
-                              setTimeout(tryNextUrl, 500);
-                            } catch (e) {
-                              console.log(`Facebook app URL ${urlIndex + 1} failed:`, e);
-                              urlIndex++;
-                              tryNextUrl();
-                            }
-                          } else {
-                            console.log('All Facebook app URLs failed');
-                          }
-                        };
-                        
-                        tryNextUrl();
+                        // Mobile-specific approach - direct window.location works best
+                        try {
+                          window.location.href = fbAppUrl;
+                          console.log('Successfully triggered Facebook app opening');
+                        } catch (e) {
+                          console.error('Facebook app opening failed:', e);
+                        }
                       } else {
                         console.log('Could not extract Facebook handle from URL');
                       }

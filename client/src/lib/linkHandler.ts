@@ -194,13 +194,13 @@ export function openSmartLink(url: string): void {
       }
     }
     
-    // Special handling for Facebook
+    // Special handling for Facebook (mobile-optimized)
     if (domain.includes('facebook.com') || domain.includes('fb.com')) {
       // Mark that we're navigating externally
       sessionStorage.setItem('external-nav', 'true');
       
       const pathname = urlObj.pathname;
-      console.log('Facebook URL pathname:', pathname);
+      console.log('Mobile Facebook URL pathname:', pathname);
       
       // Extract handle from various Facebook URL formats
       let handle = '';
@@ -215,33 +215,21 @@ export function openSmartLink(url: string): void {
       }
       
       if (handle) {
-        let fbAppUrl = '';
-        if (handle.match(/^\d+$/)) {
-          // Numeric ID
-          fbAppUrl = `fb://profile/${handle}`;
-        } else {
-          // Username
-          fbAppUrl = `fb://page/${handle}`;
-        }
-        console.log('Attempting to open Facebook app with:', fbAppUrl);
+        // Mobile Facebook app URL scheme
+        const fbAppUrl = handle.match(/^\d+$/) ? `fb://profile/${handle}` : `fb://page/${handle}`;
+        console.log('Attempting mobile Facebook app with:', fbAppUrl);
         
         try {
-          // Try multiple methods for better compatibility
+          // For mobile, direct window.location.href works best
           window.location.href = fbAppUrl;
-          console.log('Attempted Facebook app opening via window.location');
+          console.log('Mobile Facebook app opening triggered');
         } catch (e) {
-          console.log('Facebook app opening failed:', e);
+          console.log('Mobile Facebook app opening failed:', e);
         }
         
-        // Fallback to web version
-        setTimeout(() => {
-          console.log('Facebook app timeout - opening web version');
-          window.open(url, '_blank', 'noopener,noreferrer');
-        }, 2000);
         return;
       } else {
-        console.log('Could not extract Facebook handle, opening web version');
-        window.open(url, '_blank', 'noopener,noreferrer');
+        console.log('Could not extract Facebook handle from mobile URL');
         return;
       }
     }
