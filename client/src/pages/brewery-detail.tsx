@@ -1,64 +1,38 @@
-import React, { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { useParams, Link } from "wouter";
 import { Facebook, Globe, Instagram } from "lucide-react";
 
 import { openSmartLink } from "@/lib/linkHandler";
-import { supabase } from "@/lib/supabaseClient";
 
-type Brewery = {
-  id: string;
-  name: string;
-  description?: string;
-  logoUrl?: string;
-  hours?: string;
-  website?: string;
-  podcastEpisodeUrl?: string;
-  socialLinks: {
-    facebook?: string;
-    instagram?: string;
-  };
-};
+import type { Brewery } from "@shared/schema";
 
 export default function BreweryDetail() {
-  const { id } = useParams<{ id: string }>();
-  const [brewery, setBrewery] = useState<Brewery | null>(null);
+  const params = useParams();
+  const id = params.id;
 
-  /* Fetch brewery info from Supabase on mount */
-  useEffect(() => {
-    let ignore = false;
-
-    (async () => {
-      const { data, error } = await supabase
-        .from("breweries")
-        .select("*")
-        .eq("id", id)
-        .single();
-
-      if (!ignore) {
-        if (error) {
-          console.error(error);
-        } else {
-          // Ensure socialLinks always exists
-          setBrewery({
-            ...data,
-            socialLinks: {
-              facebook: data.facebook,
-              instagram: data.instagram,
-            },
-          } as Brewery);
-        }
+  const { data: brewery, isLoading } = useQuery<Brewery>({
+    queryKey: ["/api/breweries", id],
+    queryFn: async () => {
+      const response = await fetch(`/api/breweries/${id}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch brewery');
       }
-    })();
+      return response.json();
+    },
+  });
 
-    return () => {
-      ignore = true;
-    };
-  }, [id]);
+  if (isLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center text-xl">
+        Loading Brewery Info…
+      </div>
+    );
+  }
 
   if (!brewery) {
     return (
       <div className="flex h-screen items-center justify-center text-xl">
-        Loading Brewer Info…
+        Brewery not found
       </div>
     );
   }
@@ -67,9 +41,9 @@ export default function BreweryDetail() {
     <div className="mx-auto max-w-3xl px-4 py-8 space-y-8">
       {/* Header */}
       <header className="flex items-center gap-4">
-        {brewery.logoUrl && (
+        {brewery.logo && (
           <img
-            src={brewery.logoUrl}
+            src={brewery.logo}
             alt={`${brewery.name} logo`}
             className="h-16 w-16 rounded-lg object-cover"
           />
@@ -77,10 +51,12 @@ export default function BreweryDetail() {
         <h1 className="text-3xl font-semibold">{brewery.name}</h1>
       </header>
 
-      {/* Description */}
-      {brewery.description && (
-        <p className="leading-relaxed">{brewery.description}</p>
-      )}
+      {/* Address */}
+      <section>
+        <p className="leading-relaxed">
+          {brewery.address}, {brewery.city}, {brewery.state} {brewery.zipCode}
+        </p>
+      </section>
 
       {/* Hours */}
       {brewery.hours && (
@@ -94,9 +70,9 @@ export default function BreweryDetail() {
 
       {/* Social + Website */}
       <section className="flex flex-wrap items-center gap-4">
-        {brewery.website && (
+        {brewery.socialLinks.website && (
           <button
-            onClick={() => openSmartLink(brewery.website!)}
+            onClick={() => openSmartLink(brewery.socialLinks.website!)}
             className="flex h-12 w-12 items-center justify-center
                        rounded-full bg-gray-800 text-white transition-colors
                        hover:bg-gray-900"
@@ -137,11 +113,11 @@ export default function BreweryDetail() {
       </section>
 
       {/* Podcast Episode */}
-      {brewery.podcastEpisodeUrl && (
+      {brewery.podcastUrl && (
         <section className="space-y-2">
           <h2 className="text-lg font-medium">Latest Podcast Episode</h2>
           <button
-            onClick={() => openSmartLink(brewery.podcastEpisodeUrl!)}
+            onClick={() => openSmartLink(brewery.podcastUrl!)}
             className="rounded bg-green-600 px-4 py-2 font-medium text-white
                        transition-colors hover:bg-green-700"
           >
@@ -153,7 +129,7 @@ export default function BreweryDetail() {
       {/* Back link */}
       <footer className="pt-8">
         <Link
-          to="/"
+          to="/breweries"
           className="text-sm font-medium text-blue-600 underline-offset-2
                      hover:underline"
         >
