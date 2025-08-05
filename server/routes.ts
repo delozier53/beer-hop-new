@@ -146,6 +146,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update brewery banner (master admin only)
+  app.put("/api/breweries/:id/banner", async (req, res) => {
+    try {
+      const userId = req.headers['x-user-id'] as string;
+      
+      if (!userId) {
+        return res.status(401).json({ message: "User ID required" });
+      }
+
+      // Get user to check admin status - only joshuamdelozier@gmail.com should be able to do this
+      const user = await storage.getUser(userId);
+      if (!user || user.email !== 'joshuamdelozier@gmail.com') {
+        return res.status(403).json({ message: "Master admin access required" });
+      }
+
+      const { bannerImageUrl, bannerLinkUrl } = req.body;
+      if (!bannerImageUrl || !bannerLinkUrl) {
+        return res.status(400).json({ message: "Banner image URL and link URL required" });
+      }
+
+      const brewery = await storage.updateBrewery(req.params.id, {
+        bannerImage: bannerImageUrl,
+        bannerLink: bannerLinkUrl
+      });
+      
+      res.json({ success: true, brewery });
+    } catch (error) {
+      console.error("Error updating brewery banner:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Object Storage endpoints
   app.post("/api/objects/upload", async (req, res) => {
     try {

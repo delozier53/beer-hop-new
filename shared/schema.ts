@@ -49,6 +49,8 @@ export const breweries = pgTable("breweries", {
   checkins: integer("checkins").notNull().default(0),
   rating: decimal("rating", { precision: 2, scale: 1 }).notNull().default("0.0"),
   ownerId: varchar("owner_id"),
+  bannerImage: text("banner_image"), // Custom banner image for each brewery
+  bannerLink: text("banner_link"), // Link URL for the banner
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 

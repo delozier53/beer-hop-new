@@ -20,13 +20,16 @@ import {
   Facebook,
   Instagram,
   Headphones,
-  Save
+  Save,
+  Upload,
+  Plus
 } from "lucide-react";
 import { Link, useParams, useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { useState, useEffect } from "react";
 import type { Brewery, User, CheckIn } from "@shared/schema";
+import defaultBannerImage from "../assets/default-brewery-banner.jpg";
 
 
 
@@ -86,6 +89,9 @@ export default function BreweryDetail() {
   const [notes, setNotes] = useState("");
   const [isNotesDialogOpen, setIsNotesDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isBannerDialogOpen, setIsBannerDialogOpen] = useState(false);
+  const [bannerImageUrl, setBannerImageUrl] = useState("");
+  const [bannerLinkUrl, setBannerLinkUrl] = useState("");
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [editFormData, setEditFormData] = useState({
@@ -211,6 +217,114 @@ export default function BreweryDetail() {
         variant: "destructive",
       });
     }
+  });
+
+  // Helper function to get banner image (default or custom)
+  const getBannerImage = (brewery: Brewery): string => {
+    if (brewery.bannerImage) {
+      // If it's a custom uploaded image (object storage path)
+      if (brewery.bannerImage.startsWith('/objects/')) {
+        return brewery.bannerImage;
+      }
+      // If it's the default asset path
+      if (brewery.bannerImage.startsWith('/assets/')) {
+        return defaultBannerImage;
+      }
+      return brewery.bannerImage;
+    }
+    // Default banner
+    return defaultBannerImage;
+  };
+
+  // Banner image upload handlers
+  const handleBannerImageUpload = async () => {
+    try {
+      const response = await fetch("/api/objects/upload", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      return {
+        method: "PUT" as const,
+        url: data.uploadURL,
+      };
+    } catch (error) {
+      console.error("Error getting upload URL:", error);
+      throw error;
+    }
+  };
+
+  const handleBannerImageUploadComplete = async (result: any) => {
+    if (result.successful && result.successful.length > 0) {
+      const uploadedFile = result.successful[0];
+      const uploadURL = uploadedFile.uploadURL;
+      
+      try {
+        // First normalize the URL
+        const normalizeResponse = await fetch("/api/objects/normalize", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ url: uploadURL }),
+        });
+        
+        let finalImagePath = uploadURL || "";
+        if (normalizeResponse.ok) {
+          const normalizeData = await normalizeResponse.json();
+          finalImagePath = normalizeData.objectPath || uploadURL || "";
+        }
+        
+        setBannerImageUrl(finalImagePath);
+        
+        toast({
+          title: "Success",
+          description: "Banner image uploaded successfully! Don't forget to add a link URL and save.",
+        });
+      } catch (error) {
+        console.error("Error uploading banner image:", error);
+        toast({
+          title: "Error",
+          description: "Failed to upload banner image. Please try again.",
+          variant: "destructive",
+        });
+      }
+    }
+  };
+
+  // Banner save mutation
+  const saveBannerMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest(`/api/breweries/${id}/banner`, "PUT", {
+        bannerImageUrl,
+        bannerLinkUrl,
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Brewery banner updated successfully!",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/breweries", id] });
+      setIsBannerDialogOpen(false);
+      setBannerImageUrl("");
+      setBannerLinkUrl("");
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: "Failed to update banner. Please try again.",
+        variant: "destructive",
+      });
+    },
   });
 
   // Get user location on component mount
@@ -370,6 +484,115 @@ export default function BreweryDetail() {
             </button>
           </div>
         </div>
+
+        {/* Brewery Banner - 500x100 positioned between name and check-in button */}
+        {brewery.bannerImage || brewery.bannerLink ? (
+          <div className="mb-6 relative">
+            <div 
+              className="w-full cursor-pointer rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow"
+              style={{ 
+                aspectRatio: '5/1', // 500x100 aspect ratio
+                maxHeight: '100px'
+              }}
+              onClick={() => {
+                if (brewery.bannerLink) {
+                  window.open(brewery.bannerLink, '_blank');
+                }
+              }}
+            >
+              <img 
+                src={getBannerImage(brewery)} 
+                alt="Brewery Banner"
+                className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                onError={(e) => {
+                  // Fallback to default banner
+                  e.currentTarget.src = defaultBannerImage;
+                }}
+              />
+            </div>
+            {currentUser?.email === 'joshuamdelozier@gmail.com' && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="absolute top-2 right-2 bg-black/50 text-white border-white/50 hover:bg-white hover:text-black"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  // Pre-populate with current values
+                  setBannerImageUrl(brewery.bannerImage || "");
+                  setBannerLinkUrl(brewery.bannerLink || "");
+                  setIsBannerDialogOpen(true);
+                }}
+              >
+                <Edit className="w-4 h-4 mr-1" />
+                Edit Banner
+              </Button>
+            )}
+          </div>
+        ) : currentUser?.email === 'joshuamdelozier@gmail.com' ? (
+          <div className="mb-6">
+            <div 
+              className="w-full border-2 border-dashed border-gray-300 rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow flex items-center justify-center cursor-pointer"
+              style={{ 
+                aspectRatio: '5/1',
+                maxHeight: '100px'
+              }}
+              onClick={() => {
+                setBannerImageUrl("");
+                setBannerLinkUrl("");
+                setIsBannerDialogOpen(true);
+              }}
+            >
+              <div className="text-center text-gray-500">
+                <Plus className="w-6 h-6 mx-auto mb-1" />
+                <p className="text-sm">Add Banner Ad</p>
+              </div>
+            </div>
+          </div>
+        ) : null}
+
+        {/* Banner Editor Dialog */}
+        <Dialog open={isBannerDialogOpen} onOpenChange={setIsBannerDialogOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Edit {brewery.name} Banner</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="banner-image">Banner Image (500x100 recommended)</Label>
+                <ObjectUploader
+                  maxNumberOfFiles={1}
+                  maxFileSize={10485760}
+                  onGetUploadParameters={handleBannerImageUpload}
+                  onComplete={handleBannerImageUploadComplete}
+                  buttonClassName="w-full mt-2"
+                >
+                  <Upload className="w-4 h-4 mr-2" />
+                  Upload Banner Image
+                </ObjectUploader>
+              </div>
+              <div>
+                <Label htmlFor="banner-link">Banner Link URL</Label>
+                <Input
+                  id="banner-link"
+                  type="url"
+                  placeholder="https://example.com"
+                  value={bannerLinkUrl}
+                  onChange={(e) => setBannerLinkUrl(e.target.value)}
+                  className="mt-1"
+                />
+              </div>
+              {bannerImageUrl && bannerLinkUrl && (
+                <Button
+                  onClick={() => saveBannerMutation.mutate()}
+                  disabled={saveBannerMutation.isPending}
+                  className="w-full"
+                >
+                  {saveBannerMutation.isPending ? "Saving..." : "Save Banner"}
+                </Button>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {/* Location Error Warning */}
         {locationError && (
