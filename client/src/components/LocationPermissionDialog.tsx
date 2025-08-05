@@ -69,7 +69,7 @@ export function LocationPermissionDialog({
       case 'denied':
         return 'To check in at breweries, please enable location access in your browser settings and refresh the page.';
       default:
-        return 'Beer Hop uses your location to verify that you\'re actually at a brewery before allowing check-ins. This ensures authentic check-ins and maintains the integrity of our community.';
+        return 'Beer Hop would like to use your current location. This app will use your precise location because Beer Hop currently has access to your precise location.';
     }
   };
 
