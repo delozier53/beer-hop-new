@@ -119,6 +119,74 @@ export const specialEvents = pgTable("special_events", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+// Gamified Brewery Exploration Challenges
+export const challenges = pgTable("challenges", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  type: text("type").notNull(), // 'distance', 'variety', 'time', 'social', 'special'
+  difficulty: text("difficulty").notNull().default("medium"), // 'easy', 'medium', 'hard', 'epic'
+  targetValue: integer("target_value").notNull(), // number of breweries, miles, days, etc.
+  timeLimit: integer("time_limit"), // days to complete (null for no limit)
+  points: integer("points").notNull().default(100),
+  badge: text("badge"), // optional badge earned upon completion
+  isActive: boolean("is_active").notNull().default(true),
+  startDate: timestamp("start_date").notNull().defaultNow(),
+  endDate: timestamp("end_date"), // null for permanent challenges
+  requirements: json("requirements").$type<{
+    breweryTypes?: string[];
+    minDistance?: number;
+    maxDistance?: number;
+    specificBreweries?: string[];
+    consecutiveDays?: number;
+  }>().default({}),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const userChallenges = pgTable("user_challenges", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  challengeId: varchar("challenge_id").notNull(),
+  status: text("status").notNull().default("active"), // 'active', 'completed', 'failed', 'paused'
+  progress: integer("progress").notNull().default(0),
+  startedAt: timestamp("started_at").notNull().defaultNow(),
+  completedAt: timestamp("completed_at"),
+  data: json("data").$type<{
+    visitedBreweries?: string[];
+    totalDistance?: number;
+    streakDays?: number;
+    lastVisitDate?: string;
+    milestones?: Array<{ value: number; achievedAt: string }>;
+  }>().default({}),
+});
+
+export const challengeLeaderboard = pgTable("challenge_leaderboard", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  challengeId: varchar("challenge_id").notNull(),
+  userId: varchar("user_id").notNull(),
+  score: integer("score").notNull().default(0),
+  rank: integer("rank").notNull().default(0),
+  completedAt: timestamp("completed_at"),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// Enhanced user stats for gamification
+export const userStats = pgTable("user_stats", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().unique(),
+  totalPoints: integer("total_points").notNull().default(0),
+  challengesCompleted: integer("challenges_completed").notNull().default(0),
+  currentStreak: integer("current_streak").notNull().default(0),
+  longestStreak: integer("longest_streak").notNull().default(0),
+  totalDistance: decimal("total_distance", { precision: 8, scale: 2 }).default("0.00"),
+  uniqueBreweries: integer("unique_breweries").notNull().default(0),
+  favoriteBreweryType: text("favorite_brewery_type"),
+  lastCheckInDate: timestamp("last_check_in_date"),
+  weeklyGoal: integer("weekly_goal").default(3),
+  monthlyGoal: integer("monthly_goal").default(10),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
 // Verification codes for email authentication
 export const verificationCodes = pgTable("verification_codes", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -184,6 +252,23 @@ export const insertVerificationCodeSchema = createInsertSchema(verificationCodes
   createdAt: true,
 });
 
+export const insertChallengeSchema = createInsertSchema(challenges).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertUserChallengeSchema = createInsertSchema(userChallenges).omit({
+  id: true,
+});
+
+export const insertChallengeLeaderboardSchema = createInsertSchema(challengeLeaderboard).omit({
+  id: true,
+});
+
+export const insertUserStatsSchema = createInsertSchema(userStats).omit({
+  id: true,
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -205,6 +290,24 @@ export type InsertBadge = z.infer<typeof insertBadgeSchema>;
 
 export type SpecialEvent = typeof specialEvents.$inferSelect;
 export type InsertSpecialEvent = z.infer<typeof insertSpecialEventSchema>;
+
+export type Challenge = typeof challenges.$inferSelect;
+export type InsertChallenge = z.infer<typeof insertChallengeSchema>;
+
+export type UserChallenge = typeof userChallenges.$inferSelect;
+export type InsertUserChallenge = z.infer<typeof insertUserChallengeSchema>;
+
+export type ChallengeLeaderboard = typeof challengeLeaderboard.$inferSelect;
+export type InsertChallengeLeaderboard = z.infer<typeof insertChallengeLeaderboardSchema>;
+
+export type UserStats = typeof userStats.$inferSelect;
+export type InsertUserStats = z.infer<typeof insertUserStatsSchema>;
+
+export type VerificationCode = typeof verificationCodes.$inferSelect;
+export type InsertVerificationCode = z.infer<typeof insertVerificationCodeSchema>;
+
+export type WeeklyEvent = typeof weeklyEvents.$inferSelect;
+export type InsertWeeklyEvent = z.infer<typeof insertWeeklyEventSchema>;
 
 export type VerificationCode = typeof verificationCodes.$inferSelect;
 export type InsertVerificationCode = z.infer<typeof insertVerificationCodeSchema>;
