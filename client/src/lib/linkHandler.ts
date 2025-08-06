@@ -259,49 +259,51 @@ export function openSmartLink(url: string): void {
       
       console.log('Generated Spotify app URL:', spotifyAppUrl);
       
-      // Use the most direct approach that bypasses popups
+      // Use immediate direct approach for better reliability
       try {
-        // Method 1: Try direct window.location assignment (works on many mobile browsers)
-        setTimeout(() => {
-          window.location.assign(spotifyAppUrl);
-        }, 10);
-        
-        console.log('Attempted direct location assignment to Spotify app');
+        // Method 1: Immediate direct window.location assignment
+        window.location.href = spotifyAppUrl;
+        console.log('Attempted immediate location assignment to Spotify app');
         
       } catch (e) {
         console.log('Direct assignment failed, trying alternative:', e);
         
-        // Method 2: Create and programmatically click a link
+        // Method 2: Create and immediately click a link (no delay)
         try {
           const a = document.createElement('a');
           a.href = spotifyAppUrl;
           a.style.display = 'none';
-          a.target = '_blank';
-          a.rel = 'noopener noreferrer';
           
-          // Add to DOM temporarily
+          // Add to DOM and click immediately
           document.body.appendChild(a);
+          a.click();
           
-          // Simulate user click
-          const clickEvent = new MouseEvent('click', {
-            bubbles: true,
-            cancelable: true,
-            view: window
-          });
+          // Clean up immediately
+          document.body.removeChild(a);
           
-          a.dispatchEvent(clickEvent);
-          
-          // Clean up
-          setTimeout(() => {
-            if (document.body.contains(a)) {
-              document.body.removeChild(a);
-            }
-          }, 100);
-          
-          console.log('Attempted programmatic click method');
+          console.log('Attempted immediate click method');
           
         } catch (e2) {
-          console.log('All methods failed:', e2);
+          console.log('All immediate methods failed, trying iframe fallback:', e2);
+          
+          // Method 3: Try hidden iframe as last resort
+          try {
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            iframe.src = spotifyAppUrl;
+            document.body.appendChild(iframe);
+            
+            // Clean up after brief moment
+            setTimeout(() => {
+              if (document.body.contains(iframe)) {
+                document.body.removeChild(iframe);
+              }
+            }, 100);
+            
+            console.log('Attempted iframe method for Spotify');
+          } catch (e3) {
+            console.log('All methods failed:', e3);
+          }
         }
       }
       
