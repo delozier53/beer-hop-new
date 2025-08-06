@@ -2,7 +2,32 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 
+// Check required environment variables for deployment
+function checkRequiredEnvVars() {
+  const required = ['DATABASE_URL'];
+  const optional = ['SENDGRID_API_KEY', 'PRIVATE_OBJECT_DIR', 'PUBLIC_OBJECT_SEARCH_PATHS'];
+  
+  for (const envVar of required) {
+    if (!process.env[envVar]) {
+      log(`ERROR: Required environment variable ${envVar} is not set`);
+      process.exit(1);
+    }
+  }
+  
+  for (const envVar of optional) {
+    if (!process.env[envVar]) {
+      log(`WARNING: Optional environment variable ${envVar} is not set - some features may not work`);
+    }
+  }
+  
+  log(`Environment variables validated for ${process.env.NODE_ENV || 'development'} environment`);
+}
+
 const app = express();
+
+// Explicitly set the environment for Express
+app.set('env', process.env.NODE_ENV || 'development');
+
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: false, limit: '10mb' }));
 
@@ -37,6 +62,9 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // Check environment variables before starting
+  checkRequiredEnvVars();
+  
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
@@ -61,11 +89,24 @@ app.use((req, res, next) => {
   // this serves both the API and the client.
   // It is the only port that is not firewalled.
   const port = parseInt(process.env.PORT || '5000', 10);
-  server.listen({
-    port,
-    host: "0.0.0.0",
-    reusePort: true,
-  }, () => {
-    log(`serving on port ${port}`);
+  const host = process.env.HOST || "0.0.0.0";
+  
+  log(`Environment: ${app.get('env')}`);
+  log(`Starting server on ${host}:${port}`);
+  
+  server.listen(port, host, () => {
+    log(`Server successfully started on ${host}:${port}`);
+    log(`Server ready to accept connections`);
+  });
+
+  server.on('error', (error: any) => {
+    if (error.code === 'EADDRINUSE') {
+      log(`Port ${port} is already in use`);
+    } else if (error.code === 'EACCES') {
+      log(`Permission denied to bind to port ${port}`);
+    } else {
+      log(`Server error: ${error.message}`);
+    }
+    process.exit(1);
   });
 })();

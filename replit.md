@@ -81,6 +81,13 @@ Key recent changes (August 2025):
 - Enhanced React Query caching with appropriate stale times for different data types
 - Removed location caching per user request - geolocation requests fresh each time
 - Improved query response times: breweries 83% faster (0.4s → 0.07s), leaderboard 68% faster (0.9s → 0.29s)
+- Applied cloud deployment fixes for production environment compatibility (August 6, 2025)
+- Fixed Express environment detection by explicitly setting app.set('env') from NODE_ENV
+- Updated server listening configuration for better cloud deployment compatibility  
+- Added comprehensive environment variable validation with required vs optional checks
+- Implemented health check endpoint (/health) for deployment service validation
+- Enhanced server startup logging and error handling for deployment debugging
+- Configured server to listen on HOST environment variable with 0.0.0.0 fallback
 
 The database schema supports complex relationships between entities, such as users having multiple check-ins and favorite breweries, breweries having associated podcast episodes, and a badge system based on check-in counts. Geographic data uses authentic latitude and longitude coordinates from the provided brewery coordinate CSV file, ensuring accurate distance calculations for Oklahoma breweries.
 
@@ -125,3 +132,28 @@ The application is specifically designed for mobile devices with a bottom naviga
 - **date-fns**: Date manipulation and formatting utilities
 - **nanoid**: URL-safe unique ID generation
 - **clsx**: Conditional className utility for dynamic styling
+
+## Deployment Configuration
+
+### Required Environment Variables
+- `DATABASE_URL`: PostgreSQL database connection string (required)
+- `NODE_ENV`: Set to "production" for deployment builds (required)
+- `PORT`: Server port (provided by cloud platform, defaults to 5000)
+- `HOST`: Server host binding (defaults to 0.0.0.0 for cloud compatibility)
+
+### Optional Environment Variables
+- `SENDGRID_API_KEY`: Email service for user verification (optional, disables email features if not set)
+- `PRIVATE_OBJECT_DIR`: Object storage directory for private files (optional, disables file uploads if not set)
+- `PUBLIC_OBJECT_SEARCH_PATHS`: Object storage paths for public assets (optional, disables public file serving if not set)
+
+### Build and Deployment Scripts
+- `npm run build`: Creates production build (frontend + backend)
+- `npm run start`: Starts production server
+- Health check endpoint: `/health` for deployment service validation
+
+### Cloud Deployment Compatibility
+- Server configured to listen on 0.0.0.0 for cloud platform requirements
+- Express environment properly set from NODE_ENV variable
+- Comprehensive environment variable validation on startup
+- Production-optimized server listening configuration
+- Built-in error handling for common deployment issues

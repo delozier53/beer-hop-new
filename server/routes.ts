@@ -7,6 +7,15 @@ import { ObjectStorageService } from "./objectStorage";
 import { sendVerificationCode, generateVerificationCode } from "./emailService";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Health check endpoint for deployment validation
+  app.get("/health", (req, res) => {
+    res.status(200).json({ 
+      status: "healthy", 
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV || 'development'
+    });
+  });
+
   // Users
   app.get("/api/users/:id", async (req, res) => {
     try {
