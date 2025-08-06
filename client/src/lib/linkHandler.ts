@@ -259,53 +259,61 @@ export function openSmartLink(url: string): void {
       
       console.log('Generated Spotify app URL:', spotifyAppUrl);
       
-      // Use immediate direct approach for better reliability
-      try {
-        // Method 1: Immediate direct window.location assignment
-        window.location.href = spotifyAppUrl;
-        console.log('Attempted immediate location assignment to Spotify app');
+      // Use the most reliable method for opening Spotify app
+      const openSpotifyApp = () => {
+        console.log('Attempting Spotify app launch');
         
-      } catch (e) {
-        console.log('Direct assignment failed, trying alternative:', e);
+        // Create an invisible iframe to trigger the app
+        const iframe = document.createElement('iframe');
+        iframe.style.cssText = 'display:none;width:0;height:0;border:none;';
+        iframe.src = spotifyAppUrl;
         
-        // Method 2: Create and immediately click a link (no delay)
-        try {
-          const a = document.createElement('a');
-          a.href = spotifyAppUrl;
-          a.style.display = 'none';
-          
-          // Add to DOM and click immediately
-          document.body.appendChild(a);
-          a.click();
-          
-          // Clean up immediately
-          document.body.removeChild(a);
-          
-          console.log('Attempted immediate click method');
-          
-        } catch (e2) {
-          console.log('All immediate methods failed, trying iframe fallback:', e2);
-          
-          // Method 3: Try hidden iframe as last resort
-          try {
-            const iframe = document.createElement('iframe');
-            iframe.style.display = 'none';
-            iframe.src = spotifyAppUrl;
-            document.body.appendChild(iframe);
-            
-            // Clean up after brief moment
-            setTimeout(() => {
-              if (document.body.contains(iframe)) {
-                document.body.removeChild(iframe);
-              }
-            }, 100);
-            
-            console.log('Attempted iframe method for Spotify');
-          } catch (e3) {
-            console.log('All methods failed:', e3);
+        document.body.appendChild(iframe);
+        
+        // Track if page becomes hidden (app opened successfully)
+        let appOpened = false;
+        
+        const handleVisibilityChange = () => {
+          if (document.hidden) {
+            appOpened = true;
+            console.log('Spotify app opened successfully');
+            cleanup();
           }
-        }
-      }
+        };
+        
+        const cleanup = () => {
+          document.removeEventListener('visibilitychange', handleVisibilityChange);
+          if (iframe && iframe.parentNode) {
+            iframe.parentNode.removeChild(iframe);
+          }
+        };
+        
+        // Listen for app opening
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        
+        // Fallback to web player if app doesn't open within 2 seconds
+        setTimeout(() => {
+          if (!appOpened && !document.hidden) {
+            console.log('Spotify app failed to open, opening web player');
+            window.open(url, '_blank', 'noopener,noreferrer');
+          }
+          cleanup();
+        }, 2000);
+        
+        // Clean up iframe after short delay regardless
+        setTimeout(() => {
+          if (iframe && iframe.parentNode) {
+            try {
+              iframe.parentNode.removeChild(iframe);
+            } catch (e) {
+              // Iframe already removed
+            }
+          }
+        }, 500);
+      };
+      
+      // Execute the Spotify opening function
+      openSpotifyApp();
       
       return;
     }
