@@ -1,0 +1,993 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beer Hop - Connect with Local Breweries</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        amber: {
+                            400: '#FBBF24',
+                            500: '#F59E0B',
+                            600: '#D97706'
+                        },
+                        emerald: {
+                            500: '#10B981',
+                            600: '#059669'
+                        },
+                        amber: {
+                            50: '#FFFBEB',
+                            100: '#FEF3C7',
+                            500: '#F59E0B',
+                            600: '#D97706'
+                        },
+                        hops: {
+                            500: '#16A34A',
+                            600: '#15803D'
+                        },
+                        brown: {
+                            500: '#92400E',
+                            600: '#7C2D12'
+                        }
+                    },
+                    fontFamily: {
+                        'sans': ['Inter', 'system-ui', 'sans-serif']
+                    }
+                }
+            }
+        };
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50 text-gray-900 font-sans">
+    
+    <!-- Mobile App Container -->
+    <div class="max-w-sm mx-auto bg-white min-h-screen shadow-2xl relative overflow-hidden">
+        
+        <!-- Profile Screen -->
+        <!-- @COMPONENT: ProfileScreen -->
+        <div id="profile-screen" class="screen active">
+            <!-- Clickable Banner -->
+            <!-- A golden sunset over rolling hills dotted with hop plants -->
+            <div class="relative h-48 bg-gradient-to-r from-amber-500 to-hops-500 cursor-pointer" 
+                 style="background-image: linear-gradient(rgba(245, 158, 11, 0.8), rgba(22, 163, 74, 0.8)), url('https://images.unsplash.com/photo-1516594915697-87eb3b1c14ea?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=400');">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>
+                <div class="absolute top-4 left-4 text-white">
+                    <h1 class="text-xl font-bold">Beer Hop</h1>
+                    <p class="text-sm opacity-90">Discover. Check-in. Connect.</p>
+                </div>
+                <button class="absolute top-4 right-4 text-white" data-event="click:openSettings">
+                    <i class="fas fa-cog text-xl"></i>
+                </button>
+            </div>
+
+            <!-- Profile Section -->
+            <div class="px-6 -mt-16 relative z-10">
+                <!-- Profile Photo -->
+                <div class="flex items-end space-x-4 mb-4">
+                    <!-- A friendly person holding a craft beer glass in a brewery setting -->
+                    <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&h=150" 
+                         alt="Profile picture" 
+                         class="w-20 h-20 rounded-full border-4 border-white shadow-lg object-cover">
+                    <div class="flex-1 pb-2">
+                        <h2 class="text-xl font-bold text-white" data-bind="user.name">Alex Thompson</h2>
+                        <p class="text-amber-100 text-sm" data-bind="user.location">San Francisco, CA</p>
+                    </div>
+                </div>
+
+                <!-- Stats Cards -->
+                <div class="bg-white rounded-xl shadow-lg p-4 mb-4">
+                    <div class="grid grid-cols-3 gap-4 text-center">
+                        <div>
+                            <div class="text-2xl font-bold text-amber-600" data-bind="user.checkins">47</div>
+                            <div class="text-xs text-gray-600">Check-ins</div>
+                        </div>
+                        <div>
+                            <div class="text-2xl font-bold text-hops-600" data-bind="user.favorites">12</div>
+                            <div class="text-xs text-gray-600">Favorites</div>
+                        </div>
+                        <div>
+                            <div class="text-2xl font-bold text-brown-600" data-bind="user.rank">#23</div>
+                            <div class="text-xs text-gray-600">Rank</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Current Badge -->
+                <div class="bg-gradient-to-r from-amber-500 to-amber-600 rounded-xl p-4 mb-4 text-white">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                            <i class="fas fa-medal text-xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold" data-bind="user.badge.name">Hop Enthusiast</h3>
+                            <p class="text-sm opacity-90" data-bind="user.badge.description">25+ brewery check-ins</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Leaderboard Button -->
+                <button class="w-full bg-hops-500 text-white py-3 rounded-xl font-semibold mb-4 hover:bg-hops-600 transition-colors" 
+                        data-event="click:showLeaderboard">
+                    <i class="fas fa-trophy mr-2"></i>
+                    View Leaderboard
+                </button>
+
+                <!-- Favorite Breweries -->
+                <div class="mb-6">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="text-lg font-semibold">Favorite Breweries</h3>
+                        <button class="text-amber-600 text-sm font-medium" data-event="click:editProfile">
+                            Edit Profile
+                        </button>
+                    </div>
+
+                    <!-- @MAP: user.favoriteBreweries.map(brewery => ( -->
+                    <div class="space-y-3">
+                        <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                            <!-- Modern craft brewery exterior with large windows -->
+                            <img src="https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&auto=format&fit=crop&w=60&h=60" 
+                                 alt="Brewery" class="w-12 h-12 rounded-lg object-cover">
+                            <div class="flex-1">
+                                <h4 class="font-medium" data-bind="brewery.name">Golden Gate Brewing</h4>
+                                <p class="text-sm text-gray-600" data-bind="brewery.distance">0.8 miles away</p>
+                            </div>
+                            <i class="fas fa-heart text-red-500"></i>
+                        </div>
+
+                        <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                            <!-- Historic brick brewery building with ivy-covered walls -->
+                            <img src="https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?ixlib=rb-4.0.3&auto=format&fit=crop&w=60&h=60" 
+                                 alt="Brewery" class="w-12 h-12 rounded-lg object-cover">
+                            <div class="flex-1">
+                                <h4 class="font-medium" data-bind="brewery.name">Anchor Brewing Co.</h4>
+                                <p class="text-sm text-gray-600" data-bind="brewery.distance">2.1 miles away</p>
+                            </div>
+                            <i class="fas fa-heart text-red-500"></i>
+                        </div>
+
+                        <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                            <!-- Industrial-style brewery with steel tanks visible through windows -->
+                            <img src="https://images.unsplash.com/photo-1598300042247-d088f8ab3a91?ixlib=rb-4.0.3&auto=format&fit=crop&w=60&h=60" 
+                                 alt="Brewery" class="w-12 h-12 rounded-lg object-cover">
+                            <div class="flex-1">
+                                <h4 class="font-medium" data-bind="brewery.name">Hop Valley Brewing</h4>
+                                <p class="text-sm text-gray-600" data-bind="brewery.distance">5.3 miles away</p>
+                            </div>
+                            <i class="fas fa-heart text-red-500"></i>
+                        </div>
+                    </div>
+                    <!-- @END_MAP )) -->
+                </div>
+            </div>
+        </div>
+        <!-- @END_COMPONENT: ProfileScreen -->
+
+        <!-- Breweries Screen -->
+        <!-- @COMPONENT: BreweriesScreen -->
+        <div id="breweries-screen" class="screen hidden">
+            <!-- Header -->
+            <div class="bg-white border-b border-gray-200 sticky top-0 z-20">
+                <div class="px-6 py-4">
+                    <h1 class="text-2xl font-bold text-gray-900 mb-4">Nearby Breweries</h1>
+                    
+                    <!-- Search Box -->
+                    <div class="relative">
+                        <input type="text" 
+                               placeholder="Search breweries..." 
+                               class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                               data-functionality="Search breweries by name, location, or beer style">
+                        <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Brewery List -->
+            <div class="px-6 py-4 space-y-4">
+                <!-- @MAP: breweries.map(brewery => ( -->
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden" 
+                     data-event="click:viewBrewery" data-bind="brewery.id">
+                    <div class="flex">
+                        <!-- Modern brewery storefront with people outside -->
+                        <img src="https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&auto=format&fit=crop&w=120&h=120" 
+                             alt="Golden Gate Brewing" class="w-24 h-24 object-cover">
+                        <div class="flex-1 p-4">
+                            <div class="flex justify-between items-start mb-1">
+                                <h3 class="font-semibold text-gray-900" data-bind="brewery.name">Golden Gate Brewing</h3>
+                                <span class="text-sm font-medium text-amber-600" data-bind="brewery.distance">0.8 mi</span>
+                            </div>
+                            <p class="text-sm text-gray-600 mb-2" data-bind="brewery.address">1234 Mission St, San Francisco, CA</p>
+                            <div class="flex items-center">
+                                <div class="flex text-amber-400 text-xs mr-2">
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                </div>
+                                <span class="text-xs text-gray-500" data-bind="brewery.checkins">127 check-ins</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden" 
+                     data-event="click:viewBrewery" data-bind="brewery.id">
+                    <div class="flex">
+                        <!-- Historic brewery building with exposed brick -->
+                        <img src="https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?ixlib=rb-4.0.3&auto=format&fit=crop&w=120&h=120" 
+                             alt="Anchor Brewing Co." class="w-24 h-24 object-cover">
+                        <div class="flex-1 p-4">
+                            <div class="flex justify-between items-start mb-1">
+                                <h3 class="font-semibold text-gray-900" data-bind="brewery.name">Anchor Brewing Co.</h3>
+                                <span class="text-sm font-medium text-amber-600" data-bind="brewery.distance">2.1 mi</span>
+                            </div>
+                            <p class="text-sm text-gray-600 mb-2" data-bind="brewery.address">1705 Mariposa St, San Francisco, CA</p>
+                            <div class="flex items-center">
+                                <div class="flex text-amber-400 text-xs mr-2">
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="far fa-star"></i>
+                                </div>
+                                <span class="text-xs text-gray-500" data-bind="brewery.checkins">89 check-ins</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden" 
+                     data-event="click:viewBrewery" data-bind="brewery.id">
+                    <div class="flex">
+                        <!-- Contemporary brewery with large glass windows and industrial design -->
+                        <img src="https://images.unsplash.com/photo-1598300042247-d088f8ab3a91?ixlib=rb-4.0.3&auto=format&fit=crop&w=120&h=120" 
+                             alt="Hop Valley Brewing" class="w-24 h-24 object-cover">
+                        <div class="flex-1 p-4">
+                            <div class="flex justify-between items-start mb-1">
+                                <h3 class="font-semibold text-gray-900" data-bind="brewery.name">Hop Valley Brewing</h3>
+                                <span class="text-sm font-medium text-amber-600" data-bind="brewery.distance">5.3 mi</span>
+                            </div>
+                            <p class="text-sm text-gray-600 mb-2" data-bind="brewery.address">980 25th St, Oakland, CA</p>
+                            <div class="flex items-center">
+                                <div class="flex text-amber-400 text-xs mr-2">
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                </div>
+                                <span class="text-xs text-gray-500" data-bind="brewery.checkins">156 check-ins</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden" 
+                     data-event="click:viewBrewery" data-bind="brewery.id">
+                    <div class="flex">
+                        <!-- Rustic brewery with wooden exterior and outdoor seating -->
+                        <img src="https://pixabay.com/get/g0a440180ff438461e7db425306073a18dd5bfbdb7db284428e2c6464c7ab70bdd07ebc408b6d8a8070ff159681237a0d0b20c520b007284c38fec154f3f5c29e_1280.jpg" 
+                             alt="Creek Side Brewing" class="w-24 h-24 object-cover">
+                        <div class="flex-1 p-4">
+                            <div class="flex justify-between items-start mb-1">
+                                <h3 class="font-semibold text-gray-900" data-bind="brewery.name">Creek Side Brewing</h3>
+                                <span class="text-sm font-medium text-amber-600" data-bind="brewery.distance">7.8 mi</span>
+                            </div>
+                            <p class="text-sm text-gray-600 mb-2" data-bind="brewery.address">4567 Creek Rd, Berkeley, CA</p>
+                            <div class="flex items-center">
+                                <div class="flex text-amber-400 text-xs mr-2">
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="far fa-star"></i>
+                                </div>
+                                <span class="text-xs text-gray-500" data-bind="brewery.checkins">73 check-ins</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- @END_MAP )) -->
+            </div>
+        </div>
+        <!-- @END_COMPONENT: BreweriesScreen -->
+
+        <!-- Individual Brewery Screen -->
+        <!-- @COMPONENT: BreweryDetailScreen -->
+        <div id="brewery-detail-screen" class="screen hidden">
+            <!-- Clickable Banner -->
+            <!-- Golden hour shot of modern brewery exterior with warm lighting -->
+            <div class="relative h-56 bg-gradient-to-r from-amber-500 to-hops-500 cursor-pointer" 
+                 style="background-image: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url('https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=500');">
+                <button class="absolute top-4 left-4 w-10 h-10 bg-black/30 rounded-full flex items-center justify-center text-white" 
+                        data-event="click:goBack">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <button class="absolute top-4 right-4 w-10 h-10 bg-black/30 rounded-full flex items-center justify-center text-white" 
+                        data-event="click:editBrewery" data-visibility="owner-admin">
+                    <i class="fas fa-edit"></i>
+                </button>
+                
+                <!-- Check-in Button -->
+                <button class="absolute bottom-4 right-4 bg-amber-500 text-white px-6 py-3 rounded-full font-semibold shadow-lg hover:bg-amber-600 transition-colors" 
+                        data-event="click:checkIn">
+                    <i class="fas fa-map-marker-alt mr-2"></i>
+                    Check In
+                </button>
+            </div>
+
+            <div class="px-6 py-6">
+                <!-- Brewery Header -->
+                <div class="flex items-start justify-between mb-6">
+                    <div class="flex items-center space-x-4">
+                        <!-- Circular brewery logo with hops and grain design -->
+                        <img src="https://pixabay.com/get/g667bef465c19c5817e7329a009455fef8201997b0420bb24aabee7921126c69da279a74327579884c55584dfab44ec08525fd4ee4a092415653457c326f9f6f0_1280.jpg" 
+                             alt="Golden Gate Brewing Logo" class="w-16 h-16 rounded-full">
+                        <div>
+                            <h1 class="text-2xl font-bold" data-bind="brewery.name">Golden Gate Brewing</h1>
+                            <p class="text-gray-600" data-bind="brewery.type">Craft Brewery</p>
+                        </div>
+                    </div>
+                    <button class="text-red-500 p-2" data-event="click:toggleFavorite">
+                        <i class="fas fa-heart text-xl"></i>
+                    </button>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="grid grid-cols-2 gap-3 mb-6">
+                    <button class="bg-hops-500 text-white py-3 rounded-xl font-semibold hover:bg-hops-600 transition-colors" 
+                            data-event="click:addToFavorites">
+                        <i class="fas fa-heart mr-2"></i>
+                        Add to Favorites
+                    </button>
+                    <button class="bg-brown-500 text-white py-3 rounded-xl font-semibold hover:bg-brown-600 transition-colors" 
+                            data-event="click:takeNotes">
+                        <i class="fas fa-sticky-note mr-2"></i>
+                        Take Notes
+                    </button>
+                </div>
+
+                <!-- Hours -->
+                <div class="bg-gray-50 rounded-xl p-4 mb-6">
+                    <h3 class="font-semibold mb-3">Hours</h3>
+                    <div class="space-y-1 text-sm">
+                        <div class="flex justify-between">
+                            <span>Monday - Thursday</span>
+                            <span data-bind="brewery.hours.weekday">3:00 PM - 10:00 PM</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Friday - Saturday</span>
+                            <span data-bind="brewery.hours.weekend">12:00 PM - 11:00 PM</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Sunday</span>
+                            <span data-bind="brewery.hours.sunday">12:00 PM - 9:00 PM</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Address -->
+                <div class="mb-6">
+                    <h3 class="font-semibold mb-2">Address</h3>
+                    <p class="text-gray-600" data-bind="brewery.fullAddress">1234 Mission Street, San Francisco, CA 94103</p>
+                    <button class="text-amber-600 text-sm font-medium mt-1" data-event="click:openMaps">
+                        <i class="fas fa-map-marker-alt mr-1"></i>
+                        Get Directions
+                    </button>
+                </div>
+
+                <!-- About -->
+                <div class="mb-6">
+                    <h3 class="font-semibold mb-2">About</h3>
+                    <p class="text-gray-600 text-sm leading-relaxed" data-bind="brewery.about">
+                        Golden Gate Brewing has been crafting exceptional ales and lagers since 2015. Located in the heart of San Francisco, 
+                        we pride ourselves on using locally sourced ingredients and traditional brewing methods to create unique, 
+                        flavorful beers that capture the spirit of the Bay Area.
+                    </p>
+                </div>
+
+                <!-- Policies -->
+                <div class="mb-6">
+                    <h3 class="font-semibold mb-2">Policies</h3>
+                    <div class="space-y-2 text-sm text-gray-600">
+                        <div class="flex items-center">
+                            <i class="fas fa-paw text-hops-500 mr-2"></i>
+                            <span data-bind="brewery.policies.dogs">Dog-friendly outdoor seating</span>
+                        </div>
+                        <div class="flex items-center">
+                            <i class="fas fa-utensils text-brown-500 mr-2"></i>
+                            <span data-bind="brewery.policies.food">Food trucks on weekends</span>
+                        </div>
+                        <div class="flex items-center">
+                            <i class="fas fa-car text-amber-500 mr-2"></i>
+                            <span data-bind="brewery.policies.parking">Street parking available</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Social Links -->
+                <div class="mb-6">
+                    <h3 class="font-semibold mb-3">Connect</h3>
+                    <div class="flex space-x-4">
+                        <button class="bg-blue-600 text-white p-3 rounded-lg" data-event="click:openFacebook">
+                            <i class="fab fa-facebook-f"></i>
+                        </button>
+                        <button class="bg-pink-600 text-white p-3 rounded-lg" data-event="click:openInstagram">
+                            <i class="fab fa-instagram"></i>
+                        </button>
+                        <button class="bg-gray-900 text-white p-3 rounded-lg" data-event="click:openWebsite">
+                            <i class="fas fa-globe"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Photo Slideshow -->
+                <div class="mb-6">
+                    <h3 class="font-semibold mb-3">Photos</h3>
+                    <div class="flex space-x-3 overflow-x-auto pb-3" data-functionality="Swipe gallery with touch gestures">
+                        <!-- Interior shot of brewery with copper tanks and industrial lighting -->
+                        <img src="https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=150" 
+                             alt="Brewery interior" class="w-32 h-24 object-cover rounded-lg flex-shrink-0">
+                        <!-- Close-up of craft beer taps with branded handles -->
+                        <img src="https://images.unsplash.com/photo-1582037928769-181f2644ecb7?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=150" 
+                             alt="Beer taps" class="w-32 h-24 object-cover rounded-lg flex-shrink-0">
+                        <!-- Aerial view of brewery floor with steel fermentation tanks -->
+                        <img src="https://images.unsplash.com/photo-1598300042247-d088f8ab3a91?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=150" 
+                             alt="Brewing equipment" class="w-32 h-24 object-cover rounded-lg flex-shrink-0">
+                        <!-- Outdoor patio with picnic tables and string lights -->
+                        <img src="https://pixabay.com/get/gb534c904705c95f5f3334458c62a49f0f351254ffc4b582f5e0616efa0918c1fe134b100aae61da9ad71ef6d87b2cbdd95adf2e7fb5cb83070d476e4a430f6b5_1280.jpg" 
+                             alt="Outdoor seating" class="w-32 h-24 object-cover rounded-lg flex-shrink-0">
+                    </div>
+                </div>
+
+                <!-- Podcast Episode -->
+                <div class="bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl p-4 text-white">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                            <i class="fas fa-podcast text-xl"></i>
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="font-semibold">Beer Hop Podcast</h3>
+                            <p class="text-sm opacity-90">Episode #23 - Brewing Excellence</p>
+                        </div>
+                        <button class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg text-sm font-medium transition-colors" 
+                                data-event="click:openPodcast">
+                            Listen
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- @END_COMPONENT: BreweryDetailScreen -->
+
+        <!-- Podcast Screen -->
+        <!-- @COMPONENT: PodcastScreen -->
+        <div id="podcast-screen" class="screen hidden">
+            <!-- Clickable Banner -->
+            <!-- Professional podcast recording studio with microphones and acoustic panels -->
+            <div class="relative h-48 bg-gradient-to-r from-purple-600 to-pink-600 cursor-pointer" 
+                 style="background-image: linear-gradient(rgba(147, 51, 234, 0.8), rgba(219, 39, 119, 0.8)), url('https://images.unsplash.com/photo-1590602847861-f357a9332bbc?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=400');">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>
+                <div class="absolute bottom-4 left-4 text-white">
+                    <h1 class="text-2xl font-bold">Beer Hop Podcast</h1>
+                    <p class="text-sm opacity-90">Stories from Local Brewers</p>
+                </div>
+                <div class="absolute top-4 right-4">
+                    <button class="w-12 h-12 bg-black/30 rounded-full flex items-center justify-center text-white" 
+                            data-event="click:playLatest">
+                        <i class="fas fa-play"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Episodes List -->
+            <div class="px-6 py-6">
+                <h2 class="text-xl font-bold mb-4">Latest Episodes</h2>
+
+                <div class="space-y-4">
+                    <!-- @MAP: podcastEpisodes.map(episode => ( -->
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4" 
+                         data-event="click:openSpotify" data-bind="episode.spotifyUrl">
+                        <div class="flex items-start space-x-4">
+                            <!-- Podcast artwork showing brewery owner in front of brewing equipment -->
+                            <img src="https://images.unsplash.com/photo-1590602847861-f357a9332bbc?ixlib=rb-4.0.3&auto=format&fit=crop&w=80&h=80" 
+                                 alt="Episode 28 artwork" class="w-16 h-16 rounded-lg object-cover">
+                            <div class="flex-1">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-sm font-medium text-purple-600" data-bind="episode.number">Episode #28</span>
+                                    <span class="text-xs text-gray-500" data-bind="episode.duration">42 min</span>
+                                </div>
+                                <h3 class="font-semibold text-gray-900 mb-1" data-bind="episode.guest">Mike Rodriguez</h3>
+                                <p class="text-sm text-gray-600 mb-2" data-bind="episode.business">Golden Gate Brewing</p>
+                                <p class="text-xs text-gray-500" data-bind="episode.date">Released March 15, 2024</p>
+                            </div>
+                            <button class="text-purple-600 p-2" data-event="click:playEpisode">
+                                <i class="fas fa-play"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4" 
+                         data-event="click:openSpotify" data-bind="episode.spotifyUrl">
+                        <div class="flex items-start space-x-4">
+                            <!-- Female brewery owner speaking into a professional microphone -->
+                            <img src="https://images.unsplash.com/photo-1478737270239-2f02b77fc618?ixlib=rb-4.0.3&auto=format&fit=crop&w=80&h=80" 
+                                 alt="Episode 27 artwork" class="w-16 h-16 rounded-lg object-cover">
+                            <div class="flex-1">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-sm font-medium text-purple-600" data-bind="episode.number">Episode #27</span>
+                                    <span class="text-xs text-gray-500" data-bind="episode.duration">38 min</span>
+                                </div>
+                                <h3 class="font-semibold text-gray-900 mb-1" data-bind="episode.guest">Sarah Chen</h3>
+                                <p class="text-sm text-gray-600 mb-2" data-bind="episode.business">Hop Valley Brewing</p>
+                                <p class="text-xs text-gray-500" data-bind="episode.date">Released March 8, 2024</p>
+                            </div>
+                            <button class="text-purple-600 p-2" data-event="click:playEpisode">
+                                <i class="fas fa-play"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4" 
+                         data-event="click:openSpotify" data-bind="episode.spotifyUrl">
+                        <div class="flex items-start space-x-4">
+                            <!-- Brewery founder showing off award-winning beer bottles -->
+                            <img src="https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?ixlib=rb-4.0.3&auto=format&fit=crop&w=80&h=80" 
+                                 alt="Episode 26 artwork" class="w-16 h-16 rounded-lg object-cover">
+                            <div class="flex-1">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-sm font-medium text-purple-600" data-bind="episode.number">Episode #26</span>
+                                    <span class="text-xs text-gray-500" data-bind="episode.duration">45 min</span>
+                                </div>
+                                <h3 class="font-semibold text-gray-900 mb-1" data-bind="episode.guest">Tom Wilson</h3>
+                                <p class="text-sm text-gray-600 mb-2" data-bind="episode.business">Anchor Brewing Co.</p>
+                                <p class="text-xs text-gray-500" data-bind="episode.date">Released March 1, 2024</p>
+                            </div>
+                            <button class="text-purple-600 p-2" data-event="click:playEpisode">
+                                <i class="fas fa-play"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4" 
+                         data-event="click:openSpotify" data-bind="episode.spotifyUrl">
+                        <div class="flex items-start space-x-4">
+                            <!-- Young entrepreneur with craft beer samples in a modern tasting room -->
+                            <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=80&h=80" 
+                                 alt="Episode 25 artwork" class="w-16 h-16 rounded-lg object-cover">
+                            <div class="flex-1">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-sm font-medium text-purple-600" data-bind="episode.number">Episode #25</span>
+                                    <span class="text-xs text-gray-500" data-bind="episode.duration">52 min</span>
+                                </div>
+                                <h3 class="font-semibold text-gray-900 mb-1" data-bind="episode.guest">Jake Thompson</h3>
+                                <p class="text-sm text-gray-600 mb-2" data-bind="episode.business">Creek Side Brewing</p>
+                                <p class="text-xs text-gray-500" data-bind="episode.date">Released February 22, 2024</p>
+                            </div>
+                            <button class="text-purple-600 p-2" data-event="click:playEpisode">
+                                <i class="fas fa-play"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <!-- @END_MAP )) -->
+                </div>
+            </div>
+        </div>
+        <!-- @END_COMPONENT: PodcastScreen -->
+
+        <!-- Events Screen -->
+        <!-- @COMPONENT: EventsScreen -->
+        <div id="events-screen" class="screen hidden">
+            <!-- Clickable Banner -->
+            <!-- Outdoor beer festival with tents, people, and string lights at sunset -->
+            <div class="relative h-48 bg-gradient-to-r from-amber-500 to-orange-500 cursor-pointer" 
+                 style="background-image: linear-gradient(rgba(245, 158, 11, 0.7), rgba(251, 146, 60, 0.7)), url('https://images.unsplash.com/photo-1558618666-fcd25c85cd64?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=400');">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>
+                <div class="absolute bottom-4 left-4 text-white">
+                    <h1 class="text-2xl font-bold">Special Events</h1>
+                    <p class="text-sm opacity-90">Discover brewery events near you</p>
+                </div>
+            </div>
+
+            <div class="px-6 py-6">
+                <h2 class="text-xl font-bold mb-4">Upcoming Events</h2>
+
+                <div class="space-y-4">
+                    <!-- @MAP: events.map(event => ( -->
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden" 
+                         data-event="click:viewEventDetails" data-bind="event.id">
+                        <div class="flex">
+                            <!-- Beer tasting event with flight of craft beers and tasting notes -->
+                            <img src="https://images.unsplash.com/photo-1571613316887-6f8d5cbf7ef7?ixlib=rb-4.0.3&auto=format&fit=crop&w=120&h=120" 
+                                 alt="Craft Beer Tasting" class="w-24 h-24 object-cover">
+                            <div class="flex-1 p-4">
+                                <h3 class="font-semibold text-gray-900 mb-1" data-bind="event.name">Craft Beer Tasting</h3>
+                                <p class="text-sm text-amber-600 font-medium mb-1" data-bind="event.brewery">Golden Gate Brewing</p>
+                                <p class="text-sm text-gray-600 mb-1" data-bind="event.datetime">Friday, March 22 • 7:00 PM</p>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs bg-amber-100 text-amber-800 px-2 py-1 rounded-full" data-bind="event.type">Ticketed Event</span>
+                                    <span class="text-xs text-gray-500" data-bind="event.attendees">24 attending</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden" 
+                         data-event="click:viewEventDetails" data-bind="event.id">
+                        <div class="flex">
+                            <!-- Live acoustic music performance in a cozy brewery setting -->
+                            <img src="https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=120&h=120" 
+                                 alt="Live Music Night" class="w-24 h-24 object-cover">
+                            <div class="flex-1 p-4">
+                                <h3 class="font-semibold text-gray-900 mb-1" data-bind="event.name">Live Music Night</h3>
+                                <p class="text-sm text-amber-600 font-medium mb-1" data-bind="event.brewery">Anchor Brewing Co.</p>
+                                <p class="text-sm text-gray-600 mb-1" data-bind="event.datetime">Saturday, March 23 • 8:00 PM</p>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full" data-bind="event.type">Free Event</span>
+                                    <span class="text-xs text-gray-500" data-bind="event.attendees">67 attending</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden" 
+                         data-event="click:viewEventDetails" data-bind="event.id">
+                        <div class="flex">
+                            <!-- Group of people on a brewery tour with guide explaining the brewing process -->
+                            <img src="https://images.unsplash.com/photo-1604467707321-70d5ac45adda?ixlib=rb-4.0.3&auto=format&fit=crop&w=120&h=120" 
+                                 alt="Brewery Tour" class="w-24 h-24 object-cover">
+                            <div class="flex-1 p-4">
+                                <h3 class="font-semibold text-gray-900 mb-1" data-bind="event.name">Behind the Scenes Brewery Tour</h3>
+                                <p class="text-sm text-amber-600 font-medium mb-1" data-bind="event.brewery">Hop Valley Brewing</p>
+                                <p class="text-sm text-gray-600 mb-1" data-bind="event.datetime">Sunday, March 24 • 2:00 PM</p>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs bg-amber-100 text-amber-800 px-2 py-1 rounded-full" data-bind="event.type">Ticketed Event</span>
+                                    <span class="text-xs text-gray-500" data-bind="event.attendees">15 attending</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden" 
+                         data-event="click:viewEventDetails" data-bind="event.id">
+                        <div class="flex">
+                            <!-- Food truck festival scene with various food vendors and beer garden -->
+                            <img src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?ixlib=rb-4.0.3&auto=format&fit=crop&w=120&h=120" 
+                                 alt="Food Truck Friday" class="w-24 h-24 object-cover">
+                            <div class="flex-1 p-4">
+                                <h3 class="font-semibold text-gray-900 mb-1" data-bind="event.name">Food Truck Friday</h3>
+                                <p class="text-sm text-amber-600 font-medium mb-1" data-bind="event.brewery">Creek Side Brewing</p>
+                                <p class="text-sm text-gray-600 mb-1" data-bind="event.datetime">Friday, March 29 • 5:00 PM</p>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full" data-bind="event.type">Free Event</span>
+                                    <span class="text-xs text-gray-500" data-bind="event.attendees">89 attending</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- @END_MAP )) -->
+                </div>
+            </div>
+        </div>
+        <!-- @END_COMPONENT: EventsScreen -->
+
+        <!-- Event Detail Screen -->
+        <!-- @COMPONENT: EventDetailScreen -->
+        <div id="event-detail-screen" class="screen hidden">
+            <div class="relative">
+                <!-- Full Size Event Image -->
+                <!-- Close-up of beer flight with tasting notes and elegant glassware -->
+                <div class="h-64 bg-cover bg-center relative" 
+                     style="background-image: url('https://images.unsplash.com/photo-1571613316887-6f8d5cbf7ef7?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600');">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                    <button class="absolute top-4 left-4 w-10 h-10 bg-black/30 rounded-full flex items-center justify-center text-white" 
+                            data-event="click:goBack">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                    <button class="absolute top-4 right-4 w-10 h-10 bg-black/30 rounded-full flex items-center justify-center text-white" 
+                            data-event="click:editEvent" data-visibility="owner-admin">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    
+                    <div class="absolute bottom-4 left-4 text-white">
+                        <h1 class="text-2xl font-bold" data-bind="event.name">Craft Beer Tasting</h1>
+                        <p class="text-amber-200" data-bind="event.brewery">Golden Gate Brewing</p>
+                    </div>
+                </div>
+
+                <div class="px-6 py-6">
+                    <!-- Event Details -->
+                    <div class="mb-6">
+                        <div class="flex items-center space-x-4 mb-4">
+                            <div class="flex items-center text-gray-600">
+                                <i class="fas fa-calendar mr-2"></i>
+                                <span data-bind="event.date">Friday, March 22, 2024</span>
+                            </div>
+                            <div class="flex items-center text-gray-600">
+                                <i class="fas fa-clock mr-2"></i>
+                                <span data-bind="event.time">7:00 PM - 9:00 PM</span>
+                            </div>
+                        </div>
+
+                        <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-4">
+                            <h3 class="font-semibold text-amber-800 mb-2">Event Description</h3>
+                            <p class="text-amber-700 text-sm" data-bind="event.description">
+                                Join us for an exclusive craft beer tasting featuring our latest seasonal brews. 
+                                Learn about the brewing process, taste unique flavor profiles, and meet fellow beer enthusiasts. 
+                                Each ticket includes a flight of 5 beers and artisanal cheese pairings.
+                            </p>
+                        </div>
+
+                        <!-- Ticket Button -->
+                        <button class="w-full bg-amber-500 text-white py-4 rounded-xl font-semibold text-lg hover:bg-amber-600 transition-colors mb-6" 
+                                data-event="click:buyTickets" data-implementation="Integrate with ticketing platform">
+                            <i class="fas fa-ticket-alt mr-2"></i>
+                            Buy Tickets - $25
+                        </button>
+
+                        <!-- Extra Photos -->
+                        <div class="mb-6">
+                            <h3 class="font-semibold mb-3">Event Photos</h3>
+                            <div class="grid grid-cols-2 gap-3">
+                                <!-- Brewery interior setup for tasting event with tables and glassware -->
+                                <img src="https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=150" 
+                                     alt="Event setup" class="w-full h-24 object-cover rounded-lg">
+                                <!-- Close-up of craft beer samples with tasting notes -->
+                                <img src="https://images.unsplash.com/photo-1582037928769-181f2644ecb7?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=150" 
+                                     alt="Beer samples" class="w-full h-24 object-cover rounded-lg">
+                                <!-- Cheese and beer pairing spread on wooden boards -->
+                                <img src="https://images.unsplash.com/photo-1559181567-c3190ca9959b?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=150" 
+                                     alt="Food pairings" class="w-full h-24 object-cover rounded-lg">
+                                <!-- Group of people enjoying beer tasting in brewery setting -->
+                                <img src="https://images.unsplash.com/photo-1604467707321-70d5ac45adda?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=150" 
+                                     alt="Previous event" class="w-full h-24 object-cover rounded-lg">
+                            </div>
+                        </div>
+
+                        <!-- Attendees -->
+                        <div class="bg-gray-50 rounded-xl p-4">
+                            <div class="flex justify-between items-center mb-3">
+                                <h3 class="font-semibold">Attendees</h3>
+                                <span class="text-sm text-gray-600" data-bind="event.attendeeCount">24 people attending</span>
+                            </div>
+                            <div class="flex -space-x-2">
+                                <!-- Multiple profile pictures of event attendees -->
+                                <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=40&h=40" 
+                                     alt="Attendee" class="w-8 h-8 rounded-full border-2 border-white">
+                                <img src="https://pixabay.com/get/g6361fc62652c602d7b0b0693f696461bdfa370c19ea73aeab4a117dd4810b578f69fc8cd2198d7c5b7b62e4e8eee87b98259fef7370182a3e885c743f49f0b2d_1280.jpg" 
+                                     alt="Attendee" class="w-8 h-8 rounded-full border-2 border-white">
+                                <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=40&h=40" 
+                                     alt="Attendee" class="w-8 h-8 rounded-full border-2 border-white">
+                                <div class="w-8 h-8 bg-gray-300 rounded-full border-2 border-white flex items-center justify-center text-xs font-medium text-gray-600">
+                                    +21
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- @END_COMPONENT: EventDetailScreen -->
+
+        <!-- Leaderboard Screen -->
+        <!-- @COMPONENT: LeaderboardScreen -->
+        <div id="leaderboard-screen" class="screen hidden">
+            <div class="bg-gradient-to-r from-amber-500 to-hops-500 p-6 text-white">
+                <div class="flex items-center justify-between mb-4">
+                    <button class="w-10 h-10 bg-black/20 rounded-full flex items-center justify-center" 
+                            data-event="click:goBack">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                    <h1 class="text-xl font-bold">Check-in Leaderboard</h1>
+                    <div class="w-10"></div>
+                </div>
+
+                <!-- Top 3 -->
+                <div class="flex justify-center items-end space-x-4 mb-6">
+                    <!-- 2nd Place -->
+                    <div class="text-center">
+                        <!-- Profile photo of second place user -->
+                        <img src="https://pixabay.com/get/g724ddd54bf6dd95417e8dfc3b867c98490a0af9a7e5d10f73f5e5889efcb9473fd5c01934d402cefa0fe8185de4b5d7941d1014ac74cde0154d4083c7eedc515_1280.jpg" 
+                             alt="2nd place" class="w-12 h-12 rounded-full mx-auto mb-2 border-2 border-gray-300">
+                        <div class="bg-gray-300 text-gray-700 text-xs px-2 py-1 rounded-full font-semibold">2nd</div>
+                        <div class="text-sm font-medium mt-1" data-bind="leaderboard[1].name">Sarah Chen</div>
+                        <div class="text-xs opacity-90" data-bind="leaderboard[1].checkins">62 check-ins</div>
+                    </div>
+
+                    <!-- 1st Place -->
+                    <div class="text-center">
+                        <!-- Profile photo of first place user with achievement glow -->
+                        <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=80&h=80" 
+                             alt="1st place" class="w-16 h-16 rounded-full mx-auto mb-2 border-4 border-yellow-300">
+                        <div class="bg-yellow-400 text-yellow-900 text-sm px-3 py-1 rounded-full font-bold">1st</div>
+                        <div class="text-base font-bold mt-1" data-bind="leaderboard[0].name">Mike Rodriguez</div>
+                        <div class="text-sm opacity-90" data-bind="leaderboard[0].checkins">89 check-ins</div>
+                    </div>
+
+                    <!-- 3rd Place -->
+                    <div class="text-center">
+                        <!-- Profile photo of third place user -->
+                        <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=60&h=60" 
+                             alt="3rd place" class="w-12 h-12 rounded-full mx-auto mb-2 border-2 border-amber-400">
+                        <div class="bg-amber-400 text-amber-900 text-xs px-2 py-1 rounded-full font-semibold">3rd</div>
+                        <div class="text-sm font-medium mt-1" data-bind="leaderboard[2].name">Tom Wilson</div>
+                        <div class="text-xs opacity-90" data-bind="leaderboard[2].checkins">58 check-ins</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rest of Leaderboard -->
+            <div class="px-6 py-4">
+                <div class="space-y-3">
+                    <!-- @MAP: leaderboard.slice(3).map((user, index) => ( -->
+                    <div class="flex items-center space-x-4 p-3 bg-gray-50 rounded-lg">
+                        <div class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-sm font-semibold text-gray-600">
+                            <span data-bind="user.rank">4</span>
+                        </div>
+                        <!-- Profile photo of leaderboard participant -->
+                        <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=40&h=40" 
+                             alt="User" class="w-10 h-10 rounded-full object-cover">
+                        <div class="flex-1">
+                            <h4 class="font-medium" data-bind="user.name">Alex Thompson</h4>
+                            <p class="text-sm text-gray-600" data-bind="user.location">San Francisco, CA</p>
+                        </div>
+                        <div class="text-right">
+                            <div class="font-semibold text-amber-600" data-bind="user.checkins">47</div>
+                            <div class="text-xs text-gray-500">check-ins</div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center space-x-4 p-3 bg-gray-50 rounded-lg">
+                        <div class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-sm font-semibold text-gray-600">
+                            <span data-bind="user.rank">5</span>
+                        </div>
+                        <!-- Profile photo of another leaderboard participant -->
+                        <img src="https://pixabay.com/get/g7392f558f691b0e4bf2a21045df5753084b28bf957671feb0ce3fce7a6c1f7a2ea5c6bea4a97af9709809fce882440b68d7888f2a5193d9dc5d9add461e68a2e_1280.jpg" 
+                             alt="User" class="w-10 h-10 rounded-full object-cover">
+                        <div class="flex-1">
+                            <h4 class="font-medium" data-bind="user.name">Jennifer Park</h4>
+                            <p class="text-sm text-gray-600" data-bind="user.location">Oakland, CA</p>
+                        </div>
+                        <div class="text-right">
+                            <div class="font-semibold text-amber-600" data-bind="user.checkins">43</div>
+                            <div class="text-xs text-gray-500">check-ins</div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center space-x-4 p-3 bg-gray-50 rounded-lg">
+                        <div class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-sm font-semibold text-gray-600">
+                            <span data-bind="user.rank">6</span>
+                        </div>
+                        <!-- Profile photo of yet another leaderboard participant -->
+                        <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=40&h=40" 
+                             alt="User" class="w-10 h-10 rounded-full object-cover">
+                        <div class="flex-1">
+                            <h4 class="font-medium" data-bind="user.name">David Kim</h4>
+                            <p class="text-sm text-gray-600" data-bind="user.location">Berkeley, CA</p>
+                        </div>
+                        <div class="text-right">
+                            <div class="font-semibold text-amber-600" data-bind="user.checkins">39</div>
+                            <div class="text-xs text-gray-500">check-ins</div>
+                        </div>
+                    </div>
+                    <!-- @END_MAP )) -->
+                </div>
+            </div>
+        </div>
+        <!-- @END_COMPONENT: LeaderboardScreen -->
+
+        <!-- Bottom Navigation -->
+        <nav class="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-sm bg-white border-t border-gray-200 px-6 py-3">
+            <div class="flex justify-around">
+                <button class="nav-btn flex flex-col items-center space-y-1 p-2" 
+                        data-screen="profile" data-event="click:switchScreen">
+                    <i class="fas fa-user text-lg"></i>
+                    <span class="text-xs">Profile</span>
+                </button>
+                <button class="nav-btn flex flex-col items-center space-y-1 p-2" 
+                        data-screen="breweries" data-event="click:switchScreen">
+                    <i class="fas fa-beer text-lg"></i>
+                    <span class="text-xs">Breweries</span>
+                </button>
+                <button class="nav-btn flex flex-col items-center space-y-1 p-2" 
+                        data-screen="podcast" data-event="click:switchScreen">
+                    <i class="fas fa-podcast text-lg"></i>
+                    <span class="text-xs">Podcast</span>
+                </button>
+                <button class="nav-btn flex flex-col items-center space-y-1 p-2" 
+                        data-screen="events" data-event="click:switchScreen">
+                    <i class="fas fa-calendar text-lg"></i>
+                    <span class="text-xs">Events</span>
+                </button>
+            </div>
+        </nav>
+    </div>
+
+    <script>
+        (function() {
+            // Simple screen navigation system
+            const screens = document.querySelectorAll('.screen');
+            const navButtons = document.querySelectorAll('.nav-btn');
+            
+            function showScreen(screenId) {
+                screens.forEach(screen => {
+                    screen.classList.add('hidden');
+                    screen.classList.remove('active');
+                });
+                
+                const targetScreen = document.getElementById(screenId + '-screen');
+                if (targetScreen) {
+                    targetScreen.classList.remove('hidden');
+                    targetScreen.classList.add('active');
+                }
+                
+                // Update navigation active state
+                navButtons.forEach(btn => {
+                    btn.classList.remove('text-amber-600');
+                    btn.classList.add('text-gray-600');
+                });
+                
+                const activeNavBtn = document.querySelector(`[data-screen="${screenId}"]`);
+                if (activeNavBtn) {
+                    activeNavBtn.classList.remove('text-gray-600');
+                    activeNavBtn.classList.add('text-amber-600');
+                }
+            }
+            
+            // Navigation event listeners
+            navButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const screenId = button.getAttribute('data-screen');
+                    showScreen(screenId);
+                });
+            });
+            
+            // Initial screen setup
+            showScreen('profile');
+            
+            // TODO: Implement business logic for:
+            // - User authentication and profile management
+            // - Geolocation-based brewery sorting
+            // - Check-in tracking and leaderboard updates
+            // - Spotify API integration for podcast episodes
+            // - Event ticket purchasing flow
+            // - Image upload and management
+            // - Real-time data synchronization
+            // - Push notifications for events and check-ins
+            
+            // Mock interaction handlers
+            document.addEventListener('click', (e) => {
+                const target = e.target.closest('[data-event]');
+                if (target) {
+                    const event = target.getAttribute('data-event');
+                    
+                    // Handle specific navigation events
+                    switch(event) {
+                        case 'click:showLeaderboard':
+                            showScreen('leaderboard');
+                            break;
+                        case 'click:viewBrewery':
+                            showScreen('brewery-detail');
+                            break;
+                        case 'click:viewEventDetails':
+                            showScreen('event-detail');
+                            break;
+                        case 'click:goBack':
+                            // TODO: Implement proper navigation history
+                            showScreen('profile');
+                            break;
+                        default:
+                            console.log('Event triggered:', event);
+                            // TODO: Implement specific event handlers
+                    }
+                }
+            });
+        })();
+    </script>
+</body>
+</html>
