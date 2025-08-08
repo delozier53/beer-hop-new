@@ -5,6 +5,8 @@ import { insertCheckInSchema, insertUserSchema, insertPodcastEpisodeSchema, inse
 import { z } from "zod";
 import { ObjectStorageService } from "./objectStorage";
 import { sendVerificationCode, generateVerificationCode } from "./emailService";
+import sgMail from '@sendgrid/mail';
+sgMail.setApiKey(process.env.SENDGRID_API_KEY!);
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Health check endpoint for deployment validation
@@ -964,13 +966,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Authentication Routes
-  app.post("/api/auth/send-code", async (req, res) => {
-    try {
-      const { email } = req.body;
-      
-      if (!email || !email.includes('@')) {
-        return res.status(400).json({ message: "Valid email is required" });
-      }
+  app.post('/api/auth/send-code', async (req, res) => {
+  try {
+    const email = String(req.body?.email || '').trim();
+    if (!email) return res.status(400).json({ message: 'email required' });
+
+    // generate/store code ... (you already do this)
+
+    const from = process.env.EMAIL_FROM!;
+    if (!from) {
+      console.error('[send-code] Missing EMAIL_FROM env');
+      return res.status(500).json({ message: 'email sender not configured' });
+    }
+
+    const msg = {
+      to: email,
+      from,
+      subject: 'Your Beer Hop verification code',
+      text: `Your code is ${code}`,
+      html: `<p>Your code is <strong>${code}</strong></p>`,
+      // Enable sandbox to test delivery without sending:
+      // mailSettings: { sandboxMode: { enable: true } }
+    };
+
+    const [resp] = await sgMail.send(msg);
+    console.log('[send-code] sendgrid ok', resp.statusCode);
+    return res.json({ ok: true });
+  } catch (err: any) {
+    const body = err?.response?.body || err?.message || String(err);
+    console.error('[send-code] sendgrid error', body); // <- this is the gold we need
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+});
 
       // Cleanup expired codes before creating new one
       await storage.cleanupExpiredVerificationCodes();
