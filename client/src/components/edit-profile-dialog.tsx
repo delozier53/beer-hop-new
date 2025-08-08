@@ -1,3 +1,4 @@
+// client/src/components/edit-profile-dialog.tsx
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -22,11 +23,16 @@ interface EditProfileDialogProps {
   userId: string;
 }
 
+// Minimal result shape we actually use from ObjectUploader
+type SimpleUploadResult = {
+  successful?: Array<{ uploadURL?: string }>;
+};
+
 export function EditProfileDialog({ user, userId }: EditProfileDialogProps) {
   const [open, setOpen] = useState(false);
   const [username, setUsername] = useState(user.username || user.name);
-  const [profileImage, setProfileImage] = useState(user.profileImage || "");
-  const [headerImage, setHeaderImage] = useState(user.headerImage || "");
+  const [profileImage, setProfileImage] = useState<string>(user.profileImage || "");
+  const [headerImage, setHeaderImage] = useState<string>(user.headerImage || "");
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -34,7 +40,7 @@ export function EditProfileDialog({ user, userId }: EditProfileDialogProps) {
     mutationFn: async (updates: { username?: string; profileImage?: string; headerImage?: string }) => {
       const response = await apiRequest(`/api/users/${userId}`, "PUT", updates);
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
+        const errorData = await response.json().catch(() => ({ message: "Unknown error" }));
         throw new Error(errorData.message || `HTTP ${response.status}`);
       }
       return response.json();
@@ -48,34 +54,32 @@ export function EditProfileDialog({ user, userId }: EditProfileDialogProps) {
       setOpen(false);
     },
     onError: (error: Error) => {
-      console.error('Profile update error:', error);
+      console.error("Profile update error:", error);
       toast({
         title: "Update failed",
-        description: error.message.includes('too large') 
+        description: error.message.includes("too large")
           ? "Image file is too large. Please choose a smaller image."
           : "Something went wrong. Please try again.",
         variant: "destructive",
       });
-    }
+    },
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const updates: { username?: string; profileImage?: string; headerImage?: string } = {};
-    
+
     if (username !== (user.username || user.name)) {
       updates.username = username;
     }
-    
     if (profileImage !== user.profileImage) {
       updates.profileImage = profileImage || undefined;
     }
-    
     if (headerImage !== user.headerImage) {
       updates.headerImage = headerImage || undefined;
     }
-    
+
     if (Object.keys(updates).length > 0) {
       updateProfileMutation.mutate(updates);
     } else {
@@ -86,8 +90,6 @@ export function EditProfileDialog({ user, userId }: EditProfileDialogProps) {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // In a real app, you'd upload to a file service
-      // For now, we'll use a placeholder URL
       const reader = new FileReader();
       reader.onload = (event) => {
         if (event.target?.result) {
@@ -113,13 +115,16 @@ export function EditProfileDialog({ user, userId }: EditProfileDialogProps) {
           {/* Profile Photo */}
           <div className="flex flex-col items-center space-y-4">
             <div className="relative">
-              <img 
-                src={profileImage || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&h=150"} 
-                alt="Profile" 
+              <img
+                src={
+                  profileImage ||
+                  "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&h=150"
+                }
+                alt="Profile"
                 className="w-20 h-20 rounded-full object-cover border-4 border-gray-200"
               />
-              <label 
-                htmlFor="photo-upload" 
+              <label
+                htmlFor="photo-upload"
                 className="absolute bottom-0 right-0 w-8 h-8 bg-hops hover:bg-hops-dark text-white rounded-full flex items-center justify-center cursor-pointer transition-colors"
               >
                 <Camera className="w-4 h-4" />
@@ -132,9 +137,7 @@ export function EditProfileDialog({ user, userId }: EditProfileDialogProps) {
                 />
               </label>
             </div>
-            <p className="text-xs text-gray-500 text-center">
-              Click the camera icon to change your photo
-            </p>
+            <p className="text-xs text-gray-500 text-center">Click the camera icon to change your photo</p>
           </div>
 
           {/* Username */}
@@ -156,15 +159,11 @@ export function EditProfileDialog({ user, userId }: EditProfileDialogProps) {
             <Label>Header Image</Label>
             <div className="flex flex-col space-y-3">
               <div className="w-full h-24 rounded-lg overflow-hidden bg-gray-100">
-                <img 
-                  src={headerImage || defaultHeaderImage} 
-                  alt="Header preview" 
-                  className="w-full h-full object-cover"
-                />
+                <img src={headerImage || defaultHeaderImage} alt="Header preview" className="w-full h-full object-cover" />
               </div>
               <ObjectUploader
                 maxNumberOfFiles={1}
-                maxFileSize={5242880} // 5MB
+                maxFileSize={5 * 1024 * 1024} // 5MB
                 onGetUploadParameters={async () => {
                   const response = await apiRequest("/api/objects/upload", "POST");
                   const data = await response.json();
@@ -173,20 +172,18 @@ export function EditProfileDialog({ user, userId }: EditProfileDialogProps) {
                     url: data.uploadURL,
                   };
                 }}
-                onComplete={(result) => {
-                  if (result.successful && result.successful.length > 0) {
-                    const uploadedFile = result.successful[0];
-                    if (uploadedFile.uploadURL) {
-                      // Normalize the upload URL to object path
-                      apiRequest("/api/objects/normalize", "POST", { url: uploadedFile.uploadURL })
-                        .then(res => res.json())
-                        .then(data => setHeaderImage(data.objectPath || uploadedFile.uploadURL || ""))
-                        .catch(err => {
-                          console.error("Error normalizing path:", err);
-                          setHeaderImage(uploadedFile.uploadURL);
-                        });
-                    }
-                  }
+                onComplete={(result: SimpleUploadResult) => {
+                  const uploaded = result.successful?.[0];
+                  if (!uploaded?.uploadURL) return;
+
+                  // Normalize the upload URL to an object path on the server
+                  apiRequest("/api/objects/normalize", "POST", { url: uploaded.uploadURL })
+                    .then((res) => res.json())
+                    .then((data) => setHeaderImage(data.objectPath || uploaded.uploadURL || ""))
+                    .catch((err) => {
+                      console.error("Error normalizing path:", err);
+                      setHeaderImage(uploaded.uploadURL ?? "");
+                    });
                 }}
                 buttonClassName="w-full bg-[#ff55e1] hover:bg-[#ff55e1]/90 text-white"
               >
@@ -211,19 +208,10 @@ export function EditProfileDialog({ user, userId }: EditProfileDialogProps) {
           </div>
 
           <div className="flex justify-end space-x-3 pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setOpen(false)}
-              disabled={updateProfileMutation.isPending}
-            >
+            <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={updateProfileMutation.isPending}>
               Cancel
             </Button>
-            <Button
-              type="submit"
-              className="bg-hops hover:bg-hops-dark text-white"
-              disabled={updateProfileMutation.isPending}
-            >
+            <Button type="submit" className="bg-hops hover:bg-hops-dark text-white" disabled={updateProfileMutation.isPending}>
               {updateProfileMutation.isPending ? "Saving..." : "Save Changes"}
             </Button>
           </div>

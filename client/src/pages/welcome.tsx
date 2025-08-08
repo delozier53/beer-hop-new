@@ -1,3 +1,4 @@
+// client/src/pages/welcome.tsx
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { useMutation } from "@tanstack/react-query";
@@ -53,16 +54,13 @@ export default function Welcome() {
       if (data.isNewUser) {
         setStep("profile");
       } else {
-        // Store user data in localStorage for session management
         localStorage.setItem("beer-hop-user", JSON.stringify(data.user));
         toast({
           title: "Welcome back!",
           description: `Good to see you again, ${data.user.name}`,
         });
-        // Add a small delay to ensure the toast shows, then redirect
         setTimeout(() => {
           setLocation("/");
-          // Force a page refresh to ensure proper state update
           window.location.reload();
         }, 1500);
       }
@@ -78,11 +76,9 @@ export default function Welcome() {
 
   const completeProfileMutation = useMutation({
     mutationFn: async (profileData: { email: string; username: string; profileImageUrl: string | null }) => {
-      // First complete the profile
       const response = await apiRequest("/api/auth/complete-profile", "POST", profileData);
       const result = await response.json();
-      
-      // If there's a profile image, set its ACL policy
+
       if (profileData.profileImageUrl && result.user) {
         try {
           await apiRequest("/api/profile-images", "PUT", {
@@ -91,23 +87,19 @@ export default function Welcome() {
           });
         } catch (error) {
           console.error("Failed to set profile image ACL:", error);
-          // Don't fail the entire profile creation for this
         }
       }
-      
+
       return result;
     },
     onSuccess: (data: any) => {
-      // Store user data in localStorage for session management
       localStorage.setItem("beer-hop-user", JSON.stringify(data.user));
       toast({
         title: "Welcome to Beer Hop!",
         description: "Your account has been created successfully",
       });
-      // Add a small delay to ensure the toast shows, then redirect
       setTimeout(() => {
         setLocation("/");
-        // Force a page refresh to ensure proper state update
         window.location.reload();
       }, 1500);
     },
@@ -122,7 +114,7 @@ export default function Welcome() {
 
   const handleSendCode = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !email.includes('@')) {
+    if (!email || !email.includes("@")) {
       toast({
         title: "Invalid email",
         description: "Please enter a valid email address",
@@ -171,17 +163,18 @@ export default function Welcome() {
     });
   };
 
+  // Minimal uploader result shape we actually use
+  type SimpleUploadResult = {
+    successful?: Array<{ uploadURL?: string }>;
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: '#80bc04' }}>
+    <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: "#80bc04" }}>
       <div className="w-full max-w-md">
         {/* Logo and Header */}
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
-            <img 
-              src={beerHopLogo} 
-              alt="Beer Hop" 
-              className="h-24 w-auto"
-            />
+            <img src={beerHopLogo} alt="Beer Hop" className="h-24 w-auto" />
           </div>
           <p className="text-white">Discover breweries and connect with other craft beer lovers</p>
         </div>
@@ -190,12 +183,8 @@ export default function Welcome() {
         {step === "email" && (
           <Card>
             <CardHeader className="text-center">
-              <CardTitle>
-                Welcome
-              </CardTitle>
-              <CardDescription className="text-center">
-                Enter your email to receive a verification code.
-              </CardDescription>
+              <CardTitle>Welcome</CardTitle>
+              <CardDescription className="text-center">Enter your email to receive a verification code.</CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSendCode} className="space-y-4">
@@ -206,10 +195,10 @@ export default function Welcome() {
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={sendCodeMutation.isPending}
                 />
-                <Button 
-                  type="submit" 
+                <Button
+                  type="submit"
                   className="w-full text-white hover:opacity-90"
-                  style={{ backgroundColor: '#80bc04' }}
+                  style={{ backgroundColor: "#80bc04" }}
                   disabled={sendCodeMutation.isPending}
                 >
                   {sendCodeMutation.isPending ? "Sending..." : "Send Verification Code"}
@@ -225,9 +214,7 @@ export default function Welcome() {
           <Card>
             <CardHeader className="text-center">
               <CardTitle>Enter Verification Code</CardTitle>
-              <CardDescription>
-                We sent a 6-digit code to {userEmail}. Check your email and enter it below.
-              </CardDescription>
+              <CardDescription>We sent a 6-digit code to {userEmail}. Check your email and enter it below.</CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleVerifyCode} className="space-y-4">
@@ -235,25 +222,20 @@ export default function Welcome() {
                   type="text"
                   placeholder="123456"
                   value={verificationCode}
-                  onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
                   disabled={verifyCodeMutation.isPending}
                   maxLength={6}
                   className="text-center text-2xl tracking-widest"
                 />
-                <Button 
-                  type="submit" 
+                <Button
+                  type="submit"
                   className="w-full text-white hover:opacity-90"
-                  style={{ backgroundColor: '#80bc04' }}
+                  style={{ backgroundColor: "#80bc04" }}
                   disabled={verifyCodeMutation.isPending}
                 >
                   {verifyCodeMutation.isPending ? "Verifying..." : "Verify Code"}
                 </Button>
-                <Button 
-                  type="button" 
-                  variant="ghost" 
-                  onClick={() => setStep("email")}
-                  className="w-full"
-                >
+                <Button type="button" variant="ghost" onClick={() => setStep("email")} className="w-full">
                   Back to Email
                 </Button>
               </form>
@@ -266,9 +248,7 @@ export default function Welcome() {
           <Card>
             <CardHeader className="text-center">
               <CardTitle>Complete Your Profile</CardTitle>
-              <CardDescription>
-                Just a few more details to get you started on Beer Hop.
-              </CardDescription>
+              <CardDescription>Just a few more details to get you started on Beer Hop.</CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleCompleteProfile} className="space-y-4">
@@ -276,7 +256,7 @@ export default function Welcome() {
                   type="text"
                   placeholder="Username"
                   value={username}
-                  onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/\s/g, ''))}
+                  onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/\s/g, ""))}
                   disabled={completeProfileMutation.isPending}
                   required
                 />
@@ -299,7 +279,7 @@ export default function Welcome() {
                     )}
                     <ObjectUploader
                       maxNumberOfFiles={1}
-                      maxFileSize={5242880}
+                      maxFileSize={5 * 1024 * 1024} // 5MB
                       onGetUploadParameters={async () => {
                         const response = await apiRequest("/api/objects/upload", "POST", {});
                         const data = await response.json();
@@ -308,17 +288,30 @@ export default function Welcome() {
                           url: data.uploadURL,
                         };
                       }}
-                      onComplete={(result) => {
-                        if (result.successful && result.successful[0]) {
-                          const uploadURL = result.successful[0].uploadURL;
-                          // Convert the upload URL to the object path for profile display
-                          const objectId = uploadURL.split('/').pop()?.split('?')[0];
-                          if (objectId) {
-                            setProfileImageUrl(`/objects/uploads/${objectId}`);
-                          }
+                      onComplete={(result: SimpleUploadResult) => {
+                        const uploaded = result.successful?.[0];
+                        const uploadURL = uploaded?.uploadURL;
+                        if (!uploadURL) {
+                          toast({
+                            title: "Upload failed",
+                            description: "No URL returned from uploader.",
+                            variant: "destructive",
+                          });
+                          return;
+                        }
+                        // Convert the upload URL to the object path for profile display
+                        const objectId = uploadURL.split("/").pop()?.split("?")[0] ?? "";
+                        if (objectId) {
+                          setProfileImageUrl(`/objects/uploads/${objectId}`);
                           toast({
                             title: "Photo uploaded",
                             description: "Your profile photo has been uploaded successfully",
+                          });
+                        } else {
+                          toast({
+                            title: "Upload failed",
+                            description: "Could not parse uploaded file path.",
+                            variant: "destructive",
                           });
                         }
                       }}
@@ -330,10 +323,10 @@ export default function Welcome() {
                   </div>
                 </div>
 
-                <Button 
-                  type="submit" 
+                <Button
+                  type="submit"
                   className="w-full text-white hover:opacity-90"
-                  style={{ backgroundColor: '#80bc04' }}
+                  style={{ backgroundColor: "#80bc04" }}
                   disabled={completeProfileMutation.isPending}
                 >
                   {completeProfileMutation.isPending ? "Creating Account..." : "Complete Profile"}
@@ -348,9 +341,13 @@ export default function Welcome() {
         <div className="text-center mt-6 text-sm text-white opacity-80">
           <p>
             By continuing, you agree to our{" "}
-            <a href="/terms" className="underline hover:opacity-80">Terms of Service</a>
-            {" "}and{" "}
-            <a href="/privacy" className="underline hover:opacity-80">Privacy Policy</a>
+            <a href="/terms" className="underline hover:opacity-80">
+              Terms of Service
+            </a>{" "}
+            and{" "}
+            <a href="/privacy" className="underline hover:opacity-80">
+              Privacy Policy
+            </a>
           </p>
         </div>
       </div>
