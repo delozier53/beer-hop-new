@@ -1,106 +1,41 @@
-import { MailService } from '@sendgrid/mail';
+// server/emailService.ts — use SMTP to dodge IPv6 issues
+import nodemailer from 'nodemailer';
 
-if (!process.env.SENDGRID_API_KEY) {
-  throw new Error("SENDGRID_API_KEY environment variable must be set");
-}
-
-const mailService = new MailService();
-mailService.setApiKey(process.env.SENDGRID_API_KEY);
-
-interface EmailParams {
-  to: string;
-  from?: string;
-  subject: string;
-  text?: string;
-  html?: string;
-}
-
-export async function sendEmail(params: EmailParams): Promise<boolean> {
-  try {
-    console.log('Attempting to send email to:', params.to);
-    const fromAddress = params.from || 'jdelozier@beerhopok.com';
-    await mailService.send({
-      to: params.to,
-      from: {
-        email: fromAddress,
-        name: 'Beer Hop'
-      },
-      subject: params.subject,
-      text: params.text || '',
-      html: params.html || '',
-    });
-    console.log('Email sent successfully to:', params.to);
-    return true;
-  } catch (error) {
-    console.error('SendGrid email error:', error);
-    if (error && typeof error === 'object' && 'response' in error) {
-      const response = (error as any).response;
-      console.error('SendGrid response status:', response?.status);
-      console.error('SendGrid response body:', JSON.stringify(response?.body, null, 2));
-      
-      if (response?.body?.errors) {
-        response.body.errors.forEach((err: any, index: number) => {
-          console.error(`SendGrid Error ${index + 1}:`, err.message);
-          if (err.field) console.error(`Field: ${err.field}`);
-        });
-      }
-    }
-    return false;
-  }
-}
+const FROM = process.env.EMAIL_FROM!;
+const KEY = process.env.SENDGRID_API_KEY!;
 
 export function generateVerificationCode(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
+const transporter = nodemailer.createTransport({
+  host: 'smtp.sendgrid.net',
+  port: 587,            // STARTTLS
+  secure: false,        // TLS will be upgraded
+  auth: {
+    user: 'apikey',     // literally the string 'apikey'
+    pass: KEY,          // your SendGrid API key
+  },
+  family: 4,            // <— force IPv4 at socket level
+});
+
 export async function sendVerificationCode(email: string, code: string): Promise<boolean> {
-  const html = `
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-      <div style="text-align: center; margin-bottom: 30px;">
-        <h1 style="color: #80bc04; font-size: 28px; margin: 0;">Beer Hop</h1>
-        <p style="color: #6B7280; font-size: 16px; margin: 10px 0 0 0;">Brewery Discovery & Check-ins</p>
-      </div>
-      
-      <div style="background: #F9FAFB; border-radius: 8px; padding: 30px; margin: 20px 0;">
-        <h2 style="color: #111827; font-size: 24px; margin: 0 0 20px 0; text-align: center;">Verification Code</h2>
-        <p style="color: #374151; font-size: 16px; line-height: 1.5; margin: 0 0 20px 0; text-align: center;">
-          Please use the following 6-digit code to verify your account:
-        </p>
-        
-        <div style="text-align: center; margin: 30px 0;">
-          <div style="background: #FFFFFF; border: 2px solid #80bc04; border-radius: 8px; display: inline-block; padding: 20px 30px;">
-            <span style="font-size: 32px; font-weight: bold; color: #80bc04; letter-spacing: 8px;">${code}</span>
-          </div>
-        </div>
-        
-        <p style="color: #6B7280; font-size: 14px; line-height: 1.5; margin: 20px 0 0 0; text-align: center;">
-          This code will expire in 10 minutes. Don't share this code with anyone.
-        </p>
-      </div>
-      
-      <div style="text-align: center; margin-top: 30px;">
-        <p style="color: #9CA3AF; font-size: 12px; margin: 0;">
-          If you didn't request this code, you can safely ignore this email.
-        </p>
-      </div>
-    </div>
-  `;
+  try {
+    if (!KEY) throw new Error('SENDGRID_API_KEY missing');
+    if (!FROM) throw new Error('EMAIL_FROM missing');
 
-  const text = `
-    Beer Hop - Verification Code
-    
-    Please use the following 6-digit code to verify your account: ${code}
-    
-    This code will expire in 10 minutes. Don't share this code with anyone.
-    
-    If you didn't request this code, you can safely ignore this email.
-  `;
+    const info = await transporter.sendMail({
+      from: FROM, // must be a verified sender in SendGrid
+      to: email,
+      subject: 'Your Beer Hop verification code',
+      text: `Your code is ${code}`,
+      html: `<p>Your code is <strong>${code}</strong></p>`,
+    });
 
-  return await sendEmail({
-    to: email,
-    from: 'jdelozier@beerhopok.com', // Verified sender email in SendGrid
-    subject: 'Beer Hop - Verification Code',
-    text,
-    html
-  });
+    console.log('[emailService] smtp messageId', info.messageId);
+    return true;
+  } catch (err: any) {
+    console.error('[emailService] smtp error', err?.response?.toString?.() || err?.message || String(err));
+    return false;
+  }
 }
