@@ -1,16 +1,14 @@
-// capacitor.config.ts
-import { CapacitorConfig } from "@capacitor/cli";
+import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: "com.beerhop.app",
-  appName: "BeerHop",
-  webDir: "dist/public",
-  bundledWebRuntime: false,
+  appId: 'com.beerhop.app',
+  appName: 'Beer Hop',
+  webDir: 'dist/public',     // where your Vite build ends up
   server: {
-    // For live reload on device you could set a LAN url here during dev.
-    // url: "http://192.168.1.123:5000",
-    // cleartext: true,
-  },
+    androidScheme: 'https',  // keeps WKWebView/Android happy with local assets
+    iosScheme: 'https'
+  }
+  // NOTE: 'bundledWebRuntime' no longer exists in v6
 };
 
 export default config;

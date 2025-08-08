@@ -1,3 +1,4 @@
+import { authFetch } from '@/lib/api';
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -61,7 +62,7 @@ export function SpecialEventEditModal({ event, isOpen, onClose }: SpecialEventEd
       // Get current user ID - in a real app this would come from auth context
       const userId = 'joshuamdelozier'; // Hardcoded for demo - replace with actual auth
       
-      const response = await fetch(`/api/special-events/${event.id}`, {
+      const response = await authFetch(`/api/special-events/${event.id}`, {
         method: 'PUT',
         headers: {
           'x-user-id': userId,
@@ -113,7 +114,7 @@ export function SpecialEventEditModal({ event, isOpen, onClose }: SpecialEventEd
   };
 
   const handleGetUploadParameters = async () => {
-    const response = await fetch('/api/objects/upload', {
+    const response = await authFetch('/api/objects/upload', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -133,7 +134,7 @@ export function SpecialEventEditModal({ event, isOpen, onClose }: SpecialEventEd
       
       try {
         // Process the uploaded image with ACL policy
-        const response = await fetch('/api/event-images', {
+        const response = await authFetch('/api/event-images', {
           method: 'PUT',
           headers: {
             'x-user-id': 'joshuamdelozier',
@@ -171,7 +172,7 @@ export function SpecialEventEditModal({ event, isOpen, onClose }: SpecialEventEd
     mutationFn: async () => {
       const userId = 'joshuamdelozier';
       
-      const response = await fetch(`/api/special-events/${event.id}`, {
+      const response = await authFetch(`/api/special-events/${event.id}`, {
         method: 'DELETE',
         headers: {
           'x-user-id': userId,

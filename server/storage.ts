@@ -29,9 +29,9 @@ import {
   verificationCodes,
 } from "@shared/schema";
 
-import { randomUUID } from "crypto";
-import * as fs from "fs";
-import * as path from "path";
+import fs from 'node:fs';
+import path from 'node:path';
+import { randomUUID } from 'node:crypto';
 
 // ===== CSV BREWERIES LOADER =====
 async function loadBreweriesFromCSV(): Promise<Brewery[]> {
@@ -1351,10 +1351,6 @@ export class DatabaseStorage implements IStorage {
 }
 
 // ===== SPECIAL + WEEKLY EVENTS CSV LOADER (robust) =====
-
-import fs from "fs";
-import path from "path";
-import { randomUUID } from "crypto";
 
 // If these types live elsewhere, keep the imports you already have.
 // type SpecialEvent = { ... }
