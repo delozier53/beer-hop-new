@@ -1,3 +1,6 @@
+// force IPv4 DNS resolution on this runtime
+import { setDefaultResultOrder } from 'node:dns';
+setDefaultResultOrder('ipv4first');
 // server/index.ts — COMPLETE REPLACEMENT
 import path from "path";
 import { fileURLToPath } from "url";
