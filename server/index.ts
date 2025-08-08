@@ -1,4 +1,4 @@
-// Force IPv4 DNS resolution to avoid ENETUNREACH on some hosts
+// MUST be first to affect all DNS lookups
 import { setDefaultResultOrder } from 'node:dns';
 setDefaultResultOrder('ipv4first');
 // server/index.ts — COMPLETE REPLACEMENT
