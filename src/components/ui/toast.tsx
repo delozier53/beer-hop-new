@@ -102,4 +102,5 @@ export {
   Toast,
   ToastTitle,
   ToastDescription,
-  ToastClose,
+  ToastClose
+}
