@@ -418,7 +418,12 @@ export class Storage {
       }
     } catch (error) {
       // Don't throw or retry - just log and continue
-      console.warn("Could not cleanup expired verification codes (non-critical):", error instanceof Error ? error.message : String(error));
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : error && typeof error === 'object' && 'message' in error 
+          ? String(error.message)
+          : 'Unknown database connection error';
+      console.warn("Could not cleanup expired verification codes (non-critical):", errorMessage);
     }
   }
 
