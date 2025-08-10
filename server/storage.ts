@@ -290,6 +290,7 @@ export interface IStorage {
 
   // Verification Codes
   createVerificationCode(email: string, code: string): Promise<VerificationCode>;
+  getUserByUsername(username: string): Promise<User | undefined>;
   getValidVerificationCode(
     email: string,
     code: string
@@ -300,10 +301,12 @@ export interface IStorage {
   // Special Events
   getSpecialEvents(): Promise<SpecialEvent[]>;
   getSpecialEvent(id: string): Promise<SpecialEvent | undefined>;
+  createSpecialEvent(event: InsertSpecialEvent & { ownerId?: string }): Promise<SpecialEvent>;
   updateSpecialEvent(
     id: string,
     updates: Partial<SpecialEvent>
   ): Promise<SpecialEvent | undefined>;
+  deleteSpecialEvent(id: string): Promise<boolean>;
 
   // Weekly Events
   getWeeklyEvents(): Promise<WeeklyEvent[]>;
@@ -920,6 +923,33 @@ export class MemStorage implements IStorage {
     this.specialEvents.set(id, updated);
     return updated;
   }
+  async createSpecialEvent(event: InsertSpecialEvent & { ownerId?: string }): Promise<SpecialEvent> {
+    const id = randomUUID();
+    const se: SpecialEvent = {
+      id,
+      company: event.company,
+      event: event.event,
+      details: event.details,
+      time: event.time,
+      date: event.date,
+      address: event.address,
+      taproom: event.taproom ?? false,
+      logo: event.logo ?? null,
+      location: event.location ?? null,
+      rsvpRequired: event.rsvpRequired ?? false,
+      ticketLink: event.ticketLink ?? null,
+      ownerId: event.ownerId ?? null,
+      createdAt: new Date(),
+    };
+    this.specialEvents.set(id, se);
+    return se;
+  }
+  async deleteSpecialEvent(id: string): Promise<boolean> {
+    return this.specialEvents.delete(id);
+  }
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    return Array.from(this.users.values()).find((u) => u.username === username);
+  }
 
   // Weekly Events (mem)
   async getWeeklyEvents(): Promise<WeeklyEvent[]> {
@@ -1276,6 +1306,18 @@ export class DatabaseStorage implements IStorage {
   ): Promise<SpecialEvent | undefined> {
     const [row] = await db.update(specialEvents).set(updates).where(eq(specialEvents.id, id)).returning();
     return row || undefined;
+  }
+  async createSpecialEvent(event: InsertSpecialEvent & { ownerId?: string }): Promise<SpecialEvent> {
+    const [row] = await db.insert(specialEvents).values(event).returning();
+    return row;
+  }
+  async deleteSpecialEvent(id: string): Promise<boolean> {
+    const res = await db.delete(specialEvents).where(eq(specialEvents.id, id));
+    return (res.rowCount ?? 0) > 0;
+  }
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user || undefined;
   }
 
   // Weekly Events

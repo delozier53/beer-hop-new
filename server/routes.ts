@@ -5,6 +5,7 @@ import { z } from "zod";
 
 import { storage } from "./storage";
 import { ObjectStorageService } from "./objectStorage";
+import { requireAuth } from "./auth.js";
 import {
   insertCheckInSchema,
   insertPodcastEpisodeSchema,
@@ -16,11 +17,6 @@ import {
   sendVerificationCode,
   generateVerificationCode,
 } from "./emailService";
-
-import { sendVerificationCode, generateVerificationCode } from "./emailService";
-
-// NOTE: emailService should handle SendGrid setup internally.
-// If not, ensure EMAIL_FROM and SENDGRID_API_KEY are set in your env.
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // ---------- Health ----------
@@ -744,25 +740,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ---------- Authentication ----------
   app.post("/api/auth/send-code", async (req, res) => {
-  try {
-    const raw = String(req.body?.email || "");
-    const email = raw.trim().toLowerCase();
-    if (!email) return res.status(400).json({ message: "email required" });
+    try {
+      const raw = String(req.body?.email || "");
+      const email = raw.trim().toLowerCase();
+      if (!email) return res.status(400).json({ message: "email required" });
 
-    await storage.cleanupExpiredVerificationCodes();
-    const code = generateVerificationCode();
-    await storage.createVerificationCode(email, code);
+      await storage.cleanupExpiredVerificationCodes();
+      const code = generateVerificationCode();
+      await storage.createVerificationCode(email, code);
 
-    console.log("[send-code] route using emailService SMTP path");
-    const ok = await sendVerificationCode(email, code);
-    if (!ok) return res.status(500).json({ message: "Failed to send verification email" });
+      console.log("[send-code] route using emailService SMTP path");
+      const ok = await sendVerificationCode(email, code);
+      if (!ok) return res.status(500).json({ message: "Failed to send verification email" });
 
-    return res.json({ message: "Verification code sent to your email" });
-  } catch (err: any) {
-    console.error("[send-code] route error", err?.message || String(err));
-    return res.status(500).json({ message: "Internal server error" });
-  }
-});
+      return res.json({ message: "Verification code sent to your email" });
+    } catch (err: any) {
+      console.error("[send-code] route error", err?.message || String(err));
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
 
 
   app.post("/api/auth/verify-code", async (req, res) => {

@@ -21,6 +21,7 @@ function checkRequiredEnvVars() {
   const required = ["DATABASE_URL"];
   const optional = [
     "PORT",
+    "EMAIL_FROM",
     "SENDGRID_API_KEY",
     "SUPABASE_URL",
     "SUPABASE_ANON_KEY",
@@ -37,7 +38,11 @@ function checkRequiredEnvVars() {
 
   for (const envVar of optional) {
     if (!process.env[envVar]) {
-      log(`WARNING: Optional environment variable ${envVar} is not set - some features may not work`);
+      if (envVar === 'SENDGRID_API_KEY') {
+        log(`INFO: ${envVar} not set - verification codes will be logged to console`);
+      } else {
+        log(`WARNING: Optional environment variable ${envVar} is not set - some features may not work`);
+      }
     }
   }
 
@@ -129,33 +134,10 @@ app.use((req, res, next) => {
   const server = await registerRoutes(app);
 
   // -------- Supabase-protected utility endpoints --------
-  app.get("/api/auth/me", authLimiter, requireAuth, (req, res) => {
-    res.json({ id: (req as any).user!.id, email: (req as any).user!.email });
-  });
-
-  app.post("/api/storage/signed-upload", authLimiter, requireAuth, async (req, res) => {
-    try {
-      const filename = (req.body?.filename || "file.bin").toString();
-      const userId = (req as any).user!.id as string;
-      const key = `uploads/${userId}/${Date.now()}-${filename}`;
-      const data = await createSignedUploadUrl(key);
-      res.json({ key, signedUrl: data.signedUrl, token: data.token, publicUrl: publicUrl(key) });
-    } catch (e: any) {
-      res.status(500).json({ error: "failed_to_create_signed_upload_url", details: String(e?.message || e) });
-    }
-  });
-
-  app.post("/api/storage/signed-get", authLimiter, requireAuth, async (req, res) => {
-    try {
-      const { key, expiresInSec = 900 } = req.body || {};
-      if (!key) return res.status(400).json({ error: "key required" });
-      const ttl = Math.min(Math.max(Number(expiresInSec) || 900, 60), 3600);
-      const url = await createSignedGetUrl(String(key), ttl);
-      res.json({ url });
-    } catch (e: any) {
-      res.status(500).json({ error: "failed_to_create_signed_get_url", details: String(e?.message || e) });
-    }
-  });
+  // Optional: Add Supabase-protected endpoints if needed
+  // app.get("/api/auth/me", authLimiter, requireAuth, (req, res) => {
+  //   res.json({ id: (req as any).user!.id, email: (req as any).user!.email });
+  // });
 
   // -------- Dev vs Prod client serving --------
   if (app.get("env") === "development") {
