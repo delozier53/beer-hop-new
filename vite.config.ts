@@ -15,13 +15,14 @@ export default defineConfig({
       "@assets": path.resolve(__dirname, "client/src/assets"),
     },
   },
-  root: "client",
+  root: path.resolve(__dirname, "client"),
   build: {
     outDir: "../dist/public",
     emptyOutDir: true,
   },
   server: {
     port: 5173,
+    host: true,
     proxy: {
       "/api": {
         target: "http://localhost:5001",
