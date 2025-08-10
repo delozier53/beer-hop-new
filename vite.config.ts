@@ -7,13 +7,17 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 export default defineConfig({
+  root: "client",
   plugins: [react()],
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "src"),
+      "@": path.resolve(__dirname, "client/src"),
       "@shared": path.resolve(__dirname, "shared"),
-      "@assets": path.resolve(__dirname, "src/assets"),
+      "@assets": path.resolve(__dirname, "client/src/assets"),
     },
+  },
+  build: {
+    outDir: "../dist/public",
   },
   server: {
     port: 5173,
