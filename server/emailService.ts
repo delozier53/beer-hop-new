@@ -8,7 +8,7 @@ export function generateVerificationCode(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
-const transporter = nodemailer.createTransport({
+const transporter = nodemailer.createTransporter({
   host: 'smtp.sendgrid.net',
   port: 587,            // STARTTLS
   secure: false,        // TLS will be upgraded
@@ -17,6 +17,8 @@ const transporter = nodemailer.createTransport({
     pass: KEY,          // your SendGrid API key
   },
   family: 4,            // <— force IPv4 at socket level
+  debug: true,          // Enable debug logging
+  logger: true,         // Enable logger
 });
 
 export async function sendVerificationCode(email: string, code: string): Promise<boolean> {
@@ -27,6 +29,9 @@ export async function sendVerificationCode(email: string, code: string): Promise
       return true;
     }
 
+    console.log(`[emailService] Attempting to send email to ${email} with code ${code}`);
+    console.log(`[emailService] Using SendGrid API key: ${KEY.substring(0, 10)}...`);
+    
     const info = await transporter.sendMail({
       from: FROM, // must be a verified sender in SendGrid
       to: email,
@@ -36,9 +41,16 @@ export async function sendVerificationCode(email: string, code: string): Promise
     });
 
     console.log('[emailService] smtp messageId', info.messageId);
+    console.log('[emailService] Email sent successfully');
     return true;
   } catch (err: any) {
-    console.error('[emailService] smtp error', err?.response?.toString?.() || err?.message || String(err));
+    console.error('[emailService] smtp error details:', {
+      message: err?.message,
+      code: err?.code,
+      response: err?.response,
+      responseCode: err?.responseCode,
+      command: err?.command
+    });
     // Fallback to console output for development
     console.log(`\n🔐 VERIFICATION CODE FOR ${email}: ${code}\n`);
     return true;

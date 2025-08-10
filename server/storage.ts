@@ -406,26 +406,19 @@ export class Storage {
   }
 
   async cleanupExpiredVerificationCodes(): Promise<void> {
-    const maxRetries = 3;
-    let attempt = 0;
-    
-    while (attempt < maxRetries) {
-      try {
+    try {
+      // Use a simpler query that's less likely to cause WebSocket issues
+      const expiredCodes = await db.select()
+        .from(verificationCodes)
+        .where(sql`${verificationCodes.expiresAt} < NOW()`);
+      
+      if (expiredCodes.length > 0) {
+        console.log(`Cleaning up ${expiredCodes.length} expired verification codes`);
         await db.delete(verificationCodes).where(sql`${verificationCodes.expiresAt} < NOW()`);
-        return; // Success, exit the retry loop
-      } catch (error) {
-        attempt++;
-        console.error(`Error cleaning up expired verification codes (attempt ${attempt}/${maxRetries}):`, error);
-        
-        if (attempt >= maxRetries) {
-          console.error("Failed to cleanup expired verification codes after all retries");
-          return;
-        }
-        
-        // Exponential backoff: wait 2^attempt seconds
-        const delay = Math.pow(2, attempt) * 1000;
-        await new Promise(resolve => setTimeout(resolve, delay));
       }
+    } catch (error) {
+      // Don't throw or retry - just log and continue
+      console.warn("Could not cleanup expired verification codes (non-critical):", error instanceof Error ? error.message : String(error));
     }
   }
 
