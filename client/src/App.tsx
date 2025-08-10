@@ -26,6 +26,8 @@ function Router() {
   const { isAuthenticated, isLoading, user } = useAuth();
   const [showLocationDialog, setShowLocationDialog] = useState(false);
 
+  console.log('Router state:', { isAuthenticated, isLoading, user });
+
   // Show location permission dialog after user authenticates
   useEffect(() => {
     if (isAuthenticated && !isLoading && user) {
