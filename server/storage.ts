@@ -406,10 +406,26 @@ export class Storage {
   }
 
   async cleanupExpiredVerificationCodes(): Promise<void> {
-    try {
-      await db.delete(verificationCodes).where(sql`${verificationCodes.expiresAt} < NOW()`);
-    } catch (error) {
-      console.error("Error cleaning up expired verification codes:", error);
+    const maxRetries = 3;
+    let attempt = 0;
+    
+    while (attempt < maxRetries) {
+      try {
+        await db.delete(verificationCodes).where(sql`${verificationCodes.expiresAt} < NOW()`);
+        return; // Success, exit the retry loop
+      } catch (error) {
+        attempt++;
+        console.error(`Error cleaning up expired verification codes (attempt ${attempt}/${maxRetries}):`, error);
+        
+        if (attempt >= maxRetries) {
+          console.error("Failed to cleanup expired verification codes after all retries");
+          return;
+        }
+        
+        // Exponential backoff: wait 2^attempt seconds
+        const delay = Math.pow(2, attempt) * 1000;
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
     }
   }
 
