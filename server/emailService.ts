@@ -1,7 +1,7 @@
 // server/emailService.ts — use SMTP to dodge IPv6 issues
 import nodemailer from 'nodemailer';
 
-const FROM = process.env.EMAIL_FROM || 'noreply@beerhop.com';
+const FROM = process.env.EMAIL_FROM || 'beerhopapp@gmail.com';
 const KEY = process.env.SENDGRID_API_KEY!;
 
 export function generateVerificationCode(): string {
