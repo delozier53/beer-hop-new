@@ -1,5 +1,5 @@
 // server/emailService.ts — use SMTP to dodge IPv6 issues
-import nodemailer from 'nodemailer';
+import { createTransport } from 'nodemailer';
 
 const FROM = process.env.EMAIL_FROM || 'beerhopapp@gmail.com';
 const KEY = process.env.SENDGRID_API_KEY!;
@@ -8,7 +8,7 @@ export function generateVerificationCode(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
-const transporter = nodemailer.createTransporter({
+const transporter = createTransport({
   host: 'smtp.sendgrid.net',
   port: 587,            // STARTTLS
   secure: false,        // TLS will be upgraded
