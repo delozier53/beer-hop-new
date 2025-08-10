@@ -418,12 +418,17 @@ export class Storage {
       }
     } catch (error) {
       // Don't throw or retry - just log and continue
-      const errorMessage = error instanceof Error 
-        ? error.message 
-        : error && typeof error === 'object' && 'message' in error 
-          ? String(error.message)
-          : 'Unknown database connection error';
-      console.warn("Could not cleanup expired verification codes (non-critical):", errorMessage);
+      // Handle WebSocket ErrorEvent objects specifically
+      if (error && typeof error === 'object' && 'target' in error) {
+        const wsError = error as any;
+        const closeCode = wsError.target?._closeCode || 'unknown';
+        const url = wsError.target?._url || 'unknown';
+        console.warn(`Could not cleanup expired verification codes (non-critical): WebSocket connection failed (code: ${closeCode}, url: ${url})`);
+      } else if (error instanceof Error) {
+        console.warn("Could not cleanup expired verification codes (non-critical):", error.message);
+      } else {
+        console.warn("Could not cleanup expired verification codes (non-critical): Unknown database connection error");
+      }
     }
   }
 
