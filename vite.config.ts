@@ -7,7 +7,6 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 export default defineConfig({
-  root: "client",
   plugins: [react()],
   resolve: {
     alias: {
@@ -16,13 +15,19 @@ export default defineConfig({
       "@assets": path.resolve(__dirname, "client/src/assets"),
     },
   },
+  root: "client",
   build: {
     outDir: "../dist/public",
+    emptyOutDir: true,
   },
   server: {
     port: 5173,
     proxy: {
       "/api": {
+        target: "http://localhost:5001",
+        changeOrigin: true,
+      },
+      "/objects": {
         target: "http://localhost:5001",
         changeOrigin: true,
       },
