@@ -104,5 +104,3 @@ export {
   ToastDescription,
   ToastClose,
 };
-
-export { Toast, ToastClose, ToastDescription, ToastProvider, ToastTitle, ToastViewport }
