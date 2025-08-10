@@ -11,8 +11,8 @@ import "dotenv/config";
 import express, { type Request, type Response, type NextFunction } from "express";
 import rateLimit from "express-rate-limit";
 
-import { registerRoutes } from "./routes";
-import { setupVite, log } from "./vite"; // we'll handle static ourselves
+import { registerRoutes } from "./routes.js";
+import { setupVite, log } from "./vite.js"; // we'll handle static ourselves
 import { requireAuth } from "./auth.js";
 import { createSignedUploadUrl, createSignedGetUrl, publicUrl } from "./supaStorage.js";
 

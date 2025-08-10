@@ -3,7 +3,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { z } from "zod";
 
-import { storage } from "./storage";
+import { storage } from "./storage.js";
 import { ObjectStorageService } from "./objectStorage";
 import { requireAuth } from "./auth.js";
 import {
@@ -16,7 +16,7 @@ import {
 import {
   sendVerificationCode,
   generateVerificationCode,
-} from "./emailService";
+} from "./emailService.js";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // ---------- Health ----------
