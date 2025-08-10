@@ -8,22 +8,15 @@ export default defineConfig({
     alias: {
       "@": path.resolve(__dirname, "src"),
       "@shared": path.resolve(__dirname, "shared"),
+      "@assets": path.resolve(__dirname, "src/assets"),
     },
   },
   server: {
     port: 5173,
-    historyApiFallback: true,
     proxy: {
       "/api": {
         target: "http://localhost:5001",
         changeOrigin: true,
-      },
-    },
-  },
-  build: {
-    rollupOptions: {
-      input: {
-        main: path.resolve(__dirname, "index.html"),
       },
     },
   },

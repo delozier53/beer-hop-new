@@ -4,6 +4,7 @@ import { createServer } from 'http';
 import path from 'path';
 import rateLimit from 'express-rate-limit';
 import { registerRoutes } from './routes.js';
+import { setupVite, serveStatic } from './vite.js';
 
 const app = express();
 const server = createServer(app);
@@ -27,12 +28,11 @@ app.get('/health', (_req, res) => {
 // Register API routes
 registerRoutes(app);
 
-// Serve static files in production
+// Setup Vite in development or serve static files in production
 if (process.env.NODE_ENV === 'production') {
-  app.use(express.static('dist/public'));
-  app.get('*', (_req, res) => {
-    res.sendFile(path.resolve('dist/public/index.html'));
-  });
+  serveStatic(app);
+} else {
+  await setupVite(app, server);
 }
 
 const PORT = process.env.PORT || 5001;
@@ -40,4 +40,7 @@ const PORT = process.env.PORT || 5001;
 server.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📱 Beer Hop API ready`);
+  if (process.env.NODE_ENV !== 'production') {
+    console.log(`🔧 Development mode - Vite middleware active`);
+  }
 });
